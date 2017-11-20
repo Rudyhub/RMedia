@@ -1,0 +1,23 @@
+{
+  "main": "index.html",
+  "name": "FupConvert",
+  "nodejs": true,
+  "single-instance": false,
+  "chromium-args": "--enable-webgl --ignore-gpu-blacklist",
+  "window": {
+    "show": true,
+    "title": "FupConvert",
+    "toolbar": false,
+    "width": 1920,
+    "height": 1080,
+    "resizable": true,
+    "show_in_taskbar": true,
+    "frame": false,
+    "kiosk": false,
+    "position": "center",
+    "icon": ""
+  },
+  "webkit": {
+    "plugin": true
+  }
+}

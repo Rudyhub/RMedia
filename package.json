@@ -1,0 +1,23 @@
+{
+  "name": "fupconvert",
+  "version": "1.0.0",
+  "description": "a software for editting media files",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "do": "xcopy app test\\app\\ /y /e"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mystermangit/fupconvert.git"
+  },
+  "author": "mysterman",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mystermangit/fupconvert/issues"
+  },
+  "homepage": "https://github.com/mystermangit/fupconvert#readme"
+}
