@@ -19,5 +19,9 @@
   "bugs": {
     "url": "https://github.com/mystermangit/fupconvert/issues"
   },
-  "homepage": "https://github.com/mystermangit/fupconvert#readme"
+  "homepage": "https://github.com/mystermangit/fupconvert#readme",
+  "devDependencies": {
+    "babili-webpack-plugin": "^0.1.2",
+    "webpack": "^3.8.1"
+  }
 }
