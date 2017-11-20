@@ -1,6 +1,7 @@
 const fs = require('fs'),
 	path = require('path');
 function copy( origin, target ){
+	if(!origin || !target) throw 'Error: Need two parameters';
 	origin = origin.replace(/\/+$/g,'');
 	target = target.replace(/\/+$/g,'');
 	fs.stat(origin, function(err, stats){
