@@ -5,98 +5,101 @@
 	<title>FupConvert媒体处理器</title>
 	<link rel="stylesheet" href="../css/index.css">
 </head>
-<body id="app">
-<header>
-    <div class="draggable">
-        <h1>多媒体处理器</h1>
-        <div class="titlebar-tool">
-            <button f-on-click="minimize">&minus;</button>
-            <button f-on-click="wintoggle"><i></i></button>
-            <button f-on-click="winclose">&times;</button>
+<body>
+<div id="app">
+    <header>
+        <div class="draggable">
+            <h1>{{ui.title}}</h1>
+            <div class="titlebar-tool">
+                <button v-on:click="minimize">&minus;</button>
+                <button v-on:click="wintoggle" v-bind:class="{full: isFullScreen}"><i></i></button>
+                <button v-on:click="winclose">&times;</button>
+            </div>
+        </div>
+        <section class="section-border">
+            <button class="file-btn">
+                {{ui.open}}
+                <input type="file" title="select file" multiple>
+            </button>
+            <button class="file-btn">
+                {{ui.save}}
+                <input v-on:change="chosedir" type="file" title="select dir" nwdirectory>
+            </button>
+            <button class="start-btn" title="start convert">{{ui.start}}</button>
+            <input class="output-txt-area" type="text" readonly v-bind:placeholder="ui.nosave" v-bind:value="output">
+        </section>
+    </header>
+    <div class="body">
+        <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
+            <!--preview list item-->
+        </section>
+        <div id="config-panel" class="config-panel section-border">
+            <h3 id="panel-drag" class="panel-title">输出参数配置：</h3>
+            <form action="javascript:void(0)">
+                <div class="form-group">
+                    <span class="lb-name">压缩率：</span>
+                    <input f-model="quality" title="quality" class="lb-quality" type="range" value="100">
+                    <span class="lb-percent">
+                        <input f-model="quality" class="percent-number" title="percent" type="number" max="100" placeholder="默认">%
+                    </span>
+                </div>
+                <div class="form-group">
+                    <span class="lb-name">尺寸：</span>
+                    <input f-model="width" title="width" name="width" class="lb-size" type="number" placeholder="默认">
+                    <input f-on-click="islock" class="size-link" type="checkbox" title="size lock">
+                    <input f-model="height" title="height" name="height" class="lb-size" type="number" placeholder="默认">
+                </div>
+                <div class="form-group">
+                    <span class="lb-name">格式转换：</span>
+                    <br>
+                    <span class="lb-name-tiny">当前格式：</span>
+                    <span f-bind-text="filetype" class="lb-name-tiny"></span>
+                    <br>
+                    <span class="lb-name-tiny">输出格式：</span>
+                    <select f-model="outtype" title="选择格式" class="select-format">
+                        <option value="mp4">视频：mp4</option>
+                        <option value="ogg">视频：ogg</option>
+                        <option value="webm">视频：webm</option>
+                        <option value="ts">视频：ts</option>
+                        <option value="flv">视频：flv</option>
+                        <option value="avi">视频：avi</option>
+                        <option value="wmv">视频：wmv</option>
+                        <option value="aac">音频：aac</option>
+                        <option value="mp3">音频：mp3</option>
+                        <option value="wav">音频：wav</option>
+                        <option value="jpg">图片：jpg</option>
+                        <option value="png">图片：png</option>
+                        <option value="gif">图片：gif</option>
+                        <option value="webp">图片：webp</option>
+                        <option value="ico">图片：ico</option>
+                        <option value="svg">图片：svg</option>
+                        <option value="bmp">图片：bmp</option>
+                    </select>
+                </div>
+                <div id="time-panel" class="form-group">
+                    <span class="lb-name">时间截取：</span>
+                    <br>
+                    <button>播放</button>
+                    <span f-bind-text="timeline" class="lb-time-txt">00:00:00</span>
+                    <br>
+                    <button f-on-click="markstart">设置起点</button>
+                    <span f-bind-text="markstart" class="lb-time-txt lb-time-start">00:00:00</span>
+                    <br>
+                    <button f-on-click="markend">设置终点</button>
+                    <span f-bind-text="markend" class="lb-time-txt lb-time-end">00:00:00</span>
+                </div>
+                <div class="form-group form-onok">
+                    <button f-on-click="onok" f-bind-html="okbutton">保存配置</button>
+                    <button f-on-click="oncancel">取消</button>
+                </div>
+            </form>
         </div>
     </div>
-    <section class="section-border">
-        <button class="file-btn">
-            选择文件
-            <input f-on-change="chosefile" type="file" title="select file" multiple>
-        </button>
-        <button class="file-btn">
-            输出目录
-            <input f-on-change="chosedir" type="file" title="select dir" nwdirectory>
-        </button>
-        <button f-on-click="startConvert" title="开始转换">开始</button>
-        <input class="output-txt-area" type="text" readonly placeholder="未选择输出目录" f-bind-value="output">
-    </section>
-</header>
-<div class="body">
-    <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
-        <!--preview list item-->
-    </section>
-    <div id="config-panel" class="config-panel section-border">
-        <h3 id="panel-drag" class="panel-title">输出参数配置：</h3>
-        <form action="javascript:void(0)">
-            <div class="form-group">
-                <span class="lb-name">压缩率：</span>
-                <input f-model="quality" title="quality" class="lb-quality" type="range" value="100">
-                <span class="lb-percent">
-                    <input f-model="quality" class="percent-number" title="percent" type="number" max="100" placeholder="默认">%
-                </span>
-            </div>
-            <div class="form-group">
-                <span class="lb-name">尺寸：</span>
-                <input f-model="width" title="width" name="width" class="lb-size" type="number" placeholder="默认">
-                <input f-on-click="islock" class="size-link" type="checkbox" title="size lock">
-                <input f-model="height" title="height" name="height" class="lb-size" type="number" placeholder="默认">
-            </div>
-            <div class="form-group">
-                <span class="lb-name">格式转换：</span>
-                <br>
-                <span class="lb-name-tiny">当前格式：</span>
-                <span f-bind-text="filetype" class="lb-name-tiny"></span>
-                <br>
-                <span class="lb-name-tiny">输出格式：</span>
-                <select f-model="outtype" title="选择格式" class="select-format">
-                    <option value="mp4">视频：mp4</option>
-                    <option value="ogg">视频：ogg</option>
-                    <option value="webm">视频：webm</option>
-                    <option value="ts">视频：ts</option>
-                    <option value="flv">视频：flv</option>
-                    <option value="avi">视频：avi</option>
-                    <option value="wmv">视频：wmv</option>
-                    <option value="aac">音频：aac</option>
-                    <option value="mp3">音频：mp3</option>
-                    <option value="wav">音频：wav</option>
-                    <option value="jpg">图片：jpg</option>
-                    <option value="png">图片：png</option>
-                    <option value="gif">图片：gif</option>
-                    <option value="webp">图片：webp</option>
-                    <option value="ico">图片：ico</option>
-                    <option value="svg">图片：svg</option>
-                    <option value="bmp">图片：bmp</option>
-                </select>
-            </div>
-            <div id="time-panel" class="form-group">
-                <span class="lb-name">时间截取：</span>
-                <br>
-                <button>播放</button>
-                <span f-bind-text="timeline" class="lb-time-txt">00:00:00</span>
-                <br>
-                <button f-on-click="markstart">设置起点</button>
-                <span f-bind-text="markstart" class="lb-time-txt lb-time-start">00:00:00</span>
-                <br>
-                <button f-on-click="markend">设置终点</button>
-                <span f-bind-text="markend" class="lb-time-txt lb-time-end">00:00:00</span>
-            </div>
-            <div class="form-group form-onok">
-                <button f-on-click="onok" f-bind-html="okbutton">保存配置</button>
-                <button f-on-click="oncancel">取消</button>
-            </div>
-        </form>
-    </div>
+    <footer class="footer draggable">
+        <script>document.write('&copy; '+new Date().getFullYear()+' wenweipo.com')</script>
+    </footer>
 </div>
-<footer class="footer draggable">
-    <script>document.write('&copy; '+new Date().getFullYear()+' wenweipo.com')</script>
-</footer>
-<script src="../js/index.js"></script>
+<script type="text/javascript" src="../plugins/vue.min.js"></script>
+<script type="text/javascript" src="../js/index.js"></script>
 </body>
 </html>
