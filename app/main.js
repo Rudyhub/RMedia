@@ -1,21 +1,10 @@
 const win = nw.Window.get();
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = process.cwd()+'\\app\\plugins\\ffmpeg\\';
-ffmpeg.setFfmpegPath(ffmpegPath+'ffmpeg.exe');
-ffmpeg.setFfprobePath(ffmpegPath+'ffprobe.exe');
+const config = require('./src/config');
 
-let ui = {
-	title: '多媒体处理器',
-	open: '打开',
-	save: '保存',
-	start: '开始',
-	nosave: '未选择输出目录',
-	saveas: '输出的目录是：'
-}
 new Vue({
 	el: '#app',
 	data: {
-		ui: ui,
+		ui: config.ui,
 		output: '',
 		isFullScreen: true
 	},
@@ -42,18 +31,35 @@ new Vue({
 		winclose: function(){
 			win.close();
 		},
+		chosefile: function(e){
+			
+			// flexItems.splice(0, this.flexItems.length);
+
+			// let files = e.target.files,
+			// 	len,
+			// 	file;
+			// if(files && (len = files.length)){
+			// 	for(let i=0; i<len; i++){
+			// 		file = files[i];
+			// 		flexItems.push(`
+			// 			<div class="flex-close" data-itemid="`+flexItems.length+`">&times;</div>
+			// 			<div class="flex-item-preview">
+			// 				<canvas></canvas>
+			// 			</div>
+			// 			<div class="flex-item-fileinfo">名称：`+file.name+`<br>大小：`+file.size+`<br>尺寸：1280*720</div>
+			// 			<div class="flex-item-progress hide">
+			// 				<progress value="0" max="100"></progress>
+			// 			</div>
+			// 		`);
+			// 	}
+			// }
+		},
 		chosedir: function(e){
-            this.output = ui.saveas + (e.target.files[0].path || '');
+            this.output = config.ui.saveas + (e.target.files[0].path || '');
         },
         startConvert: function(){
         	console.log('start');
-        	ffmpeg('C:\\Users\\Administrator\\Desktop\\o.mp4').format('avi').on('error',function(err){
-        		console.log(err.message)
-        	}).on('progress', function(progress) {
-			    console.log('Processing: ' + progress.percent + '% done');
-			}).on('end', function(){
-				console.log('ended');
-			}).save('C:\\Users\\Administrator\\Desktop\\o.avi');
+        	
         }
 	}
 });

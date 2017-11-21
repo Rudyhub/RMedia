@@ -264,15 +264,10 @@ commom style end
     width: calc(100% - 310px);
 }
 
-.flex{
-    text-align: center;
-    overflow: hidden;
-}
 .flex-item{
-    float: left;
-    border: 2px solid #333;
-    text-align: center;
-    background: #fff;
+    display: inline-block;
+    width: 324px;
+    border: 2px solid #555;
     margin: 10px;
     box-shadow: #000 0 6px 10px;
     border-radius: 4px;
@@ -280,32 +275,53 @@ commom style end
     position: relative;
     box-sizing: border-box;
 }
-.flex-item.active{
-    border: 3px solid #a00;
-}
-.file-show{
-    height: 100%;
-}
-.file-info{
+.flex-close{
     position: absolute;
-    bottom: 0;
+    text-align: center;
+    top: 0;
+    right: 0;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    font-size: 22px;
+    line-height: 1em;
+    box-sizing: border-box;
+    border: none;
+    color: #ddd;
+    background: rgba(0,0,0,.5);
+    cursor: pointer;
+}
+.flex-close:hover{
+    background: rgba(0,0,0,1);
+}
+.flex-item-preview{
+    width: 100%;
+    height: 240px;
+    background: #555;
+}
+.flex-item-preview canvas{
     width: 100%;
     height: 100%;
-    margin: 0;
-    padding: 5px 10px;
+}
+.flex-item-fileinfo{
+    padding: 5px;
     box-sizing: border-box;
-    text-align: left;
-    background: rgba(0,0,0,.6);
-    overflow: auto;
 }
-.file-info li{
-    font-size: 14px;
-    line-height: 1.8em;
-    white-space: nowrap;
-    color: #eee;
+.flex-item-progress{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
 }
-.file-info i{
-    color: #bbb;
+.flex-item-progress progress{
+    width: 100%;
+    height: 100%;
+    -webkit-appearance: none;
+}
+.flex-item-progress.hide{
+    display: none;
 }
 
 .config-panel{
