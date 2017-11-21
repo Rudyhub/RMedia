@@ -17,6 +17,16 @@ module.exports = {
             return "error time";
         }
     },
+    sizemat: function(b){
+        if(b < 1024) return size + ' B';
+        let size = b/1024,
+            fixed = arguments[1] || 2;
+        if(size < 1024){
+            return size.toFixed(fixed) + ' KB';
+        }else{
+            return (size/1024).toFixed(fixed) + ' MB';
+        }
+    },
     hasClass: function(node, className){
         return node.className.split(/\s+/).indexOf(className) !== -1;
     },

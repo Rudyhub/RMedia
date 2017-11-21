@@ -1,6 +1,7 @@
 const win = nw.Window.get();
 const config = require('./src/config');
-
+const Media = require('./src/Media');
+const functions = require('./src/functions');
 new Vue({
 	el: '#app',
 	data: {
@@ -33,15 +34,23 @@ new Vue({
 			win.close();
 		},
 		chosefile: function(e){
-			let files = e.target.files,
+			let vue = this,
+				files = e.target.files,
 				len,
-				file;
+				file,
+				infostr;
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
 					file = files[i];
-					this.flexItems.push({
-						progress: 0,
-						fileinfo: `名称：`+file.name+`<br>大小：`+file.size+`<br>尺寸：1280*720`
+					Media.info(file.path, function(md) {
+						infostr = '文件：' + md.name +
+							'<br>大小：' + functions.sizemat(md.size) +
+							'<br>尺寸：' + md.width + '*' + md.height +
+							'<br>时长：' + functions.timemat(md.duration*1000);
+					    vue.flexItems.push({
+							progress: 0,
+							fileinfo: infostr
+						});
 					});
 				}
 			}

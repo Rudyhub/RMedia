@@ -1,5 +1,6 @@
-const childprocess = require('child_process');
-const ffmpegPath = process.cwd()+'\\plugins\\ffmpeg\\';
+const config = require('./config');
+const ffmpeg = config.ffmpeg();
+/*
 const fs = require('fs');
 function dimg(){
     let c = document.createElement('canvas');
@@ -23,16 +24,16 @@ function dimg(){
         });
     };
 }
+*/
 // dimg();
 module.exports = {
     info: function(url,success, fail){
-        childprocess.exec(ffmpegPath+'ffprobe.exe -hide_banner -print_format json -show_format -show_streams '+url,function (err, stdout, stderr) {
+        ffmpeg.ffprobe(url, function(err, data){
             if(err){
                 if(fail) fail(err);
             }else {
                 try{
-                    let data = JSON.parse( stdout ),
-                        stm = data.streams,
+                    let stm = data.streams,
                         a, v, o;
                     for(let i=0; i<stm.length; i++){
                         if(stm[i]['codec_type'] === 'video'){
@@ -42,6 +43,7 @@ module.exports = {
                         }
                     }
                     o = {
+                        name: data.format.filename,
                         duration: data.format.duration,
                         size: data.format.size,
                         bit: data.format['bit_rate']

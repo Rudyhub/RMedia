@@ -1,8 +1,5 @@
-const ffmpeg = require('fluent-ffmpeg');
 const config = require('./src/config');
-
-ffmpeg.setFfmpegPath(config.ffmpegPath+'ffmpeg.exe');
-ffmpeg.setFfprobePath(config.ffmpegPath+'ffprobe.exe');
+const ffmpeg = config.ffmpeg(); 
 function convert(options){
 	ffmpeg('C:\\Users\\Administrator\\Desktop\\o.mp4').format('avi').on('error',function(err){
 		console.log(err.message)
