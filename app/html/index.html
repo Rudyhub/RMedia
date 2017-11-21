@@ -31,7 +31,16 @@
     </header>
     <div class="body">
         <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
-            <div class="flex-item" is="flex-item" v-for="flexItem of flexItems" v-html="flexItem"></div>
+            <div class="flex-item" v-for="(flexItem, index) of flexItems">
+                <div class="flex-close" v-on:click="flexItemFn(index)">&times;</div>
+                <div class="flex-item-preview">
+                    <canvas></canvas>
+                </div>
+                <div class="flex-item-fileinfo" v-html="flexItem.fileinfo"></div>
+                <div class="flex-item-progress" v-if="flexItem.progress">
+                    <progress v-bind:value="flexItem.progress" max="100"></progress>
+                </div>
+            </div>
             <!--preview list item-->
         </section>
         <div id="config-panel" class="config-panel section-border">
