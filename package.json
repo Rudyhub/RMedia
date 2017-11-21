@@ -22,6 +22,7 @@
   "homepage": "https://github.com/mystermangit/fupconvert#readme",
   "devDependencies": {
     "babili-webpack-plugin": "^0.1.2",
+    "fluent-ffmpeg": "^2.1.2",
     "webpack": "^3.8.1"
   }
 }

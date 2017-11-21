@@ -25,7 +25,7 @@
                 {{ui.save}}
                 <input v-on:change="chosedir" type="file" title="select dir" nwdirectory>
             </button>
-            <button class="start-btn" title="start convert">{{ui.start}}</button>
+            <button v-on:click="startConvert" class="start-btn" title="start convert">{{ui.start}}</button>
             <input class="output-txt-area" type="text" readonly v-bind:placeholder="ui.nosave" v-bind:value="output">
         </section>
     </header>

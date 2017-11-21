@@ -1,12 +1,15 @@
 const copy = require('./app/src/copy');
 const basePath = process.cwd()+'/';
 const BabiliPlugin = require("babili-webpack-plugin");
+const webpack = require('webpack');
+const fs = require('fs');
 
 //copy app for testing
 copy(basePath+'app/css/', basePath+'test/nwjs/app/css/');
 copy(basePath+'app/html/', basePath+'test/nwjs/app/html/');
 copy(basePath+'app/plugins/', basePath+'test/nwjs/app/plugins/');
 copy(basePath+'app/package.json', basePath+'test/nwjs/');
+copy(basePath+'app/node_modules/', basePath+'test/nwjs/node_modules/');
 
 module.exports = {
     entry:  __dirname + "/app/main.js",
@@ -17,5 +20,8 @@ module.exports = {
     plugins: [
         new BabiliPlugin()
     ],
-    target: 'node-webkit'
+    target: 'node-webkit',
+    externals: {
+    	'fluent-ffmpeg': 'commonjs fluent-ffmpeg'
+    }
 };
