@@ -45,9 +45,11 @@ new Vue({
 					    vue.flexItems.push({
 					    	name: md.name.slice( md.name.lastIndexOf('\\')+1 ),
 					    	size: functions.sizemat(md.size),
-					    	pixel: md.width + ' * ' + md.height,
+					    	width: md.width,
+					    	height: md.height,
 					    	duration: functions.timemat(md.duration*1000),
-							progress: 0
+							progress: 0,
+							editable: false
 						});
 					});
 				}
@@ -56,8 +58,11 @@ new Vue({
 		chosedir: function(e){
             this.output = config.ui.saveas + (e.target.files[0].path || '');
         },
-        flexItemFn: function(e){
-        	this.flexItems.splice(e,1);
+        flexItemFn: function(index, str){
+        	switch(str){
+        		case 'del': this.flexItems.splice(index,1); break;
+        		case 'edit': this.flexItems[index].editable = !this.flexItems[index].editable; break;
+        	}
         },
         startConvert: function(){
         	console.log('start');

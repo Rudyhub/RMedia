@@ -24,9 +24,9 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icon-pencil:before {
+.icon-edit:before {
   content: "\e905";
 }
-.icon-bin:before {
+.icon-del:before {
   content: "\e9ac";
 }

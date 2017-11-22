@@ -33,15 +33,31 @@
     <div class="body">
         <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
             <div class="flex-item" v-for="(flexItem, index) of flexItems">
-                <div class="flex-close icon-bin" v-on:click="flexItemFn(index)" title="删除"></div>
+                <div class="flex-item-tools">
+                    <i class="flex-item-tool icon-edit" v-on:click="flexItemFn(index,'edit')" title="编辑"></i>
+                    <i class="flex-item-tool icon-del" v-on:click="flexItemFn(index,'del')" title="删除"></i>
+                </div>
                 <div class="flex-item-preview">
                     <canvas></canvas>
                 </div>
                 <div class="flex-item-fileinfo">
-                    <p v-if="flexItem.name"><i>文件</i>：{{flexItem.name}}</p>
-                    <p v-if="flexItem.size"><i>大小</i>：{{flexItem.size}}</p>
-                    <p v-if="flexItem.pixel"><i>像素</i>：{{flexItem.pixel}}</p>
-                    <p v-if="flexItem.duration"><i>时长</i>：{{flexItem.duration}}</p>
+                    <p v-if="flexItem.name">
+                        <i>文件</i>：
+                        <input v-bind:value="flexItem.name" readonly>
+                    </p>
+                    <p v-if="flexItem.size">
+                        <i>大小</i>：
+                        <input v-bind:value="flexItem.size" readonly>
+                    </p>
+                    <p v-if="flexItem.width && flexItem.height">
+                        <i>像素</i>：
+                        <input class="flex-item-input-pixel" v-bind:value="flexItem.width" v-bind:readonly="!flexItem.editable"> &times;
+                        <input class="flex-item-input-pixel" v-bind:value="flexItem.height" v-bind:readonly="!flexItem.editable">
+                    </p>
+                    <p v-if="flexItem.duration">
+                        <i>时长</i>：
+                        <input v-bind:value="flexItem.duration" v-bind:readonly="!flexItem.editable">
+                    </p>
                 </div>
                 <div class="flex-item-progress" v-if="flexItem.progress">
                     <progress v-bind:value="flexItem.progress" max="100"></progress>
