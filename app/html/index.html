@@ -3,13 +3,14 @@
 <head>
 	<meta charset="UTF-8">
 	<title>FupConvert媒体处理器</title>
-	<link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" type="text/css" href="../css/icon.css">
+	<link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
 <body>
 <div id="app">
     <header>
         <div class="draggable">
-            <h1>{{ui.title}}</h1>
+            <h1>多媒体处理器</h1>
             <div class="titlebar-tool">
                 <button v-on:click="minimize">&minus;</button>
                 <button v-on:click="wintoggle" v-bind:class="{full: isFullScreen}"><i></i></button>
@@ -18,25 +19,30 @@
         </div>
         <section class="section-border">
             <button class="file-btn">
-                {{ui.open}}
+                打开
                 <input v-on:change="chosefile" type="file" title="select file" multiple>
             </button>
             <button class="file-btn">
-                {{ui.save}}
+                保存
                 <input v-on:change="chosedir" type="file" title="select dir" nwdirectory>
             </button>
-            <button v-on:click="startConvert" class="start-btn" title="start convert">{{ui.start}}</button>
-            <input class="output-txt-area" type="text" readonly v-bind:placeholder="ui.nosave" v-bind:value="output">
+            <button v-on:click="startConvert" class="start-btn" title="start convert">开始转换</button>
+            <input class="output-txt-area" type="text" readonly placeholder="未选择输出目录" v-bind:value="output">
         </section>
     </header>
     <div class="body">
         <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
             <div class="flex-item" v-for="(flexItem, index) of flexItems">
-                <div class="flex-close" v-on:click="flexItemFn(index)">&times;</div>
+                <div class="flex-close icon-bin" v-on:click="flexItemFn(index)" title="删除"></div>
                 <div class="flex-item-preview">
                     <canvas></canvas>
                 </div>
-                <div class="flex-item-fileinfo" v-html="flexItem.fileinfo"></div>
+                <div class="flex-item-fileinfo">
+                    <p v-if="flexItem.name"><i>文件</i>：{{flexItem.name}}</p>
+                    <p v-if="flexItem.size"><i>大小</i>：{{flexItem.size}}</p>
+                    <p v-if="flexItem.pixel"><i>像素</i>：{{flexItem.pixel}}</p>
+                    <p v-if="flexItem.duration"><i>时长</i>：{{flexItem.duration}}</p>
+                </div>
                 <div class="flex-item-progress" v-if="flexItem.progress">
                     <progress v-bind:value="flexItem.progress" max="100"></progress>
                 </div>

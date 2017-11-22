@@ -251,13 +251,16 @@ commom style end
     overflow: auto;
     position: relative;
 }
-.file-btn,.start-btn{
-    width: 100%;
-    max-width: 66px;
-    max-height: 36px;
+.file-btn{
+    width: 66px;
+    height: 36px;
 }
 .file-btn input{
     opacity: 0;
+}
+.start-btn{
+    width: 80px;
+    height: 36px;
 }
 
 .output-txt-area{
@@ -288,11 +291,17 @@ commom style end
     box-sizing: border-box;
     border: none;
     color: #ddd;
-    background: rgba(0,0,0,.5);
+    background: #000;
     cursor: pointer;
+    z-index: 2;
+    transition: all .5s;
+    opacity: 0;
+}
+.flex-item:hover .flex-close{
+    opacity: .5;
 }
 .flex-close:hover{
-    background: rgba(0,0,0,1);
+    opacity: .9;
 }
 .flex-item-preview{
     width: 100%;
@@ -306,6 +315,15 @@ commom style end
 .flex-item-fileinfo{
     padding: 5px;
     box-sizing: border-box;
+    font-size: 14px;
+    color: #888;
+    word-break: break-all;
+}
+.flex-item-fileinfo p{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin: 5px 0;
 }
 .flex-item-progress{
     position: absolute;
@@ -314,14 +332,12 @@ commom style end
     width: 100%;
     height: 100%;
     opacity: 0.3;
+    z-index: 1;
 }
 .flex-item-progress progress{
     width: 100%;
     height: 100%;
     -webkit-appearance: none;
-}
-.flex-item-progress.hide{
-    display: none;
 }
 
 .config-panel{

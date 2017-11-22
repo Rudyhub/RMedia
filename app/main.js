@@ -6,7 +6,6 @@ new Vue({
 	el: '#app',
 	data: {
 		flexItems: [],
-		ui: config.ui,
 		output: '',
 		isFullScreen: true
 	},
@@ -42,14 +41,13 @@ new Vue({
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
 					file = files[i];
-					Media.info(file.path, function(md) {
-						infostr = '文件：' + md.name +
-							'<br>大小：' + functions.sizemat(md.size) +
-							'<br>尺寸：' + md.width + '*' + md.height +
-							'<br>时长：' + functions.timemat(md.duration*1000);
+					Media.info(file.path, function(md,data) {
 					    vue.flexItems.push({
-							progress: 0,
-							fileinfo: infostr
+					    	name: md.name.slice( md.name.lastIndexOf('\\')+1 ),
+					    	size: functions.sizemat(md.size),
+					    	pixel: md.width + ' * ' + md.height,
+					    	duration: functions.timemat(md.duration*1000),
+							progress: 0
 						});
 					});
 				}

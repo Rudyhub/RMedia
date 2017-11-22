@@ -1,8 +1,6 @@
 const copy = require('./app/src/copy');
 const basePath = process.cwd()+'/';
 const BabiliPlugin = require("babili-webpack-plugin");
-const webpack = require('webpack');
-const fs = require('fs');
 
 //copy app for testing
 copy(basePath+'app/css/', basePath+'test/nwjs/app/css/');

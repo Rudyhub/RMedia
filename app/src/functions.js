@@ -8,6 +8,7 @@ module.exports = {
             t = time.split(':');
             return (parseInt(t[0]*3600) + parseInt(t[1]*60) + parseInt(t[2])) * 1000;
         }else if(typeof time === 'number'){
+            if(isNaN(time)) return '00:00:00';
             t = time / 1000;
             let h = Math.floor( t/3600 );
             let m = Math.floor( (t%3600) / 60 );
