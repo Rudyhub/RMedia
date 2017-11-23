@@ -277,6 +277,7 @@ commom style end
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
+    vertical-align: top;
 }
 .flex-item-tools{
     position: absolute;
@@ -285,19 +286,21 @@ commom style end
     box-sizing: border-box;
     text-align: right;
     z-index: 2;
-    background: rgba(0,0,0, 0);
+    background: rgba(255,255,255, 0);
     transition: all .5s;
+    bottom: 0;
+    left: 0;
 }
 .flex-item:hover .flex-item-tools{
-    background: rgba(0,0,0, .35);
+    background: rgba(255,255,255, .42);
 }
 .flex-item-tool{
     display: inline-block;
     text-align: center;
-    width: 30px;
-    height: 30px;
-    font-size: 22px;
-    line-height: 30px;
+    width: 20px;
+    height: 20px;
+    font-size: 16px;
+    line-height: 20px;
     border-radius: 4px;
     color: #ddd;
     background: #222;
@@ -310,15 +313,23 @@ commom style end
 }
 .flex-item:hover .flex-item-tool:hover{
     opacity: 1;
+    color: #d87217;
 }
 .flex-item-preview{
     width: 100%;
-    height: 240px;
+    height: 180px;
     background: #555;
+    position: relative;
 }
-.flex-item-preview canvas{
+.flex-item-preview canvas,
+.flex-item-preview video,
+.flex-item-preview audio,
+.flex-item-preview img
+{
     width: 100%;
     height: 100%;
+    object-fit: cover;
+    object-position: center;
 }
 .flex-item-fileinfo{
     padding: 5px;
@@ -327,29 +338,70 @@ commom style end
     color: #888;
     word-break: break-all;
 }
-.flex-item-fileinfo p{
-    white-space: nowrap;
+.flex-item-fileinfo label{
+    display: block;
     overflow: hidden;
-    text-overflow: ellipsis;
-    margin: 5px 0;
+}
+.flex-item-newinfo{
+    max-height: 0;
+    transition: all .5s;
+}
+.flex-item-fileinfo.editable .flex-item-newinfo{
+    padding-top: 5px; 
+    padding-bottom: 10px;
+    max-height: 100px;
+    border-bottom: 1px dashed #555;
+}
+
+.flex-item-newinfo i{
+    display: inline-block;
+    vertical-align: middle;
+    text-align: center;
 }
 .flex-item-fileinfo input{
     width: 260px;
-    background: #ddd;
-    padding: 5px 10px;
     box-sizing: border-box;
-    border-radius: 4px;
-    border: 1px solid #444;
-    height: 36px;
-}
-.flex-item-fileinfo input.flex-item-input-pixel{
-    width: 120px;
-}
-.flex-item-fileinfo input[readonly]{
-    background: #222;
     margin: 0;
-    color: #aaa;
+    vertical-align: middle;
+    color: #ddd;
 }
+.flex-item-fileinfo input[type=range]{
+    -webkit-appearance: none;
+}
+.flex-item-newinfo span{
+    vertical-align: middle;
+    display: inline-block;
+}
+.flex-item-newinfo span[contenteditable]{
+    outline: none;
+    border-bottom: 1px dashed;
+    color: #af7c4f;
+    cursor: pointer;
+}
+.flex-item-newinfo span[contenteditable]:focus{
+    border-bottom: 1px solid;
+    color: #d87217;
+    cursor: text;
+}
+.flex-item-curtime,
+.flex-item-starttime,
+.flex-item-endtime{
+    display: block !important;
+    padding-left: 40px;
+    box-sizing: border-box;
+}
+.flex-item-fileinfo .icon-subdirectory_arrow_right{
+    width: 36px;
+}
+.flex-item-newinfo .icon-done{
+    color: #af7c4f;
+    cursor: pointer;
+}
+.flex-item-newinfo .icon-done:hover{
+    border-bottom: 2px solid;
+    color: #d87217;
+}
+
 .flex-item-progress{
     position: absolute;
     top: 0;

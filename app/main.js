@@ -7,7 +7,8 @@ new Vue({
 	data: {
 		flexItems: [],
 		output: '',
-		isFullScreen: true
+		isFullScreen: true,
+		defwidth: 1280
 	},
 	methods: {
 		minimize: function(){
@@ -40,18 +41,46 @@ new Vue({
 				infostr;
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
-					file = files[i];
-					Media.info(file.path, function(md,data) {
-					    vue.flexItems.push({
-					    	name: md.name.slice( md.name.lastIndexOf('\\')+1 ),
-					    	size: functions.sizemat(md.size),
-					    	width: md.width,
-					    	height: md.height,
-					    	duration: functions.timemat(md.duration*1000),
+					(function(file){
+						let itemO = {
+							path: file.path,
+							name: file.name,
+							size: functions.sizemat(file.size),
+							width: 0,
+							height: 0,
+							duration: 0,
+							extend: file.name.slice(file.name.lastIndexOf('.')+1),
 							progress: 0,
-							editable: false
+							editable: false,
+
+							toname: 'fup-'+file.name,
+							tosize: 0,
+							towidth: vue.defwidth,
+							toheight: vue.defwidth*0.6525,
+							maxtime: 0,
+							curtime: 0,
+							starttime: 0,
+							endtime: 0
+						};
+						vue.flexItems.push(itemO);
+
+						Media.info(itemO.path, function(md) {
+							itemO.width = md.width;
+							itemO.height = md.height;
+							itemO.duration = md.duration;
+							itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
+							itemO.toheight = Math.round(itemO.towidth * (itemO.height/itemO.width) );
+							itemO.maxtime = md.duration;
+							itemO.endtime = md.duration;
+							
+							if(/^video\//.test(file.type)){
+								Media.previewBase64(itemO.path, function(database64){
+									itemO.path = database64;
+								});
+							}
 						});
-					});
+
+					})(files[i]);
 				}
 			}
 		},
@@ -59,14 +88,23 @@ new Vue({
             this.output = config.ui.saveas + (e.target.files[0].path || '');
         },
         flexItemFn: function(index, str){
+        	let item = this.flexItems[index];
         	switch(str){
         		case 'del': this.flexItems.splice(index,1); break;
-        		case 'edit': this.flexItems[index].editable = !this.flexItems[index].editable; break;
+        		case 'edit': item.editable = !item.editable; break;
+        		case 'setstart': item.starttime = item.curtime; break;
+        		case 'setend': item.endtime = item.curtime; break;
+        		case 'convert': console.log(item.starttime, item.endtime); break;
         	}
         },
         startConvert: function(){
         	console.log('start');
         	
         }
+	},
+	filters: {
+		timemat: function(t){
+			return functions.timemat(t*1000);
+		}
 	}
 });

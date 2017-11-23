@@ -28,6 +28,7 @@ function dimg(){
 // dimg();
 module.exports = {
     info: function(url,success, fail){
+        if(!success) return;
         ffmpeg.ffprobe(url, function(err, data){
             if(err){
                 if(fail) fail(err);
@@ -42,9 +43,9 @@ module.exports = {
                             a = stm[i];
                         }
                     }
+                    
                     o = {
-                        name: data.format.filename,
-                        duration: data.format.duration,
+                        duration: parseFloat(data.format.duration) || 0,
                         size: data.format.size,
                         bit: data.format['bit_rate']
                     };
@@ -62,6 +63,13 @@ module.exports = {
                 }
             }
         });
+    },
+    previewBase64: function(url, success, fail){
+        if(!success) return;
+        let p = ffmpeg(url).outputOptions(['-ss 0', '-y', '-f image2', '-t 1']).size('320x?').pipe().on('data',function(chunk){
+            success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
+        });
+        if(fial) p.on('error', fail);
     },
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
