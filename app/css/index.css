@@ -267,19 +267,34 @@ commom style end
     width: calc(100% - 310px);
 }
 
-.flex-item{
-    display: inline-block;
-    width: 324px;
-    border: 2px solid #555;
-    margin: 10px;
-    box-shadow: #000 0 6px 10px;
-    border-radius: 4px;
+
+.item{
+    display: inline-table;
+    width: 19vw;
+    border: .2vw solid transparent;
+    margin: .3vw;
+    box-shadow: #000 0 .1vw .5vw;
+    border-radius: .2vw;
     overflow: hidden;
     position: relative;
     box-sizing: border-box;
     vertical-align: top;
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 14px;
+    table-layout: fixed;
 }
-.flex-item-tools{
+.item-preview-inner{
+    height: 10.8vw;
+    position: relative;
+}
+.item-preview-img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+.item-tools{
     position: absolute;
     width: 100%;
     padding: 5px;
@@ -291,10 +306,10 @@ commom style end
     bottom: 0;
     left: 0;
 }
-.flex-item:hover .flex-item-tools{
+.item:hover .item-tools{
     background: rgba(255,255,255, .42);
 }
-.flex-item-tool{
+.item-tool{
     display: inline-block;
     text-align: center;
     width: 20px;
@@ -308,114 +323,85 @@ commom style end
     opacity: 0;
     transition: all .3s;
 }
-.flex-item:hover .flex-item-tool{
+.item:hover .item-tool{
     opacity: .5;
 }
-.flex-item:hover .flex-item-tool:hover{
+.item:hover .item-tool:hover{
     opacity: 1;
     color: #d87217;
 }
-.flex-item-preview{
-    width: 100%;
-    height: 180px;
-    background: #555;
-    position: relative;
-}
-.flex-item-preview canvas,
-.flex-item-preview video,
-.flex-item-preview audio,
-.flex-item-preview img
-{
-    width: 100%;
+.item-progress{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
     height: 100%;
-    object-fit: cover;
-    object-position: center;
+    z-index: 1;
+    background: rgba(180, 0, 0, 0.5);
 }
-.flex-item-fileinfo{
-    padding: 5px;
-    box-sizing: border-box;
+.item-info{
+    font-size: 0;
+    margin: 0;
+}
+.item-info-head,
+.item-info-body{
+    display: inline-block;
     font-size: 14px;
-    color: #888;
-    word-break: break-all;
+    padding: 2px;
+    vertical-align: middle;
+    box-sizing: border-box;
+    color: #bbb;
 }
-.flex-item-fileinfo label{
-    display: block;
+.item-info-head{
+    width: 50px;
+    text-align: center;
+    color: #888;
+}
+.item-info-body{
+    width: calc(100% - 50px);
+}
+.item-info .icon-subdirectory_arrow_right{
+    font-size: 20px;
+}
+.item-time{
+    padding: 0 5px;
+    box-sizing: border-box;
+}
+.item-time input[type=range]{
+    -webkit-appearance: none;
+    width: 100%;
+    margin: 10px 0;
+}
+.item-time.curtime{
+    text-align: right;
+}
+.item-editable{
+    transition: all .5s;
+    max-height: 0;
+    overflow: hidden;
+    background: #1b1d1f;
+}
+.editable .item-editable{
+    max-height: 300px;
+}
+.text-limit-2{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
     overflow: hidden;
 }
-.flex-item-newinfo{
-    max-height: 0;
-    transition: all .5s;
-}
-.flex-item-fileinfo.editable .flex-item-newinfo{
-    padding-top: 5px; 
-    padding-bottom: 10px;
-    max-height: 100px;
-    border-bottom: 1px dashed #555;
-}
-
-.flex-item-newinfo i{
-    display: inline-block;
-    vertical-align: middle;
-    text-align: center;
-}
-.flex-item-fileinfo input{
-    width: 260px;
-    box-sizing: border-box;
-    margin: 0;
-    vertical-align: middle;
-    color: #ddd;
-}
-.flex-item-fileinfo input[type=range]{
-    -webkit-appearance: none;
-}
-.flex-item-newinfo span{
-    vertical-align: middle;
-    display: inline-block;
-}
-.flex-item-newinfo span[contenteditable]{
+span[contenteditable]{
     outline: none;
     border-bottom: 1px dashed;
     color: #af7c4f;
     cursor: pointer;
 }
-.flex-item-newinfo span[contenteditable]:focus{
+span[contenteditable]:focus{
     border-bottom: 1px solid;
     color: #d87217;
     cursor: text;
 }
-.flex-item-curtime,
-.flex-item-starttime,
-.flex-item-endtime{
-    display: block !important;
-    padding-left: 40px;
-    box-sizing: border-box;
-}
-.flex-item-fileinfo .icon-subdirectory_arrow_right{
-    width: 36px;
-}
-.flex-item-newinfo .icon-done{
-    color: #af7c4f;
-    cursor: pointer;
-}
-.flex-item-newinfo .icon-done:hover{
-    border-bottom: 2px solid;
-    color: #d87217;
-}
 
-.flex-item-progress{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0.3;
-    z-index: 1;
-}
-.flex-item-progress progress{
-    width: 100%;
-    height: 100%;
-    -webkit-appearance: none;
-}
 
 .config-panel{
     position: fixed;

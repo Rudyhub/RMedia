@@ -10,5 +10,5 @@ module.exports = {
 		ffmpeg.setFfprobePath(path +'ffprobe.exe');
 		return ffmpeg;
 	},
-	cache: cwd + '/app/cache/'
+	appRoot: cwd + '/app/'
 }

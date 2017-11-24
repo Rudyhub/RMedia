@@ -5,7 +5,7 @@ const functions = require('./src/functions');
 new Vue({
 	el: '#app',
 	data: {
-		flexItems: [],
+		items: [],
 		output: '',
 		isFullScreen: true,
 		defwidth: 1280
@@ -42,8 +42,9 @@ new Vue({
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
 					(function(file){
-						let itemO = {
-							path: file.path,
+						let isVideo = /^video\//.test(file.type) || !file.type,
+						itemO = {
+							path: isVideo ? config.appRoot+'css/loading.gif' : file.path,
 							name: file.name,
 							size: functions.sizemat(file.size),
 							width: 0,
@@ -51,20 +52,21 @@ new Vue({
 							duration: 0,
 							extend: file.name.slice(file.name.lastIndexOf('.')+1),
 							progress: 0,
+							progressColor: '',
 							editable: false,
 
 							toname: 'fup-'+file.name,
 							tosize: 0,
 							towidth: vue.defwidth,
-							toheight: vue.defwidth*0.6525,
+							toheight: Math.round(vue.defwidth*0.5625),
 							maxtime: 0,
 							curtime: 0,
 							starttime: 0,
 							endtime: 0
 						};
-						vue.flexItems.push(itemO);
+						vue.items.push(itemO);
 
-						Media.info(itemO.path, function(md) {
+						Media.info(file.path, function(md) {
 							itemO.width = md.width;
 							itemO.height = md.height;
 							itemO.duration = md.duration;
@@ -72,14 +74,12 @@ new Vue({
 							itemO.toheight = Math.round(itemO.towidth * (itemO.height/itemO.width) );
 							itemO.maxtime = md.duration;
 							itemO.endtime = md.duration;
-							
-							if(/^video\//.test(file.type)){
-								Media.previewBase64(itemO.path, function(database64){
-									itemO.path = database64;
-								});
-							}
 						});
-
+						if(isVideo){
+							Media.previewBase64(file.path, function(database64){
+								itemO.path = database64;
+							});
+						}
 					})(files[i]);
 				}
 			}
@@ -87,14 +87,28 @@ new Vue({
 		chosedir: function(e){
             this.output = config.ui.saveas + (e.target.files[0].path || '');
         },
-        flexItemFn: function(index, str){
-        	let item = this.flexItems[index];
+        itemFn: function(index, str){
+        	let item = this.items[index];
         	switch(str){
-        		case 'del': this.flexItems.splice(index,1); break;
+        		case 'del': this.items.splice(index,1); break;
         		case 'edit': item.editable = !item.editable; break;
         		case 'setstart': item.starttime = item.curtime; break;
         		case 'setend': item.endtime = item.curtime; break;
-        		case 'convert': console.log(item.starttime, item.endtime); break;
+        		case 'convert':
+        			let pv = 0, r = 225, g = 0;
+        			let tt = setInterval(function(){
+        				if(pv>=100) clearInterval(tt);
+        				pv++;
+        				item.progress = pv + '%';
+        				if(g < 150){
+        					g += 3;
+        				}else{
+        					r -= 3;
+        				}
+        				item.progressColor = 'rgba('+r+','+g+',0,0.5)';
+        			},100);
+        			console.log(item.starttime, item.endtime);
+        			break;
         	}
         },
         startConvert: function(){

@@ -1,5 +1,6 @@
 const config = require('./config');
 const ffmpeg = config.ffmpeg();
+const childprocess = require('child_process');
 /*
 const fs = require('fs');
 function dimg(){
@@ -66,10 +67,10 @@ module.exports = {
     },
     previewBase64: function(url, success, fail){
         if(!success) return;
-        let p = ffmpeg(url).outputOptions(['-ss 0', '-y', '-f image2', '-t 1']).size('320x?').pipe().on('data',function(chunk){
+        let p = ffmpeg(url).outputOptions(['-ss 1', '-y', '-f image2', '-t 1']).noAudio().size('320x?').pipe().on('data',function(chunk){
             success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
         });
-        if(fial) p.on('error', fail);
+        if(fail) p.on('error', fail);
     },
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');

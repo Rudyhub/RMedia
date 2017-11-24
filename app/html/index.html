@@ -32,58 +32,72 @@
     </header>
     <div class="body">
         <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
-            <div class="flex-item" v-for="(flexItem, index) of flexItems">
-                <div class="flex-item-preview">
-                    <img v-bind:src="flexItem.path">
-                    <div class="flex-item-tools">
-                        <i class="flex-item-tool icon-border_color" v-on:click="flexItemFn(index,'edit')" title="编辑"></i>
-                        <i class="flex-item-tool icon-done" v-on:click="flexItemFn(index,'convert')" title="转换此文件"></i>
-                        <i class="flex-item-tool icon-delete_forever" v-on:click="flexItemFn(index,'del')" title="删除"></i>
+            <dl class="item" v-for="(item, index) of items" v-bind:class="{editable: item.editable}">
+                <dt class="item-preview">
+                    <div class="item-preview-inner">
+                        <img class="item-preview-img" v-bind:src="item.path">
+                        <div class="item-tools">
+                            <i class="item-tool icon-border_color" v-on:click="itemFn(index,'edit')" title="编辑"></i>
+                            <i class="item-tool icon-done" v-on:click="itemFn(index,'convert')" title="转换此文件"></i>
+                            <i class="item-tool icon-delete_forever" v-on:click="itemFn(index,'del')" title="删除"></i>
+                        </div>
+                        <div class="item-progress" v-if="item.progress" v-bind:style="{width: item.progress, background: item.progressColor}"></div>
                     </div>
-                </div>
-                <form class="flex-item-fileinfo" v-bind:class="{editable: flexItem.editable}">
-                    <label v-if="flexItem.name"><i>文件</i>：{{flexItem.name}}</label>
-                    <label class="flex-item-newinfo">
-                        <i class="icon-subdirectory_arrow_right"></i>
-                        <span contenteditable="true" title="重命名">{{flexItem.toname}}</span>
-                    </label>
-
-                    <label v-if="flexItem.size"><i>大小</i>：{{flexItem.size}}</label>
-                    <label class="flex-item-newinfo">
-                        <i class="icon-subdirectory_arrow_right"></i>
-                        <span v-if="flexItem.tosize">{{flexItem.tosize}}</span>
+                </dt>
+                <dd class="item-info">
+                    <div class="item-info-head">文件：</div>
+                    <div class="item-info-body">
+                        <div class="text-limit-2">{{item.name}}</div>
+                    </div>
+                </dd>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-body">
+                        <span contenteditable="true">{{item.toname}}</span>
+                    </div>
+                </dd>
+                <dd class="item-info">
+                    <div class="item-info-head">大小：</div>
+                    <div class="item-info-body">{{item.size}}</div>
+                </dd>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-body">
+                        <span v-if="item.tosize">{{item.tosize}}</span>
                         <span v-else>默认</span>
-                    </label>
-
-                    <label v-if="flexItem.width && flexItem.height"><i>尺寸</i>：{{flexItem.width}} &times; {{flexItem.height}}</label>
-                    <label class="flex-item-newinfo">
-                        <i class="icon-subdirectory_arrow_right"></i>
-                        <span contenteditable="true" title="宽">{{flexItem.towidth}}</span>
+                    </div>
+                </dd>
+                <dd class="item-info">
+                    <div class="item-info-head">尺寸：</div>
+                    <div class="item-info-body">{{item.width}} &times; {{item.height}}</div>
+                </dd>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-body">
+                        <span contenteditable="true" title="宽">{{item.towidth}}</span>
                         &times;
-                        <span contenteditable="true" title="高">{{flexItem.toheight}}</span>
+                        <span contenteditable="true" title="高">{{item.toheight}}</span>
                         像素
-                    </label>
-
-                    <label><i>时长</i>：{{flexItem.duration | timemat}}</label>
-                    <label class="flex-item-newinfo">
-                        <i class="icon-subdirectory_arrow_right"></i>
-                        <input type="range" min="0" v-bind:max="flexItem.maxtime" v-model="flexItem.curtime" title="时间滑杆">
-                        <span class="flex-item-curtime">当前位置：{{flexItem.curtime | timemat}}</span>
-                        <span class="flex-item-starttime">
-                            起点位置：{{flexItem.starttime | timemat}}
-                            <i class="icon-done" v-on:click="flexItemFn(index, 'setstart')" title="设置起点"></i>
-                        </span>
-                        <span class="flex-item-endtime">
-                            终点位置：{{flexItem.endtime | timemat}}
-                            <i class="icon-done" v-on:click="flexItemFn(index, 'setend')" title="设置终点"></i>
-                        </span>
-                    </label>
-                </form>
-                <div class="flex-item-progress" v-if="flexItem.progress">
-                    <progress v-bind:value="flexItem.progress" max="100"></progress>
-                </div>
-            </div>
-            <!--preview list item-->
+                    </div>
+                </dd>
+                <dd class="item-info">
+                    <div class="item-info-head">截取：</div>
+                    <div class="item-info-body">{{item.starttime | timemat}} -&gt; {{item.endtime | timemat}}</div>
+                </dd>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-body">
+                        <div class="item-time">
+                            <input type="range" value="0" v-bind:max="item.maxtime" v-model="item.curtime" title="时间滑杆">
+                        </div>
+                        <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
+                        <div class="item-time">
+                            <button v-on:click="itemFn(index, 'setstart')" title="标记起点">标记起点</button>
+                            <button v-on:click="itemFn(index, 'setend')" title="标记终点">标记终点</button>
+                        </div>
+                    </div>
+                </dd>
+            </dl>
         </section>
         <div id="config-panel" class="config-panel section-border">
             <h3 id="panel-drag" class="panel-title">输出参数配置：</h3>
