@@ -81,8 +81,21 @@
                     </div>
                 </dd>
                 <dd class="item-info">
+                    <div class="item-info-head">格式：</div>
+                    <div class="item-info-body">{{item.format}}<span class="float-right">{{item.mime}}</span></div>
+                </dd>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-body">
+                        输出为：
+                        <select title="选择输出格式" v-model="item.toformat">
+                            <option v-for="format of item.toformats" v-bind:value="format">{{format}}</option>
+                        </select>
+                    </div>
+                </dd>
+                <dd class="item-info">
                     <div class="item-info-head">截取：</div>
-                    <div class="item-info-body">{{item.starttime | timemat}} -&gt; {{item.endtime | timemat}}</div>
+                    <div class="item-info-body">{{item.starttime | timemat}} - {{item.endtime | timemat}}</div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>

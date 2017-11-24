@@ -2,6 +2,10 @@ const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
 const functions = require('./src/functions');
+const Mime = require('./src/Mime');
+const formats = [['jpg','gif','png','jpeg','webp','ico','svg'],
+				['mp4','ogg','webm','wmv'],
+				['mp3','aac','wav','wma']];
 new Vue({
 	el: '#app',
 	data: {
@@ -42,23 +46,36 @@ new Vue({
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
 					(function(file){
-						let isVideo = /^video\//.test(file.type) || !file.type,
+
+						let type = Mime.lookup(file.path),
+							typeIndex;
+						switch(type.slice(0, type.indexOf('/'))){
+							case 'image': typeIndex = 0; break;
+							case 'video': typeIndex = 1; break;
+							case 'audio': typeIndex = 2; break;
+							default: typeIndex = -1;
+						}
+
+						let extend = file.name.slice(file.name.lastIndexOf('.')+1),
 						itemO = {
-							path: isVideo ? config.appRoot+'css/loading.gif' : file.path,
+							path: typeIndex == 1 ? config.appRoot+'css/loading.gif' : file.path,
 							name: file.name,
 							size: functions.sizemat(file.size),
 							width: 0,
 							height: 0,
 							duration: 0,
-							extend: file.name.slice(file.name.lastIndexOf('.')+1),
+							mime: type,
+							format: extend,
 							progress: 0,
 							progressColor: '',
-							editable: false,
+							editable: true,
 
 							toname: 'fup-'+file.name,
 							tosize: 0,
 							towidth: vue.defwidth,
 							toheight: Math.round(vue.defwidth*0.5625),
+							toformat: extend,
+							toformats: formats[typeIndex],
 							maxtime: 0,
 							curtime: 0,
 							starttime: 0,
@@ -75,7 +92,7 @@ new Vue({
 							itemO.maxtime = md.duration;
 							itemO.endtime = md.duration;
 						});
-						if(isVideo){
+						if(typeIndex == 1){
 							Media.previewBase64(file.path, function(database64){
 								itemO.path = database64;
 							});
