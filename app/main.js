@@ -44,9 +44,11 @@ new Vue({
 					(function(file){
 						let extend = file.name.slice(file.name.lastIndexOf('.')+1),
 						itemO = {
-							path: config.appRoot+'css/loading.gif',
+							path: file.path,
+							source: config.appRoot+'css/loading.gif',
 							name: file.name,
 							size: functions.sizemat(file.size),
+							lock: false,
 							width: 0,
 							height: 0,
 							duration: 0,
@@ -69,7 +71,7 @@ new Vue({
 						vue.items.push(itemO);
 
 						Media.info(file.path, function(md) {
-							itemO.path = md.source;
+							itemO.source = md.source;
 							itemO.width = md.width || 0;
 							itemO.height = md.height || 0;
 							itemO.duration = md.duration;
@@ -92,8 +94,14 @@ new Vue({
         	switch(str){
         		case 'del': this.items.splice(index,1); break;
         		case 'edit': item.editable = !item.editable; break;
+        		case 'lock': item.lock = !item.lock; break;
         		case 'setstart': item.starttime = item.curtime; break;
         		case 'setend': item.endtime = item.curtime; break;
+        		case 'curtime':
+        			Media.seek(item.path, item.curtime, function(source){
+        				item.source = source;
+        			});
+        			break;
         		case 'convert':
         			let pv = 0, r = 225, g = 0;
         			let tt = setInterval(function(){
@@ -111,8 +119,12 @@ new Vue({
         			break;
         	}
         },
+        setAll: function(){
+        	console.log(this.items);
+        },
         startConvert: function(){
-        	console.log('start');
+        	
+        	console.log(this.items);
         	
         }
 	},

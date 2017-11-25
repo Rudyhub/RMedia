@@ -18,6 +18,7 @@ audios = formats.audio.concat( otherFormats.audio );
 
 ffmpeg.setFfmpegPath(config.ffmpegRoot + 'ffmpeg.exe');
 ffmpeg.setFfprobePath(config.ffmpegRoot +'ffprobe.exe');
+
 function getInfo(url,options){
     let extend, success, fail, size = '320x?';
     if(typeof options === 'object'){
@@ -42,7 +43,8 @@ function getInfo(url,options){
                     extend: extend,
                     size: data.format.size,
                     bit: parseFloat(data.format['bit_rate'])
-                };
+                },
+                cammand;
             if(images.indexOf(extend) !== -1){
                 o.source = url;
                 o.width = stm[0].width;
@@ -52,11 +54,12 @@ function getInfo(url,options){
                 o.mediaType = 'image';
 
                 if(otherFormats.image.indexOf(extend) !== -1){
-                    ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
+                    cammand = ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
                         o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
                         success(o);
-                    }).on('error', function(){
+                    }).on('end', function(){
                         success(o);
+                        cammand.kill();
                     });
                 }else{
                     success(o);
@@ -75,11 +78,12 @@ function getInfo(url,options){
                 if(videos.indexOf(extend) !== -1){
                     o.mediaType = 'video';
                     o.toformats = videos.concat(audios);
-                    ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
+                    cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
                         o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
                         success(o);
-                    }).on('error', function(){
+                    }).on('end', function(){
                         success(o);
+                        cammand.kill();
                     });
                 }else if(audios.indexOf(extend) !== -1){
                     o.mediaType = 'audio';
@@ -94,9 +98,17 @@ function getInfo(url,options){
     });
 }
 
+function seek(url,time,success){
+    let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-an','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
+        success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
+    }).on('end', function(){
+        cammand.kill();  
+    });
+}
 
 module.exports = {
     info: getInfo,
+    seek: seek,
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
         let cv = c.getContext('2d');
