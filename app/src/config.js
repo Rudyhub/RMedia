@@ -1,14 +1,19 @@
 const cwd = process.cwd();
+const appRoot = cwd + '/app/';
 module.exports = {
 	ui: {
 		saveas: '输出的目录是：'
 	},
-	ffmpeg: function(){
-		let ffmpeg = require('fluent-ffmpeg'),
-			path = cwd + '/app/plugins/ffmpeg/';
-		ffmpeg.setFfmpegPath(path + 'ffmpeg.exe');
-		ffmpeg.setFfprobePath(path +'ffprobe.exe');
-		return ffmpeg;
-	},
-	appRoot: cwd + '/app/'
+	appRoot: appRoot,
+	ffmpegRoot: appRoot + 'plugins/ffmpeg/',
+	audioThumb: appRoot + 'css/audio.jpg',
+	output: {
+		folder: '',
+		width: 1280,
+		format: {
+			image: 'jpg',
+			video: 'mp4',
+			audio: 'mp3'
+		}
+	}
 }

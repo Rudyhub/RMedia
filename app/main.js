@@ -2,17 +2,13 @@ const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
 const functions = require('./src/functions');
-const Mime = require('./src/Mime');
-const formats = [['jpg','gif','png','jpeg','webp','ico','svg'],
-				['mp4','ogg','webm','wmv'],
-				['mp3','aac','wav','wma']];
 new Vue({
 	el: '#app',
 	data: {
 		items: [],
-		output: '',
+		output: config.output.folder,
 		isFullScreen: true,
-		defwidth: 1280
+		defwidth: config.output.width
 	},
 	methods: {
 		minimize: function(){
@@ -46,25 +42,14 @@ new Vue({
 			if(files && (len = files.length)){
 				for(let i=0; i<len; i++){
 					(function(file){
-
-						let type = Mime.lookup(file.path),
-							typeIndex;
-						switch(type.slice(0, type.indexOf('/'))){
-							case 'image': typeIndex = 0; break;
-							case 'video': typeIndex = 1; break;
-							case 'audio': typeIndex = 2; break;
-							default: typeIndex = -1;
-						}
-
 						let extend = file.name.slice(file.name.lastIndexOf('.')+1),
 						itemO = {
-							path: typeIndex == 1 ? config.appRoot+'css/loading.gif' : file.path,
+							path: config.appRoot+'css/loading.gif',
 							name: file.name,
 							size: functions.sizemat(file.size),
 							width: 0,
 							height: 0,
 							duration: 0,
-							mime: type,
 							format: extend,
 							progress: 0,
 							progressColor: '',
@@ -75,7 +60,7 @@ new Vue({
 							towidth: vue.defwidth,
 							toheight: Math.round(vue.defwidth*0.5625),
 							toformat: extend,
-							toformats: formats[typeIndex],
+							toformats: [],
 							maxtime: 0,
 							curtime: 0,
 							starttime: 0,
@@ -84,19 +69,17 @@ new Vue({
 						vue.items.push(itemO);
 
 						Media.info(file.path, function(md) {
-							itemO.width = md.width;
-							itemO.height = md.height;
+							itemO.path = md.source;
+							itemO.width = md.width || 0;
+							itemO.height = md.height || 0;
 							itemO.duration = md.duration;
 							itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
-							itemO.toheight = Math.round(itemO.towidth * (itemO.height/itemO.width) );
+							itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
 							itemO.maxtime = md.duration;
 							itemO.endtime = md.duration;
+							itemO.toformats = md.toformats;
+							itemO.toformat = config.output.format[md.mediaType];
 						});
-						if(typeIndex == 1){
-							Media.previewBase64(file.path, function(database64){
-								itemO.path = database64;
-							});
-						}
 					})(files[i]);
 				}
 			}

@@ -1,77 +1,102 @@
-const config = require('./config');
-const ffmpeg = config.ffmpeg();
-const childprocess = require('child_process');
-/*
-const fs = require('fs');
-function dimg(){
-    let c = document.createElement('canvas');
-    let cv = c.getContext('2d');
-    let img = new window.Image();
-    let qli = 0.5;
-    img.src = './source/icon_128X128.png';
-    img.onload = function(){
-        c.width = img.width;
-        c.height = img.height;
-        cv.drawImage(img, 0, 0, img.width, img.height);
-        // let newimg = document.getElementById('test');
-        let data = c.toDataURL('image/png',qli);
-        // newimg.src = data;
-        data = data.replace(/^data:image\/\w+;base64,/, '');
-        console.log(data.length);
-        data = new Buffer(data, 'base64');
+const config = require('./config'),
+ffmpeg = require('fluent-ffmpeg'),
+//html支持的格式
+formats = {
+    image: ['png','jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
+    video: ['mp4','ogg','webm'],
+    audio: ['aac','mp3','wav']
+},
+//需要转码为html支持的格式
+otherFormats = {
+    image: ['tga','psd','iff','pbm','pcx','tif'],
+    video: ['ts','flv','mkv','rm','mov','wmv','avi','rmvb'],
+    audio: ['wma','mid']
+},
+images = formats.image.concat( otherFormats.image ),
+videos = formats.video.concat( otherFormats.video ),
+audios = formats.audio.concat( otherFormats.audio );
 
-        fs.writeFile('C:/users/administrator/desktop/'+qli+'.png',data,function(err){
-            console.log(err);
-        });
-    };
-}
-*/
-// dimg();
-module.exports = {
-    info: function(url,success, fail){
-        if(!success) return;
-        ffmpeg.ffprobe(url, function(err, data){
-            if(err){
-                if(fail) fail(err);
-            }else {
-                try{
-                    let stm = data.streams,
-                        a, v, o;
-                    for(let i=0; i<stm.length; i++){
-                        if(stm[i]['codec_type'] === 'video'){
-                            v = stm[i];
-                        }else if(stm[i]['codec_type'] === 'audio'){
-                            a = stm[i];
-                        }
+ffmpeg.setFfmpegPath(config.ffmpegRoot + 'ffmpeg.exe');
+ffmpeg.setFfprobePath(config.ffmpegRoot +'ffprobe.exe');
+function getInfo(url,options){
+    let extend, success, fail, size = '320x?';
+    if(typeof options === 'object'){
+        success = options.success;
+        fail = options.fail;
+        size = options.size ? options.size : size;
+    }else if(typeof options === 'function'){
+        success = options;
+    }
+    options = null;
+
+    if(typeof success !== 'function') return;
+
+    extend = url.slice(url.lastIndexOf('.')+1);
+
+    ffmpeg.ffprobe(url, function(err, data){
+        if(err){
+            if(fail) fail(err);
+        }else {
+            let stm = data.streams,
+                o = {
+                    extend: extend,
+                    size: data.format.size,
+                    bit: parseFloat(data.format['bit_rate'])
+                };
+            if(images.indexOf(extend) !== -1){
+                o.source = url;
+                o.width = stm[0].width;
+                o.height = stm[0].height;
+                o.bitv = stm[0]['bit_rate'];
+                o.toformats = images;
+                o.mediaType = 'image';
+
+                if(otherFormats.image.indexOf(extend) !== -1){
+                    ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
+                        o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        success(o);
+                    }).on('error', function(){
+                        success(o);
+                    });
+                }else{
+                    success(o);
+                }
+            }else{
+                o.duration = data.format.duration;
+                for(let i=0; i<stm.length; i++){
+                    if(stm[i]['codec_type'] === 'video'){
+                        o.width = stm[i].width;
+                        o.height = stm[i].height;
+                        o.bitv = parseFloat(stm[i]['bit_rate']);
+                    }else if(stm[i]['codec_type'] === 'audio'){
+                        o.bita = parseFloat(stm[i]['bit_rate']);
                     }
-                    
-                    o = {
-                        duration: parseFloat(data.format.duration) || 0,
-                        size: data.format.size,
-                        bit: data.format['bit_rate']
-                    };
-                    if(v){
-                        o.width = v.width;
-                        o.height = v.height;
-                        o.bitv = v['bit_rate'];
-                    }
-                    if(a){
-                        o.bita = a['bit_rate'];
-                    }
-                    if(success) success(o, data);
-                }catch (err){
-                    if(fail) fail(err);
+                }
+                if(videos.indexOf(extend) !== -1){
+                    o.mediaType = 'video';
+                    o.toformats = videos.concat(audios);
+                    ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
+                        o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        success(o);
+                    }).on('error', function(){
+                        success(o);
+                    });
+                }else if(audios.indexOf(extend) !== -1){
+                    o.mediaType = 'audio';
+                    o.toformats = audios;
+                    o.source = config.audioThumb;
+                    success(o);
+                }else{
+                    success(o);
                 }
             }
-        });
-    },
-    previewBase64: function(url, success, fail){
-        if(!success) return;
-        let p = ffmpeg(url).outputOptions(['-ss 1', '-y', '-f image2', '-t 1']).noAudio().size('320x?').pipe().on('data',function(chunk){
-            success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
-        });
-        if(fail) p.on('error', fail);
-    },
+        }
+    });
+}
+
+
+module.exports = {
+    info: getInfo,
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
         let cv = c.getContext('2d');
@@ -89,23 +114,6 @@ module.exports = {
             cv = null;
             img = null;
             data = null;
-        });
-    },
-    convert: function(url){
-        let q = 23;
-
-        let ls = childprocess.spawn(ffmpegPath+'ffmpeg.exe',['-i',url,'-hide_banner','-q','3000','-preset','slow','-y','c:/Users/wwp/desktop/'+q+'.jpg']);
-        // let ls = childprocess.spawn(ffmpegPath+'ffmpeg.exe',['-i',url,'-hide_banner','-b:v', '3000k','-bufsize','3000k','-c:v','libx264','-preset','slow','-y','c:/Users/wwp/desktop/'+q+'.mp4']);
-        // ls.stdout.on('data', function (d) {
-        //     // console.log(d);
-        // });
-        ls.stderr.on('data', errfn);
-        function errfn(d){
-            console.log(d.toString());
-        }
-        ls.on('exit',function fn() {
-            ls.off('data',errfn);
-            ls.off('exit', fn);
         });
     }
 };
