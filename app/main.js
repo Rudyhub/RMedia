@@ -131,6 +131,7 @@ new Vue({
 	filters: {
 		timemat: function(t){
 			return functions.timemat(t*1000);
-		}
+		},
+		sizemat: functions.sizemat
 	}
 });

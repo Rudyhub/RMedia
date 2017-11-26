@@ -60,18 +60,19 @@
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">大小：</div>
-                    <div class="item-info-body">{{item.size}}</div>
+                    <div class="item-info-body">{{item.size}} - {{item.tosize}}</div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <span v-if="item.tosize">{{item.tosize}}</span>
-                        <span v-else>默认</span>
+                        压缩率：<input type="number" min="0" max="100" v-model="item.tosize"> %
                     </div>
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">尺寸：</div>
-                    <div class="item-info-body">{{item.width}} &times; {{item.height}}</div>
+                    <div class="item-info-body">
+                        {{item.width}} &times; {{item.height}} - {{item.towidth}} &times; {{item.toheight}}
+                    </div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
@@ -84,7 +85,7 @@
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">格式：</div>
-                    <div class="item-info-body">{{item.format}}</div>
+                    <div class="item-info-body">{{item.format}} - {{item.toformat}}</div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
