@@ -119,6 +119,9 @@ new Vue({
         			break;
         	}
         },
+        itemInputFn: function(e,index,attr){
+        	this.items[index][attr] = e.target.innerHTML;
+        },
         setAll: function(){
         	console.log(this.items);
         },
@@ -132,6 +135,10 @@ new Vue({
 		timemat: function(t){
 			return functions.timemat(t*1000);
 		},
-		sizemat: functions.sizemat
+		sizemat: function(s,i){
+			console.log(s,i);//functions.sizemat(s)
+
+			return s;
+		}
 	}
 });
