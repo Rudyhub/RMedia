@@ -8,7 +8,8 @@ new Vue({
 		items: [],
 		output: config.output.folder,
 		isFullScreen: true,
-		defwidth: config.output.width
+		defwidth: config.output.width,
+		dropSlidedown: false
 	},
 	methods: {
 		minimize: function(){
@@ -47,7 +48,7 @@ new Vue({
 							path: file.path,
 							source: config.appRoot+'css/loading.gif',
 							name: file.name,
-							size: functions.sizemat(file.size),
+							size: file.size,
 							lock: false,
 							width: 0,
 							height: 0,
@@ -63,7 +64,6 @@ new Vue({
 							toheight: Math.round(vue.defwidth*0.5625),
 							toformat: extend,
 							toformats: [],
-							maxtime: 0,
 							curtime: 0,
 							starttime: 0,
 							endtime: 0
@@ -77,10 +77,10 @@ new Vue({
 							itemO.duration = md.duration;
 							itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
 							itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
-							itemO.maxtime = md.duration;
 							itemO.endtime = md.duration;
 							itemO.toformats = md.toformats;
 							itemO.toformat = config.output.format[md.mediaType];
+							itmeO.mediaType = md.mediaType;
 						});
 					})(files[i]);
 				}
@@ -98,9 +98,11 @@ new Vue({
         		case 'setstart': item.starttime = item.curtime; break;
         		case 'setend': item.endtime = item.curtime; break;
         		case 'curtime':
-        			Media.seek(item.path, item.curtime, function(source){
-        				item.source = source;
-        			});
+        			if(item.mediaType !== 'image'){
+        				Media.seek(item.path, item.curtime, function(source){
+	        				item.source = source;
+	        			});
+        			}
         			break;
         		case 'convert':
         			let pv = 0, r = 225, g = 0;
@@ -120,10 +122,14 @@ new Vue({
         	}
         },
         itemInputFn: function(e,index,attr){
-        	this.items[index][attr] = e.target.innerHTML;
+        	if(attr !== 'toname'){
+        		this.items[index][attr] = parseFloat(e.target.innerHTML) || 0;
+        	}else{
+        		this.items[index][attr] = e.target.innerHTML;
+        	}
         },
         setAll: function(){
-        	console.log(this.items);
+        	this.dropSlidedown = !this.dropSlidedown;
         },
         startConvert: function(){
         	
@@ -135,10 +141,16 @@ new Vue({
 		timemat: function(t){
 			return functions.timemat(t*1000);
 		},
-		sizemat: function(s,i){
-			console.log(s,i);//functions.sizemat(s)
-
-			return s;
+		sizemat: function(tosize,attr,size){
+			if(attr === 'size'){
+				return functions.sizemat(tosize);
+			}else{
+				let tmp = (parseFloat(tosize)/100) * size;
+				if(tmp){
+					return functions.sizemat(tmp);
+				}
+			}
+			return 'auto';
 		}
 	}
 });

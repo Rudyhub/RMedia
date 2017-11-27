@@ -213,6 +213,12 @@ time{
 .color-orange{
     color: orange;
 }
+.text-limit-2{
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+}
 /**
 commom style end
  */
@@ -263,15 +269,40 @@ commom style end
     position: relative;
 }
 .menu{
-    padding-left: 10px;
+    padding: 5px;
     box-sizing: border-box;
 }
 .menu button{
     margin: 0;
 }
-
-.output-txt-area{
-    width: calc(100% - 412px);
+.drop-panel{
+    position: absolute;
+    background: #262626;
+    border: 1px solid #555;
+    border-radius: 6px;
+    width: 28vw;
+    z-index: 10;
+    overflow: hidden;
+    transition: all .8s;
+    transform: scaleY(0);
+    transform-origin: top;
+}
+.drop-panel.slidedown{
+    transform: scaleY(1);
+}
+.drop-panel-group{
+    padding: 5px 15px;
+    font-size: .8vw;
+    color: #888;
+}
+.drop-panel-group button,
+.drop-panel-group input{
+    margin: 0;
+}
+.drop-panel button.save-as{
+    background: transparent;
+    width: 100%;
+    text-align: left;
 }
 
 
@@ -344,13 +375,18 @@ commom style end
 .item [type=number]{
     width: 50px;
 }
+.item select{
+    border: none;
+    border-bottom: 1px dashed;
+    color: #af7b37;
+    background: #1b1d1f;
+    outline: none;
+}
+.item select:focus{
+    border-bottom: 1px solid;
+}
 .item-info-toname{
     width: 15.6vw;
-}
-.item input::-webkit-outer-spin-button,
-.item input::-webkit-inner-spin-button,
-.item select::-webkit-inner-spin-button{
-    -webkit-appearance: none;
 }
 .item:hover .item-tool{
     opacity: .5;
@@ -413,17 +449,12 @@ commom style end
 .editable .item-editable{
     max-height: 300px;
 }
-.text-limit-2{
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    overflow: hidden;
-}
 span[contenteditable]{
     outline: none;
     border-bottom: 1px dashed;
     color: #af7c4f;
     cursor: pointer;
+    padding: 0 5px;
 }
 span[contenteditable]:focus{
     border-bottom: 1px solid;

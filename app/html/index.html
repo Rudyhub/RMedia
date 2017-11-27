@@ -17,18 +17,33 @@
                 <button v-on:click="winclose">&times;</button>
             </div>
         </div>
-        <section class="section-border menu">
-            <button class="file-btn">
-                打开
-                <input v-on:change="chosefile" type="file" title="打开" multiple>
-            </button>
-            <button class="file-btn">
-                保存为
-                <input v-on:change="chosedir" type="file" title="文件保存为" nwdirectory>
-            </button>
-            <button v-on:click="startConvert" class="start-btn" title="开始处理所有文件">开始</button>
-            <button v-on:click="setAll" title="批量设置">批量设置</button>
-            <input class="output-txt-area" type="text" readonly placeholder="未选择输出目录" v-bind:value="output">
+        <section class="section-border">
+            <div class="menu">
+                <button>
+                    打开
+                    <input v-on:change="chosefile" type="file" title="打开" multiple>
+                </button>
+                <button v-on:click="startConvert" class="start-btn" title="开始">开始</button>
+                <button v-on:click="setAll" title="设置">设置</button>
+            </div>
+            <div class="drop-panel" v-bind:class="{slidedown:dropSlidedown}">
+                <div class="drop-panel-group">
+                    <button class="save-as">
+                        <span v-if="output">{{output}}</span><span v-else>请选择输出目录：</span>
+                        <input v-on:change="chosedir" type="file" title="文件保存为" nwdirectory>
+                    </button>
+                </div>
+                <div class="drop-panel-group">
+                    输出名称：<span contenteditable="true">auto</span>
+                </div>
+                <div class="drop-panel-group">
+                    限宽：<span contenteditable="true">0</span>  &times;
+                    限高：<span contenteditable="true">0</span>
+                </div>
+                <div class="drop-panel-group">
+                    压缩率：<span contenteditable="true">0</span> %
+                </div>
+            </div>
         </section>
     </header>
     <div class="body">
@@ -60,8 +75,8 @@
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">大小：</div>
-                    <div class="item-info-body">{{item.size}} 
-                        <span class="color-orange">( {{item.tosize | sizemat(index)}} )</span>
+                    <div class="item-info-body">{{item.size | sizemat('size')}} 
+                        <span class="color-orange">( &#8776;{{item.tosize | sizemat('tosize',item.size)}} )</span>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
@@ -109,7 +124,7 @@
                     <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <div class="item-time">
-                            <input type="range" step="0.001" min="0" v-bind:max="item.maxtime" v-model="item.curtime" v-on:change="itemFn(index,'curtime')" title="时间滑杆">
+                            <input type="range" step="0.001" min="0" :max="item.duration" v-model="item.curtime" v-on:change="itemFn(index,'curtime')" title="时间滑杆">
                         </div>
                         <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
                         <div class="item-time">
