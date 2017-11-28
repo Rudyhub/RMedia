@@ -111,12 +111,22 @@ function seek(url,time,success){
 }
 
 //use for convert one video file
-function convertVideo(url){
-    // let cammand = ffmpeg(url).outputOptions([''])
+function convertVideo(url,options){
+    let cammand = ffmpeg(url).videoBitrate(2274572).output('C:\\Users\\Administrator\\Desktop\\test.mov').on('start',function(){
+        console.log('start');
+    }).on('progress',function(d){
+        console.log(d.percent);
+    }).on('error',function(){
+        console.log('error',arguments)
+    }).on('end',function(){
+        cammand.kill();
+    });
+    console.log(cammand);
 }
 module.exports = {
     info: getInfo,
     seek: seek,
+    convert: convertVideo,
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
         let cv = c.getContext('2d');

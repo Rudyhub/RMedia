@@ -43,6 +43,12 @@
                 <div class="drop-panel-group">
                     压缩率：<input type="number" min="0" max="100" v-model="sizeLimit" placeholder="auto"> %
                 </div>
+                <div class="drop-panel-group">
+                    速度级别：
+                    <select title="速度越慢越清晰">
+                        <option v-for="(speed, key) of speeds" v-bind:value="key">{{speed}}</option>
+                    </select>
+                </div>
             </div>
         </section>
     </header>
@@ -76,7 +82,7 @@
                 <dd class="item-info">
                     <div class="item-info-head">大小：</div>
                     <div class="item-info-body">{{item.size | sizemat('size')}} 
-                        <span class="color-orange">( &#8776;{{item.tosize | sizemat('tosize',item.size)}} )</span>
+                        <span class="color-orange">( &#8776;{{item.tosize | sizemat('tosize')}} )</span>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">

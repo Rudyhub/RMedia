@@ -14,7 +14,19 @@ new Vue({
 		nameAll: '',
 		widthLimit: 1280,
 		heightLimit: 720,
-		sizeLimit: ''
+		sizeLimit: '',
+		speeds: {
+			ultrafast: '无敌快',
+			superfast: '超级快',
+			veryfast: '非常快',
+			faster: '比较快',
+			fast: '正常快',
+			medium: '普通',
+			slow: '正常慢',
+			slower: '比较慢',
+			veryslow: '非常慢',
+			placebo: '超级慢'
+		}
 	},
 	methods: {
 		minimize(){
@@ -74,7 +86,7 @@ new Vue({
 							endtime: 0
 						};
 						vue.items.push(itemO);
-
+						console.log(itemO);
 						Media.info(file.path, function(md) {
 							itemO.source = md.source;
 							itemO.width = md.width || 0;
@@ -86,6 +98,8 @@ new Vue({
 							itemO.toformats = md.toformats;
 							itemO.mediaType = md.mediaType;
 							itemO.toformat = config.output.format[itemO.mediaType];
+							// itemO.bitv = parseFloat(md.bitv) || 0;
+							// itemO.bita = parseFloat(md.bita) || 0;
 						});
 					})(files[i]);
 				}
@@ -110,6 +124,19 @@ new Vue({
         			}
         			break;
         		case 'convert':
+        			let cammand = ['-b:v '+item.tosize*8/item.duration, '-y'];
+        			Media.convert(item.path, {
+        				params: cammand,
+        				success: function(){
+        					console.log('success',arguments);
+        				},
+        				progress: function(p){
+        					console.log(p.percent);
+        				},
+        				complete: function(){
+        					console.log('complete',arguments);
+        				}
+        			})
         			/*
         			let pv = 0, r = 225, g = 0;
         			let tt = setInterval(function(){
@@ -129,10 +156,16 @@ new Vue({
         	}
         },
         itemInputFn(e,index,attr){
-        	if(attr !== 'toname'){
-        		this.items[index][attr] = parseFloat(e.target.innerHTML) || 0;
-        	}else{
-        		this.items[index][attr] = e.target.innerHTML;
+        	let tmp = parseFloat(e.target.innerHTML) || 0;
+        	switch(attr){
+        		case 'tosize': 
+        			this.items[index][attr] = (tmp/100)*this.items[index]['size'];
+        			break;
+        		case 'toname':
+        			this.items[index][attr] = e.target.innerHTML;
+        			break;
+        		default:
+        			this.items[index][attr] = tmp;
         	}
         },
         gotoSetAll(){
@@ -148,12 +181,13 @@ new Vue({
 		timemat(t){
 			return functions.timemat(t*1000);
 		},
-		sizemat(tosize,attr,size){
+		sizemat(val,attr){
 			if(attr === 'size'){
-				return functions.sizemat(tosize);
+				return functions.sizemat(val);
 			}else{
-				let tmp = (parseFloat(tosize)/100) * size;
+				let tmp = parseFloat(val);
 				if(tmp){
+					console.log(tmp);
 					return functions.sizemat(tmp);
 				}
 			}
