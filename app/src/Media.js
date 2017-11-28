@@ -39,6 +39,7 @@ function getInfo(url,options){
             if(fail) fail(err);
         }else {
             let stm = data.streams,
+                status = false,
                 o = {
                     extend: extend,
                     size: data.format.size,
@@ -56,9 +57,10 @@ function getInfo(url,options){
                 if(otherFormats.image.indexOf(extend) !== -1){
                     cammand = ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
                         o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        status = true;
                         success(o);
                     }).on('end', function(){
-                        success(o);
+                        if(!status) success(o);
                         cammand.kill();
                     });
                 }else{
@@ -80,9 +82,10 @@ function getInfo(url,options){
                     o.toformats = videos.concat(audios);
                     cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
                         o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        status = true;
                         success(o);
                     }).on('end', function(){
-                        success(o);
+                        if(!status) success(o);
                         cammand.kill();
                     });
                 }else if(audios.indexOf(extend) !== -1){
@@ -98,6 +101,7 @@ function getInfo(url,options){
     });
 }
 
+//use for creating preview image data base64 of video when change current time
 function seek(url,time,success){
     let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-an','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
         success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
@@ -106,6 +110,10 @@ function seek(url,time,success){
     });
 }
 
+//use for convert one video file
+function convertVideo(url){
+    // let cammand = ffmpeg(url).outputOptions([''])
+}
 module.exports = {
     info: getInfo,
     seek: seek,

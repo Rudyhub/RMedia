@@ -1,0 +1,4 @@
+{
+	"mp4": "h264,aac",
+	"webm": "vp8+vorbis"
+}

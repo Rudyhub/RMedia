@@ -2,6 +2,7 @@ const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
 const functions = require('./src/functions');
+
 new Vue({
 	el: '#app',
 	data: {
@@ -9,13 +10,17 @@ new Vue({
 		output: config.output.folder,
 		isFullScreen: true,
 		defwidth: config.output.width,
-		dropSlidedown: false
+		dropSlidedown: false,
+		nameAll: '',
+		widthLimit: 1280,
+		heightLimit: 720,
+		sizeLimit: ''
 	},
 	methods: {
-		minimize: function(){
+		minimize(){
 			win.minimize();
 		},
-		wintoggle: function(){
+		wintoggle(){
 			let w = screen.availWidth, h = screen.availHeight;
             if(win.width < w){
                 win.width = w;
@@ -31,10 +36,10 @@ new Vue({
                 this.isFullScreen = false;
             }
 		},
-		winclose: function(){
+		winclose(){
 			win.close();
 		},
-		chosefile: function(e){
+		chosefile(e){
 			let vue = this,
 				files = e.target.files,
 				len,
@@ -56,7 +61,7 @@ new Vue({
 							format: extend,
 							progress: 0,
 							progressColor: '',
-							editable: true,
+							editable: false,
 
 							toname: 'fup-'+file.name,
 							tosize: 0,
@@ -74,22 +79,22 @@ new Vue({
 							itemO.source = md.source;
 							itemO.width = md.width || 0;
 							itemO.height = md.height || 0;
-							itemO.duration = md.duration;
+							itemO.duration = parseFloat(md.duration) || 0;
 							itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
 							itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
-							itemO.endtime = md.duration;
+							itemO.endtime = itemO.duration;
 							itemO.toformats = md.toformats;
-							itemO.toformat = config.output.format[md.mediaType];
-							itmeO.mediaType = md.mediaType;
+							itemO.mediaType = md.mediaType;
+							itemO.toformat = config.output.format[itemO.mediaType];
 						});
 					})(files[i]);
 				}
 			}
 		},
-		chosedir: function(e){
-            this.output = config.ui.saveas + (e.target.files[0].path || '');
+		chosedir(e){
+            this.output = e.target.files[0].path || '';
         },
-        itemFn: function(index, str){
+        itemFn(index, str){
         	let item = this.items[index];
         	switch(str){
         		case 'del': this.items.splice(index,1); break;
@@ -105,6 +110,7 @@ new Vue({
         			}
         			break;
         		case 'convert':
+        			/*
         			let pv = 0, r = 225, g = 0;
         			let tt = setInterval(function(){
         				if(pv>=100) clearInterval(tt);
@@ -118,30 +124,31 @@ new Vue({
         				item.progressColor = 'rgba('+r+','+g+',0,0.5)';
         			},100);
         			console.log(item.starttime, item.endtime);
+        			*/
         			break;
         	}
         },
-        itemInputFn: function(e,index,attr){
+        itemInputFn(e,index,attr){
         	if(attr !== 'toname'){
         		this.items[index][attr] = parseFloat(e.target.innerHTML) || 0;
         	}else{
         		this.items[index][attr] = e.target.innerHTML;
         	}
         },
-        setAll: function(){
+        gotoSetAll(){
         	this.dropSlidedown = !this.dropSlidedown;
         },
-        startConvert: function(){
+        startConvert(){
         	
         	console.log(this.items);
         	
         }
 	},
 	filters: {
-		timemat: function(t){
+		timemat(t){
 			return functions.timemat(t*1000);
 		},
-		sizemat: function(tosize,attr,size){
+		sizemat(tosize,attr,size){
 			if(attr === 'size'){
 				return functions.sizemat(tosize);
 			}else{

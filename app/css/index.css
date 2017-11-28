@@ -299,6 +299,12 @@ commom style end
 .drop-panel-group input{
     margin: 0;
 }
+.drop-panel-group input[type=text]{
+    width: calc(100% - 80px);
+}
+.drop-panel-group input[type=number]{
+    width: 4em;
+}
 .drop-panel button.save-as{
     background: transparent;
     width: 100%;
@@ -441,13 +447,13 @@ commom style end
     text-align: right;
 }
 .item-editable{
-    transition: all .5s;
+    transition: all .8s;
     max-height: 0;
     overflow: hidden;
     background: #1b1d1f;
 }
 .editable .item-editable{
-    max-height: 300px;
+    max-height: 150px;
 }
 span[contenteditable]{
     outline: none;
