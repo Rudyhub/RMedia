@@ -111,17 +111,26 @@ function seek(url,time,success){
 }
 
 //use for convert one video file
-function convertVideo(url,options){
-    let cammand = ffmpeg(url).videoBitrate(2274572).output('C:\\Users\\Administrator\\Desktop\\test.mov').on('start',function(){
-        console.log('start');
-    }).on('progress',function(d){
-        console.log(d.percent);
-    }).on('error',function(){
-        console.log('error',arguments)
-    }).on('end',function(){
+function convertVideo(o){
+    let cammand = ffmpeg(o.input).outputOptions(['-b:v 64k','-an','-sn','-y']);
+    if(typeof o.start === 'function'){
+        cammand.on('start', o.start);
+    }
+    if(typeof o.progress === 'function'){
+        console.log('progress');
+        cammand.on('progress', o.progress);
+    }
+    cammand.on('end', function(a,b){
         cammand.kill();
+        if(typeof o.complete === 'function'){
+            o.complete(a,b);
+        }
     });
-    console.log(cammand);
+    cammand.on('error', function(e,a,b){
+        cammand.kill();
+        if(typeof o.error === 'function') o.error(e, a, b);
+    });
+    cammand.save(o.output);
 }
 module.exports = {
     info: getInfo,

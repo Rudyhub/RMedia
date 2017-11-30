@@ -1,7 +1,7 @@
 const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
-const functions = require('./src/functions');
+const utils = require('./src/utils');
 
 new Vue({
 	el: '#app',
@@ -86,7 +86,6 @@ new Vue({
 							endtime: 0
 						};
 						vue.items.push(itemO);
-						console.log(itemO);
 						Media.info(file.path, function(md) {
 							itemO.source = md.source;
 							itemO.width = md.width || 0;
@@ -124,34 +123,21 @@ new Vue({
         			}
         			break;
         		case 'convert':
-        			let cammand = ['-b:v '+item.tosize*8/item.duration, '-y'];
-        			Media.convert(item.path, {
-        				params: cammand,
-        				success: function(){
-        					console.log('success',arguments);
-        				},
-        				progress: function(p){
-        					console.log(p.percent);
-        				},
-        				complete: function(){
-        					console.log('complete',arguments);
+        			// let cammand = ['-b:v '+item.tosize*8/item.duration, '-y'];
+        			let r = 255, g = 0;
+        			Media.convert({
+        				input: item.path,
+        				output: 'c:/users/administrator/desktop/b.mp4',
+        				progress: function(prog){
+        					if(g < 150){
+        						g = Math.round( prog.percent * 3.5 );
+        					}else{
+        						r = 255 - Math.round( (prog.percent - g/3.5) * 3.5);
+        					}
+        					item.progress = Math.round(prog.percent) + '%';
+        					item.progressColor = 'rgba('+r+','+g+',0,0.5)';
         				}
-        			})
-        			/*
-        			let pv = 0, r = 225, g = 0;
-        			let tt = setInterval(function(){
-        				if(pv>=100) clearInterval(tt);
-        				pv++;
-        				item.progress = pv + '%';
-        				if(g < 150){
-        					g += 3;
-        				}else{
-        					r -= 3;
-        				}
-        				item.progressColor = 'rgba('+r+','+g+',0,0.5)';
-        			},100);
-        			console.log(item.starttime, item.endtime);
-        			*/
+        			});
         			break;
         	}
         },
@@ -179,16 +165,16 @@ new Vue({
 	},
 	filters: {
 		timemat(t){
-			return functions.timemat(t*1000);
+			return utils.timemat(t*1000);
 		},
 		sizemat(val,attr){
 			if(attr === 'size'){
-				return functions.sizemat(val);
+				return utils.sizemat(val);
 			}else{
 				let tmp = parseFloat(val);
 				if(tmp){
 					console.log(tmp);
-					return functions.sizemat(tmp);
+					return utils.sizemat(tmp);
 				}
 			}
 			return 'auto';
