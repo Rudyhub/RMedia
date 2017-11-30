@@ -112,12 +112,11 @@ function seek(url,time,success){
 
 //use for convert one video file
 function convertVideo(o){
-    let cammand = ffmpeg(o.input).outputOptions(['-b:v 64k','-an','-sn','-y']);
+    let cammand = ffmpeg(o.input).outputOptions(['-b:v 300k','-y']);
     if(typeof o.start === 'function'){
         cammand.on('start', o.start);
     }
     if(typeof o.progress === 'function'){
-        console.log('progress');
         cammand.on('progress', o.progress);
     }
     cammand.on('end', function(a,b){
