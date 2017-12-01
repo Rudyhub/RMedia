@@ -83,7 +83,8 @@ new Vue({
 							toformats: [],
 							curtime: 0,
 							starttime: 0,
-							endtime: 0
+							endtime: 0,
+							icon: 'file-empty'
 						};
 						vue.items.push(itemO);
 						Media.info(file.path, function(md) {
@@ -97,6 +98,11 @@ new Vue({
 							itemO.toformats = md.toformats;
 							itemO.mediaType = md.mediaType;
 							itemO.toformat = config.output.format[itemO.mediaType];
+							switch(itemO.mediaType){
+								case 'image': itemO.icon = 'icon-image'; break;
+								case 'video': itemO.icon = 'icon-video-camera'; break;
+								case 'audio': itemO.icon = 'icon-headphones'; break;
+							}
 							// itemO.bitv = parseFloat(md.bitv) || 0;
 							// itemO.bita = parseFloat(md.bita) || 0;
 						});
@@ -108,9 +114,10 @@ new Vue({
             this.output = e.target.files[0].path || '';
         },
         itemFn(index, str){
-        	let item = this.items[index];
+        	let that = this,
+        		item = that.items[index];
         	switch(str){
-        		case 'del': this.items.splice(index,1); break;
+        		case 'del': that.items.splice(index,1); break;
         		case 'edit': item.editable = !item.editable; break;
         		case 'lock': item.lock = !item.lock; break;
         		case 'setstart': item.starttime = item.curtime; break;
@@ -123,21 +130,29 @@ new Vue({
         			}
         			break;
         		case 'convert':
-        			// let cammand = ['-b:v '+item.tosize*8/item.duration, '-y'];
+        			if(!that.output){
+        				alert('请选择输出目录!');
+        				return;
+        			}
+        			/*
+        			let cammand = ['-b:v '+item.tosize*8/item.duration];
+        			
+
         			let r = 255, g = 0;
         			Media.convert({
+        				cammand: cammand,
         				input: item.path,
-        				output: 'c:/users/administrator/desktop/b.mp4',
+        				output: +,
         				progress: function(prog){
         					if(g < 150){
         						g = Math.round( prog.percent * 3.5 );
         					}else{
-        						r = 255 - Math.round( (prog.percent - g/3.5) * 3.5);
+        						r = 255 - Math.round((prog.percent - g/3.5) * 3.5);
         					}
         					item.progress = Math.round(prog.percent) + '%';
         					item.progressColor = 'rgba('+r+','+g+',0,0.5)';
         				}
-        			});
+        			});*/
         			break;
         	}
         },
@@ -173,7 +188,6 @@ new Vue({
 			}else{
 				let tmp = parseFloat(val);
 				if(tmp){
-					console.log(tmp);
 					return utils.sizemat(tmp);
 				}
 			}

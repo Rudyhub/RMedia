@@ -1,5 +1,5 @@
 module.exports = {
-    timemat: function(time){
+    timemat(time){
         let t,
             mat = (n) => {
                 return n < 10 ? '0'+n : n;
@@ -18,7 +18,7 @@ module.exports = {
             return "error time";
         }
     },
-    sizemat: function(b){
+    sizemat(b){
         if(b < 1024) return size + ' B';
         let size = b/1024,
             fixed = arguments[1] || 2;
@@ -28,7 +28,7 @@ module.exports = {
             return (size/1024).toFixed(fixed) + ' MB';
         }
     },
-    draggable: function(node, dragnode){
+    draggable(node, dragnode){
         let sx = 0,
             sy = 0,
             ol = node.offsetLeft,

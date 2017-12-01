@@ -111,8 +111,8 @@ function seek(url,time,success){
 }
 
 //use for convert one video file
-function convertVideo(o){
-    let cammand = ffmpeg(o.input).outputOptions(['-b:v 300k','-y']);
+function convert(o){
+    let cammand = ffmpeg(o.input).outputOptions(o.cammand);
     if(typeof o.start === 'function'){
         cammand.on('start', o.start);
     }
@@ -134,7 +134,7 @@ function convertVideo(o){
 module.exports = {
     info: getInfo,
     seek: seek,
-    convert: convertVideo,
+    convert: convert,
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
         let cv = c.getContext('2d');

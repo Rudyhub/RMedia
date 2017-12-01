@@ -57,12 +57,12 @@
             <dl class="item" v-for="(item, index) of items" v-bind:class="{editable: item.editable}">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
+                        <i class="item-media-type icon" v-bind:class="item.icon" v-on:click="itemFn(index,'convert')" title="转换我"></i>
                         <img class="item-preview-img" v-bind:src="item.source">
                         <div class="item-tools">
-                            <i class="item-tool icon-border_color" v-on:click="itemFn(index,'edit')" title="编辑"></i>
-                            <i class="item-tool icon-done" v-on:click="itemFn(index,'convert')" title="处理"></i>
-                            <i class="item-tool icon-delete_forever" v-on:click="itemFn(index,'del')" title="删除"></i>
-                            <i class="item-tool" v-on:click="itemFn(index,'lock')" title="锁定/解锁" v-bind:class="{'icon-lock': item.lock,'icon-lock-open':!item.lock}"></i>
+                            <i class="item-tool icon icon-cog" v-on:click="itemFn(index,'edit')" title="设置参数"></i>
+                            <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" v-bind:class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
+                            <i class="item-tool icon icon-bin" v-on:click="itemFn(index,'del')" title="删除"></i>
                         </div>
                         <div class="item-progress" v-if="item.progress" v-bind:style="{width: item.progress, background: item.progressColor}"></div>
                     </div>
@@ -74,7 +74,7 @@
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <span contenteditable="true" v-on:input="itemInputFn($event,index,'toname')">fup-{{item.name}}</span>
                     </div>
@@ -86,7 +86,7 @@
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         压缩率：<span contenteditable="true" v-on:input="itemInputFn($event,index,'tosize')">0</span> %
                     </div>
@@ -99,7 +99,7 @@
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <span contenteditable="true" v-on:input="itemInputFn($event,index,'towidth')" title="宽">0</span>
                         &times;
@@ -112,7 +112,7 @@
                     <div class="item-info-body">{{item.format}} <span class="color-orange">( {{item.toformat}} )</span></div>
                 </dd>
                 <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         输出为：
                         <select title="选择输出格式" v-model="item.toformat">
@@ -127,7 +127,7 @@
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon-subdirectory_arrow_right"></i></div>
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <div class="item-time">
                             <input type="range" step="0.001" min="0" v-bind:max="item.duration" v-model="item.curtime" v-on:change="itemFn(index,'curtime')" title="时间滑杆">
