@@ -159,22 +159,6 @@ new Vue({
         			break;
         	}
         },
-        itemInputFn(e,index,attr){
-        	let tmp = parseFloat(e.target.innerHTML) || 0;
-        	switch(attr){
-        		case 'tosize': 
-        			this.items[index][attr] = (tmp/100)*this.items[index]['size'];
-        			break;
-        		case 'toname':
-        			this.items[index][attr] = e.target.innerHTML;
-        			break;
-        		default:
-        			this.items[index][attr] = tmp;
-        	}
-        },
-        inputCompleted(e){
-        	e.target.innerHTML = parseFloat(e.target.innerHTML) || 0;
-        },
         shortcutFn(){
         	console.log('shortcutFn');
         },
@@ -201,6 +185,13 @@ new Vue({
 				}
 			}
 			return 'auto';
+		},
+		limitmat(val,attr){
+			switch(attr){
+				case 'towidth': return val > this.widthLimit ? this.widthLimit : val; break;
+				case 'toheight': return val > this.heightLimit ? this.heightLimit : val; break;
+				default: return val;
+			}
 		}
 	}
 });

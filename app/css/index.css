@@ -71,6 +71,7 @@ body{
 }
 input,button,select{
     -webkit-appearance: none;
+    box-sizing: border-box;
 }
 input,select{
     border: 1px solid var(--gray3);
@@ -324,21 +325,15 @@ button:active{
 .item input,
 .item select{
     margin: .5vw 0;
+    color: var(--blue1);
 }
-.item [type=text]{
-    vertical-align: middle;
+.item [type=text],
+.item [type=range]{
+    width: 98%;
 }
 .item [type=number]{
-    width: 2.6vw;
-}
-.item select{
-    border: none;
-    border-bottom: 1px dashed;
-    color: var(--blue1);
-    outline: none;
-}
-.item select:focus{
-    border-bottom: 1px solid;
+    width: 5em;
+    text-align: center;
 }
 .item-info-toname{
     width: 15.6vw;
@@ -379,11 +374,6 @@ button:active{
     padding: 0 5px;
     box-sizing: border-box;
 }
-.item-time input[type=range]{
-    -webkit-appearance: none;
-    width: 100%;
-    margin: 10px 0;
-}
 .item-time.curtime{
     text-align: right;
 }
@@ -394,18 +384,7 @@ button:active{
     background: var(--black2);
 }
 .editable .item-editable{
-    max-height: 150px;
-}
-span[contenteditable]{
-    outline: none;
-    border-bottom: 1px dashed;
-    color: var(--blue1);
-    cursor: pointer;
-    padding: 0 5px;
-}
-span[contenteditable]:focus{
-    border-bottom: 1px solid;
-    cursor: text;
+    max-height: 90px;
 }
 
 
