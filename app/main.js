@@ -26,7 +26,8 @@ new Vue({
 			slower: '比较慢',
 			veryslow: '非常慢',
 			placebo: '超级慢'
-		}
+		},
+		speedLevel: 'medium'
 	},
 	methods: {
 		minimize(){
@@ -84,7 +85,8 @@ new Vue({
 							curtime: 0,
 							starttime: 0,
 							endtime: 0,
-							icon: 'file-empty'
+							icon: 'file-empty',
+							rotating: false
 						};
 						vue.items.push(itemO);
 						Media.info(file.path, function(md) {
@@ -130,6 +132,7 @@ new Vue({
         			}
         			break;
         		case 'convert':
+        			item.rotating = !item.rotating;
         			if(!that.output){
         				alert('请选择输出目录!');
         				return;
@@ -169,12 +172,18 @@ new Vue({
         			this.items[index][attr] = tmp;
         	}
         },
+        inputCompleted(e){
+        	e.target.innerHTML = parseFloat(e.target.innerHTML) || 0;
+        },
+        shortcutFn(){
+        	console.log('shortcutFn');
+        },
         gotoSetAll(){
         	this.dropSlidedown = !this.dropSlidedown;
         },
         startConvert(){
         	
-        	console.log(this.items);
+        	console.log(this);
         	
         }
 	},

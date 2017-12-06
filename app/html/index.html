@@ -7,10 +7,10 @@
 	<link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
 <body>
-<div id="app">
+<div id="app" v-on:keydown="shortcutFn">
     <header>
         <div class="draggable">
-            <h1>多媒体处理器</h1>
+            <h1 class="title">多媒体处理器</h1>
             <div class="titlebar-tool">
                 <button v-on:click="minimize">&minus;</button>
                 <button v-on:click="wintoggle" v-bind:class="{full: isFullScreen}"><i></i></button>
@@ -20,11 +20,15 @@
         <section class="section-border">
             <div class="menu">
                 <button>
-                    打开
+                    <i class="icon icon-folder-open"></i> 打开
                     <input v-on:change="chosefile" type="file" title="打开" multiple>
                 </button>
-                <button v-on:click="startConvert" class="start-btn" title="开始">开始</button>
-                <button v-on:click="gotoSetAll" title="设置">设置</button>
+                <button v-on:click="startConvert" class="start-btn" title="开始">
+                    <i class="icon icon-loop2"></i> 开始
+                </button>
+                <button v-on:click="gotoSetAll" title="设置">
+                    <i class="icon icon-cog"></i> 设置
+                </button>
             </div>
             <div class="drop-panel" v-bind:class="{slidedown:dropSlidedown}">
                 <div class="drop-panel-group">
@@ -34,37 +38,43 @@
                     </button>
                 </div>
                 <div class="drop-panel-group">
-                    输出名称：<input type="text" v-model="nameAll" placeholder="auto">
+                    输出名称：
+                    <input type="text" v-model="nameAll" placeholder="file%0d 说明：%0d表示名称后缀01，02，03...">
                 </div>
                 <div class="drop-panel-group">
-                    限宽：<input type="number" min="0" v-model="widthLimit" placeholder="auto"> &times;
-                    限高：<input type="number" min="0" v-model="heightLimit" placeholder="auto">
+                    宽度上限：
+                    <input type="number" min="0" v-model="widthLimit" placeholder="auto"> &times;
+                    高度上限：
+                    <input type="number" min="0" v-model="heightLimit" placeholder="auto">
                 </div>
                 <div class="drop-panel-group">
-                    压缩率：<input type="number" min="0" max="100" v-model="sizeLimit" placeholder="auto"> %
+                    大小上限：
+                    <input type="number" min="0" v-model="sizeLimit" placeholder="auto"> (默认单位：KB, 可选单位：MB、 G)
                 </div>
                 <div class="drop-panel-group">
-                    速度级别：
-                    <select title="速度越慢越清晰">
+                    压缩速度：
+                    <select title="速度越慢越清晰" v-model="speedLevel">
                         <option v-for="(speed, key) of speeds" v-bind:value="key">{{speed}}</option>
                     </select>
+                    (压缩速度越慢越清晰)
                 </div>
             </div>
         </section>
     </header>
     <div class="body">
-        <section f-on-click="zoomInItem" f-bind-html="list" class="flex">
+        <section class="columns">
             <dl class="item" v-for="(item, index) of items" v-bind:class="{editable: item.editable}">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
-                        <i class="item-media-type icon" v-bind:class="item.icon" v-on:click="itemFn(index,'convert')" title="转换我"></i>
+                        <i class="item-media-type icon" v-bind:class="item.icon"></i>
                         <img class="item-preview-img" v-bind:src="item.source">
-                        <div class="item-tools">
-                            <i class="item-tool icon icon-cog" v-on:click="itemFn(index,'edit')" title="设置参数"></i>
-                            <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" v-bind:class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
-                            <i class="item-tool icon icon-bin" v-on:click="itemFn(index,'del')" title="删除"></i>
-                        </div>
                         <div class="item-progress" v-if="item.progress" v-bind:style="{width: item.progress, background: item.progressColor}"></div>
+                    </div>
+                    <div class="item-tools">
+                        <i class="item-tool icon icon-cog" v-on:click="itemFn(index,'edit')" title="设置参数"></i>
+                        <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" v-bind:class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
+                        <i class="item-tool icon icon-loop2" v-bind:class="{rotating:item.rotating}" v-on:click="itemFn(index,'convert')" title="转换我"></i>
+                        <i class="item-tool icon icon-bin" v-on:click="itemFn(index,'del')" title="删除"></i>
                     </div>
                 </dt>
                 <dd class="item-info">
@@ -82,34 +92,34 @@
                 <dd class="item-info">
                     <div class="item-info-head">大小：</div>
                     <div class="item-info-body">{{item.size | sizemat('size')}} 
-                        <span class="color-orange">( &#8776;{{item.tosize | sizemat('tosize')}} )</span>
+                        <span class="color-1">( {{item.tosize | sizemat('tosize')}} )</span>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        压缩率：<span contenteditable="true" v-on:input="itemInputFn($event,index,'tosize')">0</span> %
+                        限制：<span contenteditable="true" v-on:input="itemInputFn($event,index,'tosize')" v-on:blur="inputCompleted">0</span> %
                     </div>
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">尺寸：</div>
                     <div class="item-info-body">
                         {{item.width}} &times; {{item.height}} 
-                        <span class="color-orange">( {{item.towidth}} &times; {{item.toheight}} )</span>
+                        <span class="color-1">( {{item.towidth}} &times; {{item.toheight}} )</span>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <span contenteditable="true" v-on:input="itemInputFn($event,index,'towidth')" title="宽">0</span>
+                        <span contenteditable="true" v-on:input="itemInputFn($event,index,'towidth')" v-on:blur="inputCompleted" title="宽">0</span>
                         &times;
-                        <span contenteditable="true" v-on:input="itemInputFn($event,index,'toheight')" title="高">0</span>
+                        <span contenteditable="true" v-on:input="itemInputFn($event,index,'toheight')" v-on:blur="inputCompleted" title="高">0</span>
                         像素
                     </div>
                 </dd>
                 <dd class="item-info">
                     <div class="item-info-head">格式：</div>
-                    <div class="item-info-body">{{item.format}} <span class="color-orange">( {{item.toformat}} )</span></div>
+                    <div class="item-info-body">{{item.format}} <span class="color-1">( {{item.toformat}} )</span></div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
@@ -123,7 +133,7 @@
                 <dd class="item-info">
                     <div class="item-info-head">截取：</div>
                     <div class="item-info-body">
-                        <span class="color-orange">( {{item.starttime | timemat}} - {{item.endtime | timemat}} )</span>
+                        <span class="color-1">( {{item.starttime | timemat}} - {{item.endtime | timemat}} )</span>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
