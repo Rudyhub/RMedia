@@ -5,7 +5,7 @@ module.exports = {
 	ffmpegRoot: appRoot + 'plugins/ffmpeg/',
 	audioThumb: appRoot + 'css/audio.jpg',
 	output: {
-		folder: '',
+		folder: process.env.USERPROFILE,
 		width: 1280,
 		format: {
 			image: 'jpg',

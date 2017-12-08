@@ -11,10 +11,10 @@ new Vue({
 		isFullScreen: true,
 		defwidth: config.output.width,
 		dropSlidedown: false,
-		nameAll: '',
+		nameAll: 'fup',
 		widthLimit: 1280,
 		heightLimit: 720,
-		sizeLimit: '',
+		sizeLimit: 0,
 		speeds: {
 			ultrafast: '无敌快',
 			superfast: '超级快',
@@ -76,7 +76,7 @@ new Vue({
 							progressColor: '',
 							editable: false,
 
-							toname: 'fup-'+file.name,
+							toname: file.name,
 							tosize: 0,
 							towidth: vue.defwidth,
 							toheight: Math.round(vue.defwidth*0.5625),
@@ -100,6 +100,7 @@ new Vue({
 							itemO.toformats = md.toformats;
 							itemO.mediaType = md.mediaType;
 							itemO.toformat = config.output.format[itemO.mediaType];
+							itemO.toname = vue.nameAll +'-'+ itemO.name +'.'+ itemO.toformat;
 							switch(itemO.mediaType){
 								case 'image': itemO.icon = 'icon-image'; break;
 								case 'video': itemO.icon = 'icon-video-camera'; break;
@@ -115,7 +116,7 @@ new Vue({
 		chosedir(e){
             this.output = e.target.files[0].path || '';
         },
-        itemFn(index, str){
+        itemFn(index, str, e){
         	let that = this,
         		item = that.items[index];
         	switch(str){
@@ -125,7 +126,10 @@ new Vue({
         		case 'setstart': item.starttime = item.curtime; break;
         		case 'setend': item.endtime = item.curtime; break;
         		case 'curtime':
-        			if(item.mediaType !== 'image'){
+        			if(e){
+        				item.curtime = parseFloat(e.target.value);
+        			}
+        			if(item.mediaType === 'video'){
         				Media.seek(item.path, item.curtime, function(source){
 	        				item.source = source;
 	        			});
@@ -133,6 +137,8 @@ new Vue({
         			break;
         		case 'convert':
         			item.rotating = !item.rotating;
+
+        			/*
         			if(!that.output){
         				alert('请选择输出目录!');
         				return;
@@ -159,15 +165,40 @@ new Vue({
         			break;
         	}
         },
-        shortcutFn(){
-        	console.log('shortcutFn');
+        nameAllFn(e){
+        	this.nameAll = e.target.value;
+        	let len = this.items.length, i = 0, n = 0;
+        	for(; i < len; i++){
+        		if(this.items[i].lock){
+        			this.items[i].toname = utils.namemat(this.nameAll, ++n) +'.'+ this.items[i].toformat;
+        		}
+        	}
         },
+        sizeLimitFn(e){
+        	this.sizeLimit = e.target.value;
+        	let len = this.items.length, i = 0, n = 0;
+        	for(; i < len; i++){
+        		if(this.items[i].lock){
+        			n = utils.sizemat(e.target.value, true);
+        			this.items[i].tosize = n < this.items[i].size ? n : this.items[i].size;
+        		}
+        	}
+		},
+		whLimitFn(e,n){
+			this[n+'Limit'] = parseInt(e.target.value);
+			let len = this.items.length, i = 0;
+        	for(; i < len; i++){
+        		if(this.items[i].lock){
+        			this.items[i]['to'+n] = this[n+'Limit'] < this.items[i][n] ? this[n+'Limit'] : this.items[i][n];
+        		}
+        	}
+		},
         gotoSetAll(){
         	this.dropSlidedown = !this.dropSlidedown;
         },
         startConvert(){
         	
-        	console.log(this);
+        	console.log(this.sizeLimit, this.items);
         	
         }
 	},
@@ -185,13 +216,6 @@ new Vue({
 				}
 			}
 			return 'auto';
-		},
-		limitmat(val,attr){
-			switch(attr){
-				case 'towidth': return val > this.widthLimit ? this.widthLimit : val; break;
-				case 'toheight': return val > this.heightLimit ? this.heightLimit : val; break;
-				default: return val;
-			}
 		}
 	}
 });

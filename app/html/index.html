@@ -7,13 +7,13 @@
 	<link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
 <body>
-<div id="app" v-on:keydown="shortcutFn">
+<div id="app">
     <header>
         <div class="draggable">
             <h1 class="title">多媒体处理器</h1>
             <div class="titlebar-tool">
                 <button v-on:click="minimize">&minus;</button>
-                <button v-on:click="wintoggle" v-bind:class="{full: isFullScreen}"><i></i></button>
+                <button v-on:click="wintoggle" :class="{full: isFullScreen}"><i></i></button>
                 <button v-on:click="winclose">&times;</button>
             </div>
         </div>
@@ -30,7 +30,7 @@
                     <i class="icon icon-cog"></i> 设置
                 </button>
             </div>
-            <div class="drop-panel" v-bind:class="{slidedown:dropSlidedown}">
+            <div class="drop-panel" :class="{slidedown:dropSlidedown}">
                 <div class="drop-panel-group">
                     <button class="save-as">
                         输出目录：{{output}}
@@ -38,42 +38,41 @@
                     </button>
                 </div>
                 <div class="drop-panel-group">
-                    输出名称：
-                    <input type="text" v-model="nameAll" placeholder="file%0d 说明：%0d表示名称后缀01，02，03...">
-                </div>
-                <div class="drop-panel-group">
-                    宽度上限：
-                    <input type="number" min="0" v-model.number="widthLimit" placeholder="auto"> &times;
-                    高度上限：
-                    <input type="number" min="0" v-model.number="heightLimit" placeholder="auto">
-                </div>
-                <div class="drop-panel-group">
-                    大小上限：
-                    <input type="number" min="0" v-model.number="sizeLimit" placeholder="auto"> (默认单位：KB, 可选单位：MB、 G)
-                </div>
-                <div class="drop-panel-group">
                     压缩速度：
                     <select title="速度越慢越清晰" v-model="speedLevel">
-                        <option v-for="(speed, key) of speeds" v-bind:value="key">{{speed}}</option>
+                        <option v-for="(speed, key) of speeds" :value="key">{{speed}}</option>
                     </select>
-                    (压缩速度越慢越清晰)
+                </div>
+                <div class="drop-panel-group">
+                    输出名称( <i class="icon icon-lock" title="只对锁定项目生效"></i>)：
+                    <input type="text" v-on:input="nameAllFn" :value="nameAll" title="名称末尾用0填充，如“00”表示01，02，03...">
+                </div>
+                <div class="drop-panel-group">
+                    宽度上限( <i class="icon icon-lock" title="只对锁定项目生效"></i>)：
+                    <input type="number" min="0" v-on:input="whLimitFn($event,'width')" :value="widthLimit"> &times;
+                    高度上限( <i class="icon icon-lock" title="只对锁定项目生效"></i>)：
+                    <input type="number" min="0" v-on:input="whLimitFn($event,'height')" :value="heightLimit">
+                </div>
+                <div class="drop-panel-group">
+                    大小上限( <i class="icon icon-lock" title="只对锁定项目生效"></i>)：
+                    <input type="text" v-on:input="sizeLimitFn" :value="sizeLimit" title="单位：大写B、KB、MB，不写单位则默认：B">
                 </div>
             </div>
         </section>
     </header>
     <div class="body">
         <section class="columns">
-            <dl class="item" v-for="(item, index) of items" v-bind:class="{editable: item.editable}">
+            <dl class="item" v-for="(item, index) of items" :class="{editable: item.editable}">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
-                        <i class="item-media-type icon" v-bind:class="item.icon"></i>
-                        <img class="item-preview-img" v-bind:src="item.source">
-                        <div class="item-progress" v-if="item.progress" v-bind:style="{width: item.progress, background: item.progressColor}"></div>
+                        <i class="item-media-type icon" :class="item.icon"></i>
+                        <img class="item-preview-img" :src="item.source">
+                        <div class="item-progress" v-if="item.progress" :style="{width: item.progress, background: item.progressColor}"></div>
                     </div>
                     <div class="item-tools">
                         <i class="item-tool icon icon-cog" v-on:click="itemFn(index,'edit')" title="设置参数"></i>
-                        <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" v-bind:class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
-                        <i class="item-tool icon icon-loop2" v-bind:class="{rotating:item.rotating}" v-on:click="itemFn(index,'convert')" title="转换我"></i>
+                        <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
+                        <i class="item-tool icon icon-loop2" :class="{rotating:item.rotating}" v-on:click="itemFn(index,'convert')" title="转换我"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn(index,'del')" title="删除"></i>
                     </div>
                 </dt>
@@ -86,7 +85,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="text" v-model="item.toname" title="输出名称">
+                        <input type="text" :value="item.toname" title="输出名称">
                     </div>
                 </dd>
                 <dd class="item-info">
@@ -98,7 +97,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="range" min="0" v-bind:max="item.size" v-model="item.tosize" title="调节输出大小">
+                        <input type="range" min="0" :max="item.size" v-model="item.tosize" title="调节输出大小">
                     </div>
                 </dd>
                 <dd class="item-info">
@@ -125,7 +124,7 @@
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <select title="选择输出格式" v-model="item.toformat">
-                            <option v-for="format of item.toformats" v-bind:value="format">{{format}}</option>
+                            <option v-for="format of item.toformats" :value="format">{{format}}</option>
                         </select>
                     </div>
                 </dd>
@@ -138,7 +137,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="range" step="0.001" min="0" v-bind:max="item.duration" v-model="item.curtime" v-on:change="itemFn(index,'curtime')" title="时间滑杆">
+                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:input="itemFn(index,'curtime', $event)" title="时间滑杆">
                         <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
                         <div class="item-time">
                             <button v-on:click="itemFn(index, 'setstart')" title="标记起点">标记起点</button>

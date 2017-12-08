@@ -243,7 +243,7 @@ button:active{
     color: #888;
 }
 .drop-panel-group input[type=text]{
-    width: calc(98% - 5em);
+    width: calc(98% - 8em);
 }
 .drop-panel-group input[type=number]{
     width: 4em;

@@ -56,7 +56,7 @@ function getInfo(url,options){
 
                 if(otherFormats.image.indexOf(extend) !== -1){
                     cammand = ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
-                        o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        o.source = 'data:image/png;base64,'+chunk.toString('base64');
                         status = true;
                         success(o);
                     }).on('end', function(){
@@ -79,9 +79,9 @@ function getInfo(url,options){
                 }
                 if(videos.indexOf(extend) !== -1){
                     o.mediaType = 'video';
-                    o.toformats = videos.concat(audios);
+                    o.toformats = videos.concat(audios,images);
                     cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
-                        o.source = 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk));
+                        o.source = 'data:image/png;base64,'+chunk.toString('base64');
                         status = true;
                         success(o);
                     }).on('end', function(){
@@ -104,12 +104,11 @@ function getInfo(url,options){
 //use for creating preview image data base64 of video when change current time
 function seek(url,time,success){
     let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-an','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
-        success( 'data:image/png;base64,'+btoa(String.fromCharCode.apply(null,chunk)) );
+        success( 'data:image/png;base64,'+ chunk.toString('base64'));
     }).on('end', function(){
         cammand.kill();  
     });
 }
-
 //use for convert one video file
 function convert(o){
     let cammand = ffmpeg(o.input).outputOptions(o.cammand);

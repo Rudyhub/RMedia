@@ -18,15 +18,33 @@ module.exports = {
             return "error time";
         }
     },
-    sizemat(b){
-        if(b < 1024) return size + ' B';
-        let size = b/1024,
-            fixed = arguments[1] || 2;
-        if(size < 1024){
-            return size.toFixed(fixed) + ' KB';
+    sizemat(b, flag){
+        if(!flag){
+            if(b < 1024) return b + ' B';
+            let size = b/1024,
+                fixed = arguments[1] || 2;
+            if(size < 1024){
+                return size.toFixed(fixed) + ' KB';
+            }else{
+                return (size/1024).toFixed(fixed) + ' MB';
+            }
         }else{
-            return (size/1024).toFixed(fixed) + ' MB';
+            if(/^[\d\.]+\s*KB$/.test(b)){
+                return parseFloat(b)*1024;
+            }else if(/^[\d\.]+\s*MB$/.test(b)){
+                return parseFloat(b)*1024*1024;
+            }else{
+                return parseFloat(b);
+            }
         }
+    },
+    namemat(str,n){
+        if(/\d+$/g.test(str)){
+            return str.replace(/\d+$/g, function(a){
+                return (parseInt('1'+a) + n).toString().slice(1);
+            });
+        }
+        return str + (100 + n).toString().slice(1);
     },
     draggable(node, dragnode){
         let sx = 0,
