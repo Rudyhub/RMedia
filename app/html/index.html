@@ -137,7 +137,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:input="itemFn(index,'curtime', $event)" title="时间滑杆">
+                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:change="itemFn(index,'curtime', $event)" title="时间滑杆">
                         <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
                         <div class="item-time">
                             <button v-on:click="itemFn(index, 'setstart')" title="标记起点">标记起点</button>

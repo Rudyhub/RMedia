@@ -106,8 +106,14 @@ new Vue({
 								case 'video': itemO.icon = 'icon-video-camera'; break;
 								case 'audio': itemO.icon = 'icon-headphones'; break;
 							}
-							// itemO.bitv = parseFloat(md.bitv) || 0;
-							// itemO.bita = parseFloat(md.bita) || 0;
+							itemO.bitv = parseFloat(md.bitv) || 0;
+							itemO.bita = parseFloat(md.bita) || 0;
+							
+							if(itemO.bitv > config.output.bitv){
+								itemO.tosize = config.output.bitv*itemO.duration/8;
+							}else{
+								itemO.tosize = itemO.bitv*itemO.duration/8;
+							}
 						});
 					})(files[i]);
 				}
@@ -117,10 +123,10 @@ new Vue({
             this.output = e.target.files[0].path || '';
         },
         itemFn(index, str, e){
-        	let that = this,
-        		item = that.items[index];
+        	let vue = this,
+        		item = vue.items[index];
         	switch(str){
-        		case 'del': that.items.splice(index,1); break;
+        		case 'del': vue.items.splice(index,1); break;
         		case 'edit': item.editable = !item.editable; break;
         		case 'lock': item.lock = !item.lock; break;
         		case 'setstart': item.starttime = item.curtime; break;
@@ -136,10 +142,56 @@ new Vue({
         			}
         			break;
         		case 'convert':
-        			item.rotating = !item.rotating;
+        			//item.rotating = !item.rotating;
+        			let cammand = [], r = 255, g = 0, cuttime = item.endtime - item.starttime;
+        			function progress(prog){
+						if(g < 150){
+							g = Math.round( prog.percent * 3.5 );
+						}else{
+							r = 255 - Math.round((prog.percent - g/3.5) * 3.5);
+						}
+						item.progress = Math.round(prog.percent) + '%';
+						item.progressColor = 'rgba('+r+','+g+',0,0.5)';
+        			}
+        			switch(item.mediaType){
+        				case 'video':
+        					if(cuttime === 0){
+        						//to create image from a frame
+        						cammand.push('-vframes 1');
+        					}else{
+        						cammand.push('-ss '+item.starttime, '-t '+cuttime, '-b:v '+item.tosize*8/item.duration, '-preset '+vue.speedLevel);
+        					}
+		        			Media.convert({
+		        				cammand: cammand,
+		        				input: item.path,
+		        				size: item.towidth + 'x' + item.toheight,
+		        				output: vue.output +'/'+ item.toname,
+		        				progress: progress,
+		        				error: function(e){
+		        					alert('发生了错误：' + e.message);
+		        				}
+		        			});
+        					break;
+        				case 'audio':
+        					if(cuttime > 0) cammand.push('-ss '+item.starttime, '-t '+cuttime,'-preset '+vue.speedLevel, '-y');
+        					Media.convert({
+		        				cammand: cammand,
+		        				input: item.path,
+		        				output: vue.output +'/'+ item.toname,
+		        				progress: progress,
+		        				error: function(e){
+		        					alert('发生了错误：' + e.message);
+		        				}
+		        			});
+        					break;
+        				case 'image':
+        					;
+        				break;
+
+        			}
 
         			/*
-        			if(!that.output){
+        			if(!vue.output){
         				alert('请选择输出目录!');
         				return;
         			}

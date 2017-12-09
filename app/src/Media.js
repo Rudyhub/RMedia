@@ -80,7 +80,7 @@ function getInfo(url,options){
                 if(videos.indexOf(extend) !== -1){
                     o.mediaType = 'video';
                     o.toformats = videos.concat(audios,images);
-                    cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-an','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
+                    cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
                         o.source = 'data:image/png;base64,'+chunk.toString('base64');
                         status = true;
                         success(o);
@@ -103,7 +103,7 @@ function getInfo(url,options){
 
 //use for creating preview image data base64 of video when change current time
 function seek(url,time,success){
-    let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-an','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
+    let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
         success( 'data:image/png;base64,'+ chunk.toString('base64'));
     }).on('end', function(){
         cammand.kill();  
@@ -117,6 +117,9 @@ function convert(o){
     }
     if(typeof o.progress === 'function'){
         cammand.on('progress', o.progress);
+    }
+    if(o.size){
+        cammand.size(o.size);
     }
     cammand.on('end', function(a,b){
         cammand.kill();
