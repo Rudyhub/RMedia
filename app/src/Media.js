@@ -1,5 +1,7 @@
 const config = require('./config'),
-ffmpeg = require('fluent-ffmpeg'),
+fs = require('fs'),
+childprocess = require('child_process'),
+// ffmpeg = require('fluent-ffmpeg'),
 //html支持的格式
 formats = {
     image: ['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
@@ -16,85 +18,86 @@ images = formats.image.concat( otherFormats.image ),
 videos = formats.video.concat( otherFormats.video ),
 audios = formats.audio.concat( otherFormats.audio );
 
-ffmpeg.setFfmpegPath(config.ffmpegRoot + 'ffmpeg.exe');
-ffmpeg.setFfprobePath(config.ffmpegRoot +'ffprobe.exe');
-
+function getThumb(url,options){
+    let size = options.scale ? options.scale : '320:-1',
+    time = options.time ? ' -ss '+options.time : '',
+    vframes = options.time ? ' -vframes 1' : '',
+    thumb = config.appRoot+'cache/tmp.png';
+    let ffmpeg = childprocess.exec(config.ffmpegRoot + 'ffmpeg.exe'+time+' -i "'+url+'"'+vframes+' -vf "scale='+size+'" -y "'+thumb+'"',(err)=>{
+        if(!err){
+            let data = [],
+            len = 0,
+            rs = fs.createReadStream(thumb);
+            rs.on('data', function(chunk){
+                data.push(chunk);
+                len += chunk.length;
+            });
+            rs.on('end', function(){
+                if(typeof options.success === 'function'){
+                    options.success( 'data:image/png;base64,' + Buffer.concat(data, len).toString('base64') );
+                }
+                try{
+                    ffmpeg.kill();
+                }catch(er){}
+            });
+            if(typeof options.error === 'function'){
+                rs.on('error', options.error);
+            }
+        }
+    });
+}
 function getInfo(url,options){
-    let extend, success, fail, size = '320x?';
-    if(typeof options === 'object'){
-        success = options.success;
-        fail = options.fail;
-        size = options.size ? options.size : size;
-    }else if(typeof options === 'function'){
-        success = options;
-    }
-    options = null;
-
-    if(typeof success !== 'function') return;
-
-    extend = url.slice(url.lastIndexOf('.')+1);
-
-    ffmpeg.ffprobe(url, function(err, data){
+    let ffmpeg,
+    extend = url.slice(url.lastIndexOf('.')+1),
+    streamtype = audios.indexOf( extend ) !== -1 ? 'a' : 'v',
+    ffprobe = childprocess.exec('ffprobe.exe -hide_banner -print_format json -show_format -show_streams -select_streams '+streamtype+' -i "'+url+'"',(err,stdout,stderr)=>{
         if(err){
-            if(fail) fail(err);
-        }else {
-            let stm = data.streams,
-                status = false,
+            if(typeof options.error === 'function') options.error(err);
+        }else{
+            let data = JSON.parse(stdout),
+                streams = data.streams,
                 o = {
                     extend: extend,
                     size: data.format.size,
                     bit: parseFloat(data.format['bit_rate'])
-                },
-                cammand;
+                };
             if(images.indexOf(extend) !== -1){
                 o.source = url;
-                o.width = stm[0].width;
-                o.height = stm[0].height;
-                o.bitv = stm[0]['bit_rate'];
-                o.toformats = images;
                 o.mediaType = 'image';
-
+                o.width = streams[0].width;
+                o.height = streams[0].height;
+                o.bitv = streams[0]['bit_rate'];
+                o.toformats = images;
                 if(otherFormats.image.indexOf(extend) !== -1){
-                    cammand = ffmpeg(url).outputOptions(['-f image2','-y']).noAudio().size(size).pipe().on('data',function(chunk){
-                        o.source = 'data:image/png;base64,'+chunk.toString('base64');
-                        status = true;
-                        success(o);
-                    }).on('end', function(){
-                        if(!status) success(o);
-                        cammand.kill();
+                    getThumb(url,{
+                        success: (base64)=>{
+                            o.source = base64;
+                            options.success(o);
+                        }
                     });
                 }else{
-                    success(o);
+                    options.success(o);
                 }
             }else{
+                o.mediaType = streams[0].codec_type;
                 o.duration = data.format.duration;
-                for(let i=0; i<stm.length; i++){
-                    if(stm[i]['codec_type'] === 'video'){
-                        o.width = stm[i].width;
-                        o.height = stm[i].height;
-                        o.bitv = parseFloat(stm[i]['bit_rate']);
-                    }else if(stm[i]['codec_type'] === 'audio'){
-                        o.bita = parseFloat(stm[i]['bit_rate']);
-                    }
-                }
-                if(videos.indexOf(extend) !== -1){
-                    o.mediaType = 'video';
+                if(o.mediaType === 'video'){
+                    o.width = streams[0].width;
+                    o.height = streams[0].height;
+                    o.bitv = streams[0]['bit_rate'];
                     o.toformats = videos.concat(audios,images);
-                    cammand = ffmpeg(url).seekInput(o.duration/2).outputOptions(['-vframes 1','-f image2', '-y']).size(size).pipe().on('data',function(chunk){
-                        o.source = 'data:image/png;base64,'+chunk.toString('base64');
-                        status = true;
-                        success(o);
-                    }).on('end', function(){
-                        if(!status) success(o);
-                        cammand.kill();
+                    getThumb(url,{
+                        time: o.duration / 2,
+                        success: (base64)=>{
+                            o.source = base64;
+                            options.success(o);
+                        }
                     });
-                }else if(audios.indexOf(extend) !== -1){
-                    o.mediaType = 'audio';
+                }else if(o.mediaType === 'audio'){
+                    o.bita = streams[0]['bit_rate'];
                     o.toformats = audios;
                     o.source = config.audioThumb;
-                    success(o);
-                }else{
-                    success(o);
+                    options.success(o);
                 }
             }
         }
@@ -103,14 +106,17 @@ function getInfo(url,options){
 
 //use for creating preview image data base64 of video when change current time
 function seek(url,time,success){
+    /*
     let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
         success( 'data:image/png;base64,'+ chunk.toString('base64'));
     }).on('end', function(){
         cammand.kill();  
     });
+    */
 }
 //use for convert one video file
 function convert(o){
+    /*
     let cammand = ffmpeg(o.input);
     if(o.ss){
         cammand.seekInput(o.ss);
@@ -141,7 +147,9 @@ function convert(o){
         if(typeof o.error === 'function') o.error(e, a, b);
     });
     cammand.save(o.output);
+    */
 }
+
 module.exports = {
     info: getInfo,
     seek: seek,

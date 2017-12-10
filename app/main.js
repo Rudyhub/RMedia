@@ -89,29 +89,31 @@ new Vue({
 							rotating: false
 						};
 						vue.items.push(itemO);
-						Media.info(file.path, function(md) {
-							itemO.source = md.source;
-							itemO.width = md.width || 0;
-							itemO.height = md.height || 0;
-							itemO.duration = parseFloat(md.duration) || 0;
-							itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
-							itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
-							itemO.endtime = itemO.duration;
-							itemO.toformats = md.toformats;
-							itemO.mediaType = md.mediaType;
-							itemO.toformat = config.output.format[itemO.mediaType];
-							switch(itemO.mediaType){
-								case 'image': itemO.icon = 'icon-image'; break;
-								case 'video': itemO.icon = 'icon-video-camera'; break;
-								case 'audio': itemO.icon = 'icon-headphones'; break;
-							}
-							itemO.bitv = parseFloat(md.bitv) || 0;
-							itemO.bita = parseFloat(md.bita) || 0;
-							
-							if(itemO.bitv > config.output.bitv){
-								itemO.tosize = config.output.bitv*itemO.duration/8;
-							}else{
-								itemO.tosize = itemO.bitv*itemO.duration/8;
+						Media.info(file.path, {
+							success(md){
+								itemO.source = md.source;
+								itemO.width = md.width || 0;
+								itemO.height = md.height || 0;
+								itemO.duration = parseFloat(md.duration) || 0;
+								itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
+								itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
+								itemO.endtime = itemO.duration;
+								itemO.toformats = md.toformats;
+								itemO.mediaType = md.mediaType;
+								itemO.toformat = config.output.format[itemO.mediaType];
+								switch(itemO.mediaType){
+									case 'image': itemO.icon = 'icon-image'; break;
+									case 'video': itemO.icon = 'icon-video-camera'; break;
+									case 'audio': itemO.icon = 'icon-headphones'; break;
+								}
+								itemO.bitv = parseFloat(md.bitv) || 0;
+								itemO.bita = parseFloat(md.bita) || 0;
+								
+								if(itemO.bitv > config.output.bitv){
+									itemO.tosize = config.output.bitv*itemO.duration/8;
+								}else{
+									itemO.tosize = itemO.bitv*itemO.duration/8;
+								}
 							}
 						});
 					})(files[i]);
