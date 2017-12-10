@@ -100,7 +100,6 @@ new Vue({
 							itemO.toformats = md.toformats;
 							itemO.mediaType = md.mediaType;
 							itemO.toformat = config.output.format[itemO.mediaType];
-							itemO.toname = vue.nameAll +'-'+ itemO.name +'.'+ itemO.toformat;
 							switch(itemO.mediaType){
 								case 'image': itemO.icon = 'icon-image'; break;
 								case 'video': itemO.icon = 'icon-video-camera'; break;
@@ -122,19 +121,31 @@ new Vue({
 		chosedir(e){
             this.output = e.target.files[0].path || '';
         },
-        itemFn(index, str, e){
+        itemFn(e, index, str){
         	let vue = this,
         		item = vue.items[index];
         	switch(str){
         		case 'del': vue.items.splice(index,1); break;
         		case 'edit': item.editable = !item.editable; break;
         		case 'lock': item.lock = !item.lock; break;
-        		case 'setstart': item.starttime = item.curtime; break;
-        		case 'setend': item.endtime = item.curtime; break;
+        		case 'towidth':
+        			item.towidth = parseInt(e.target.value);
+        			item.toheight = Math.round((item.height / item.width) * item.towidth);
+        			break;
+        		case 'toheight':
+        			item.toheight = parseInt(e.target.value);
+        			item.towidth = Math.round(item.toheight / (item.height / item.width));
+        			break;
+        		case 'setstart': 
+        			item.starttime = item.curtime;
+        			if(item.starttime === item.endtime) item.toformat = 'jpg';
+        			break;
+        		case 'setend':
+        			item.endtime = item.curtime;
+        			if(item.starttime === item.endtime) item.toformat = 'jpg';
+        			break;
         		case 'curtime':
-        			if(e){
-        				item.curtime = parseFloat(e.target.value);
-        			}
+        			item.curtime = parseFloat(e.target.value);
         			if(item.mediaType === 'video'){
         				Media.seek(item.path, item.curtime, function(source){
 	        				item.source = source;
@@ -142,54 +153,64 @@ new Vue({
         			}
         			break;
         		case 'convert':
-        			//item.rotating = !item.rotating;
-        			let cammand = [], r = 255, g = 0, cuttime = item.endtime - item.starttime;
-        			function progress(prog){
-						if(g < 150){
-							g = Math.round( prog.percent * 3.5 );
-						}else{
-							r = 255 - Math.round((prog.percent - g/3.5) * 3.5);
-						}
-						item.progress = Math.round(prog.percent) + '%';
-						item.progressColor = 'rgba('+r+','+g+',0,0.5)';
-        			}
+        			if(item.rotating) return false;
+        			item.rotating = true;
+        			item.progress = 0;
+					item.progressColor = '';
+
+        			let cammand = [], r = 255, g = 0, cuttime = item.endtime - item.starttime, percent = 0, tosize = null,
+        			options = {
+        				input: item.path,
+        				ss: item.starttime,
+        				duration: cuttime,
+        				cammand: cammand,
+        				output: vue.output +'/'+ item.toname + '.' + item.toformat,
+        				progress: function(prog){
+        					if(cuttime > 0){
+		        				percent = prog.percent/(cuttime/item.duration);
+		        			}else{
+		        				percent = 100;
+		        				r = 60;
+		        				b = 150;
+		        			}
+							if(g < 150){
+								g = Math.round( percent * 3.5 );
+							}else{
+								r = 255 - Math.round( (percent - g/3.5) * 3.5);
+							}
+							item.progress = Math.round(percent) + '%';
+							item.progressColor = 'rgba('+r+','+g+',0,0.5)';
+	        			},
+        				error: function(e){
+        					item.rotating = false;
+        					alert('发生了错误：' + e.message);
+        				},
+        				complete: function(){
+        					item.rotating = false;
+        				}
+        			};
+        			
         			switch(item.mediaType){
         				case 'video':
+        					options.size = item.towidth + 'x' + item.toheight;
         					if(cuttime === 0){
         						//to create image from a frame
         						cammand.push('-vframes 1');
         					}else{
-        						cammand.push('-ss '+item.starttime, '-t '+cuttime, '-b:v '+item.tosize*8/item.duration, '-preset '+vue.speedLevel);
+        						cammand.push('-b:v '+item.tosize*8/item.duration, '-preset '+vue.speedLevel);
         					}
-		        			Media.convert({
-		        				cammand: cammand,
-		        				input: item.path,
-		        				size: item.towidth + 'x' + item.toheight,
-		        				output: vue.output +'/'+ item.toname,
-		        				progress: progress,
-		        				error: function(e){
-		        					alert('发生了错误：' + e.message);
-		        				}
-		        			});
+        					Media.convert(options);
         					break;
         				case 'audio':
-        					if(cuttime > 0) cammand.push('-ss '+item.starttime, '-t '+cuttime,'-preset '+vue.speedLevel, '-y');
-        					Media.convert({
-		        				cammand: cammand,
-		        				input: item.path,
-		        				output: vue.output +'/'+ item.toname,
-		        				progress: progress,
-		        				error: function(e){
-		        					alert('发生了错误：' + e.message);
-		        				}
-		        			});
+        					if(cuttime > 0){
+        						cammand.push('-preset '+vue.speedLevel);
+        						Media.convert(options);
+        					}
         					break;
         				case 'image':
         					;
         				break;
-
         			}
-
         			/*
         			if(!vue.output){
         				alert('请选择输出目录!');
@@ -222,7 +243,7 @@ new Vue({
         	let len = this.items.length, i = 0, n = 0;
         	for(; i < len; i++){
         		if(this.items[i].lock){
-        			this.items[i].toname = utils.namemat(this.nameAll, ++n) +'.'+ this.items[i].toformat;
+        			this.items[i].toname = utils.namemat(this.nameAll, ++n);
         		}
         	}
         },

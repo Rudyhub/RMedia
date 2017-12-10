@@ -68,12 +68,13 @@
                         <i class="item-media-type icon" :class="item.icon"></i>
                         <img class="item-preview-img" :src="item.source">
                         <div class="item-progress" v-if="item.progress" :style="{width: item.progress, background: item.progressColor}"></div>
+                        <span class="item-progress-percent" v-if="item.progress">{{item.progress}}</span>
                     </div>
                     <div class="item-tools">
-                        <i class="item-tool icon icon-cog" v-on:click="itemFn(index,'edit')" title="设置参数"></i>
-                        <i class="item-tool icon" v-on:click="itemFn(index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
-                        <i class="item-tool icon icon-loop2" :class="{rotating:item.rotating}" v-on:click="itemFn(index,'convert')" title="转换我"></i>
-                        <i class="item-tool icon icon-bin" v-on:click="itemFn(index,'del')" title="删除"></i>
+                        <i class="item-tool icon icon-cog" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>
+                        <i class="item-tool icon" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
+                        <i class="item-tool icon icon-loop2" :class="{rotating:item.rotating}" v-on:click="itemFn($event,index,'convert')" title="转换我"></i>
+                        <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
                     </div>
                 </dt>
                 <dd class="item-info">
@@ -85,7 +86,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="text" :value="item.toname" title="输出名称">
+                        <input type="text" :value="item.toname+'.'+item.toformat" title="输出名称">
                     </div>
                 </dd>
                 <dd class="item-info">
@@ -110,9 +111,9 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="number" min="0" v-model.number="item.towidth" title="输出宽">
+                        <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
                         &times;
-                        <input type="number" min="0" v-model.number="item.toheight" title="输出高">
+                        <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
                         像素
                     </div>
                 </dd>
@@ -137,11 +138,11 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:change="itemFn(index,'curtime', $event)" title="时间滑杆">
+                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:change="itemFn($event,index,'curtime')" title="时间滑杆">
                         <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
                         <div class="item-time">
-                            <button v-on:click="itemFn(index, 'setstart')" title="标记起点">标记起点</button>
-                            <button v-on:click="itemFn(index, 'setend')" title="标记终点">标记终点</button>
+                            <button v-on:click="itemFn($event,index,'setstart')" title="标记起点">标记起点</button>
+                            <button v-on:click="itemFn($event,index,'setend')" title="标记终点">标记终点</button>
                         </div>
                     </div>
                 </dd>

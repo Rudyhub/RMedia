@@ -278,6 +278,21 @@ button:active{
     padding: .26vw;
     font-size: 1.5vw;
     color: var(--blue1);
+    z-index: 2;
+}
+.item-progress-percent{
+    position: absolute;
+    width: 100%;
+    height: 1.5vw;
+    font-size: 1.5vw;
+    line-height: 1.5vw;
+    font-weight: bolder;
+    text-align: center;
+    color: #fff;
+    top: 0;
+    bottom: 0;
+    margin: auto 0;
+    z-index: 2;
 }
 .item-preview-img{
     width: 100%;

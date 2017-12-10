@@ -2,7 +2,7 @@ const config = require('./config'),
 ffmpeg = require('fluent-ffmpeg'),
 //html支持的格式
 formats = {
-    image: ['png','jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
+    image: ['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
     video: ['mp4','ogg','webm'],
     audio: ['aac','mp3','wav']
 },
@@ -111,15 +111,24 @@ function seek(url,time,success){
 }
 //use for convert one video file
 function convert(o){
-    let cammand = ffmpeg(o.input).outputOptions(o.cammand);
+    let cammand = ffmpeg(o.input);
+    if(o.ss){
+        cammand.seekInput(o.ss);
+    }
+    if(o.cammand){
+        cammand.outputOptions(o.cammand);
+    }
+    if(o.duration){
+        cammand.duration(o.duration);
+    }
+    if(o.size && /^\d+x\d+$/.test(o.size)){
+        cammand.size(o.size);
+    }
     if(typeof o.start === 'function'){
         cammand.on('start', o.start);
     }
     if(typeof o.progress === 'function'){
         cammand.on('progress', o.progress);
-    }
-    if(o.size){
-        cammand.size(o.size);
     }
     cammand.on('end', function(a,b){
         cammand.kill();
