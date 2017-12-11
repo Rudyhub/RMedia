@@ -149,8 +149,11 @@ new Vue({
         		case 'curtime':
         			item.curtime = parseFloat(e.target.value);
         			if(item.mediaType === 'video'){
-        				Media.seek(item.path, item.curtime, function(source){
-	        				item.source = source;
+        				Media.seek(item.path, {
+        					time: item.curtime,
+        					success: (source)=>{
+	        					item.source = source;
+	        				}
 	        			});
         			}
         			break;
@@ -160,17 +163,14 @@ new Vue({
         			item.progress = 0;
 					item.progressColor = '';
 
-        			let cammand = [], r = 255, g = 0, cuttime = item.endtime - item.starttime, percent = 0, tosize = null,
+        			let r = 255, g = 0, cuttime = item.endtime - item.starttime, tosize = null,
         			options = {
         				input: item.path,
         				ss: item.starttime,
         				duration: cuttime,
-        				cammand: cammand,
         				output: vue.output +'/'+ item.toname + '.' + item.toformat,
-        				progress: function(prog){
-        					if(cuttime > 0){
-		        				percent = prog.percent/(cuttime/item.duration);
-		        			}else{
+        				progress: function(percent){
+        					if(cuttime <= 0 || !cuttime){
 		        				percent = 100;
 		        				r = 60;
 		        				b = 150;
@@ -194,18 +194,18 @@ new Vue({
         			
         			switch(item.mediaType){
         				case 'video':
-        					options.size = item.towidth + 'x' + item.toheight;
+        					options.size = item.towidth + ':' + item.toheight;
         					if(cuttime === 0){
         						//to create image from a frame
-        						cammand.push('-vframes 1');
+        						options.cammand = '-vframes 1';
         					}else{
-        						cammand.push('-b:v '+item.tosize*8/item.duration, '-preset '+vue.speedLevel);
+        						options.cammand = '-b:v '+item.tosize*8/item.duration+' -preset '+vue.speedLevel;
         					}
         					Media.convert(options);
         					break;
         				case 'audio':
         					if(cuttime > 0){
-        						cammand.push('-preset '+vue.speedLevel);
+        						cammand = '-preset '+vue.speedLevel;
         						Media.convert(options);
         					}
         					break;

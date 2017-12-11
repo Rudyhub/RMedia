@@ -20,7 +20,5 @@
   "webkit": {
     "plugin": true
   },
-  "dependencies": {
-    "fluent-ffmpeg": "^2.1.2"
-  }
+  "dependencies": {}
 }

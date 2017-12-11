@@ -1,7 +1,6 @@
 const config = require('./config'),
 fs = require('fs'),
 childprocess = require('child_process'),
-// ffmpeg = require('fluent-ffmpeg'),
 //html支持的格式
 formats = {
     image: ['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
@@ -22,8 +21,10 @@ function getThumb(url,options){
     let size = options.scale ? options.scale : '320:-1',
     time = options.time ? ' -ss '+options.time : '',
     vframes = options.time ? ' -vframes 1' : '',
-    thumb = config.appRoot+'cache/tmp.png';
-    let ffmpeg = childprocess.exec(config.ffmpegRoot + 'ffmpeg.exe'+time+' -i "'+url+'"'+vframes+' -vf "scale='+size+'" -y "'+thumb+'"',(err)=>{
+    extend = options.format || 'png',
+    format = (extend === 'jpg' || extend === 'jpeg' ) ? 'image2' : (extend === 'png' ? 'apng' : 'gif'), 
+    thumb = config.appRoot+'cache/thumb';
+    let ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe'+time+' -i "'+url+'"'+vframes+' -vf "scale='+size+'" -y  -f '+format+' "'+thumb+'"',(err)=>{
         if(!err){
             let data = [],
             len = 0,
@@ -34,11 +35,8 @@ function getThumb(url,options){
             });
             rs.on('end', function(){
                 if(typeof options.success === 'function'){
-                    options.success( 'data:image/png;base64,' + Buffer.concat(data, len).toString('base64') );
+                    options.success( 'data:image/'+extend+';base64,' + Buffer.concat(data, len).toString('base64') );
                 }
-                try{
-                    ffmpeg.kill();
-                }catch(er){}
             });
             if(typeof options.error === 'function'){
                 rs.on('error', options.error);
@@ -50,7 +48,7 @@ function getInfo(url,options){
     let ffmpeg,
     extend = url.slice(url.lastIndexOf('.')+1),
     streamtype = audios.indexOf( extend ) !== -1 ? 'a' : 'v',
-    ffprobe = childprocess.exec('ffprobe.exe -hide_banner -print_format json -show_format -show_streams -select_streams '+streamtype+' -i "'+url+'"',(err,stdout,stderr)=>{
+    ffprobe = childprocess.exec(config.ffmpegRoot+'/ffprobe.exe -hide_banner -print_format json -show_format -show_streams -select_streams '+streamtype+' -i "'+url+'"',(err,stdout,stderr)=>{
         if(err){
             if(typeof options.error === 'function') options.error(err);
         }else{
@@ -70,7 +68,7 @@ function getInfo(url,options){
                 o.toformats = images;
                 if(otherFormats.image.indexOf(extend) !== -1){
                     getThumb(url,{
-                        success: (base64)=>{
+                        success: (base64) => {
                             o.source = base64;
                             options.success(o);
                         }
@@ -88,7 +86,7 @@ function getInfo(url,options){
                     o.toformats = videos.concat(audios,images);
                     getThumb(url,{
                         time: o.duration / 2,
-                        success: (base64)=>{
+                        success: (base64) => {
                             o.source = base64;
                             options.success(o);
                         }
@@ -104,55 +102,62 @@ function getInfo(url,options){
     });
 }
 
-//use for creating preview image data base64 of video when change current time
-function seek(url,time,success){
-    /*
-    let cammand = ffmpeg(url).seekInput(time).outputOptions(['-vframes 1','-f image2', '-y']).size('320x?').pipe().on('data',function(chunk){
-        success( 'data:image/png;base64,'+ chunk.toString('base64'));
-    }).on('end', function(){
-        cammand.kill();  
-    });
-    */
-}
 //use for convert one video file
 function convert(o){
-    /*
-    let cammand = ffmpeg(o.input);
+    let cammand = [],
+        ffmpeg;
     if(o.ss){
-        cammand.seekInput(o.ss);
+        cammand.push('-ss',o.ss);
     }
+    cammand.push('-hide_banner','-i',o.input);
     if(o.cammand){
-        cammand.outputOptions(o.cammand);
+        cammand = cammand.concat(o.cammand.split(/\s+/));
     }
     if(o.duration){
-        cammand.duration(o.duration);
+        cammand.push('-t',o.duration);
     }
-    if(o.size && /^\d+x\d+$/.test(o.size)){
-        cammand.size(o.size);
+    if(o.size && /^\d+:-?\d+$/.test(o.size)){
+        cammand.push('-vf','scale='+o.size);
     }
-    if(typeof o.start === 'function'){
-        cammand.on('start', o.start);
-    }
+    cammand.push('-y',o.output);
+    ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',cammand);
     if(typeof o.progress === 'function'){
-        cammand.on('progress', o.progress);
+        ffmpeg.stderr.on('data', (stderr)=>{
+            let line = stderr.toString(),
+                times = line.match(/time=\s*([\d\.:]+)\s+/i),
+                time = 0
+                percent = 0;    
+            if(times){
+                let timesplit = times[1].split(':');
+                time = ( parseFloat(timesplit[0])*3600 + parseFloat(timesplit[1])*60 + parseFloat(timesplit[2]) )*1000;
+                if(o.duration){
+                    percent = Math.round(100*time/(o.duration*1000));
+                }else{
+                    percent = 100;
+                }
+                o.progress(percent);
+            }
+        });
     }
-    cammand.on('end', function(a,b){
-        cammand.kill();
+    ffmpeg.on('exit', function(a,b){
+        if(a === 0){
+            if(typeof o.progress === 'function') o.progress(100);
+            if(typeof o.success === 'function') o.success();
+        }else{
+            if(typeof o.error === 'function') o.error(b);
+        }
         if(typeof o.complete === 'function'){
             o.complete(a,b);
         }
     });
-    cammand.on('error', function(e,a,b){
-        cammand.kill();
+    ffmpeg.on('error', function(e,a,b){
         if(typeof o.error === 'function') o.error(e, a, b);
     });
-    cammand.save(o.output);
-    */
 }
 
 module.exports = {
     info: getInfo,
-    seek: seek,
+    seek: getThumb,
     convert: convert,
     finalImg: function(url, type, quality, fn){
         let c = document.createElement('canvas');
