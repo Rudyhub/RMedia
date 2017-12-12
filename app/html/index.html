@@ -141,8 +141,10 @@
                         <input type="range" step="0.001" min="0" :max="item.duration" v-on:change="itemFn($event,index,'curtime')" title="时间滑杆">
                         <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
                         <div class="item-time">
+                            <button v-on:click="itemFn($event,index,'prevframe')" title="上一帧"><i class="icon icon-previous2"></i></button>
                             <button v-on:click="itemFn($event,index,'setstart')" title="标记起点">标记起点</button>
                             <button v-on:click="itemFn($event,index,'setend')" title="标记终点">标记终点</button>
+                            <button v-on:click="itemFn($event,index,'nextframe')" title="下一帧"><i class="icon icon-next2"></i></button>
                         </div>
                     </div>
                 </dd>

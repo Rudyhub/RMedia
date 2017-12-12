@@ -140,11 +140,11 @@ new Vue({
         			break;
         		case 'setstart': 
         			item.starttime = item.curtime;
-        			if(item.starttime === item.endtime) item.toformat = 'jpg';
+        			item.toformat = item.starttime === item.endtime ? 'jpg' : 'mp4';
         			break;
         		case 'setend':
         			item.endtime = item.curtime;
-        			if(item.starttime === item.endtime) item.toformat = 'jpg';
+        			item.toformat = item.starttime === item.endtime ? 'jpg' : 'mp4';
         			break;
         		case 'curtime':
         			item.curtime = parseFloat(e.target.value);
