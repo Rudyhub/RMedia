@@ -17,11 +17,11 @@ module.exports = {
         path: __dirname + "/test/nwjs/app/js",
         filename: "index.js"
     },
-    plugins: [
-        new BabiliPlugin()
-    ],
+    // plugins: [
+    //     new BabiliPlugin()
+    // ],
     target: 'node-webkit',
-    externals: {
-    	'fluent-ffmpeg': 'commonjs fluent-ffmpeg'
-    }
+    // externals: {
+    // 	'fluent-ffmpeg': 'commonjs fluent-ffmpeg'
+    // }
 };

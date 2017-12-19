@@ -46,6 +46,7 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
+    
     draggable(node, dragnode){
         let sx = 0,
             sy = 0,

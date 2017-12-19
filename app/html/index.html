@@ -20,14 +20,17 @@
         <section class="section-border">
             <div class="menu">
                 <button>
-                    <i class="icon icon-folder-open"></i> 打开
-                    <input v-on:change="chosefile" type="file" title="打开" multiple>
+                    <i class="icon icon-folder-open"></i>
+                    <input v-on:change="chosefile" type="file" title="打开文件" multiple>
                 </button>
-                <button v-on:click="startConvert" class="start-btn" title="开始">
-                    <i class="icon icon-loop2"></i> 开始
+                <button class="start-btn" title="开始" v-on:click="convert(-1)" title="批量转换">
+                    <i class="icon icon-loop2"></i>
                 </button>
-                <button v-on:click="gotoSetAll" title="设置">
-                    <i class="icon icon-cog"></i> 设置
+                <button v-on:click="gotoSetAll" title="全局设置">
+                    <i class="icon icon-cog"></i>
+                </button>
+                <button v-on:click="alphaFn" title="透明/黑色背景">
+                    <i class="icon icon-contrast"></i>
                 </button>
             </div>
             <div class="drop-panel" :class="{slidedown:dropSlidedown}">
@@ -65,28 +68,43 @@
             <dl class="item" v-for="(item, index) of items" :class="{editable: item.editable}">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
-                        <i class="item-media-type icon" :class="item.icon"></i>
-                        <img class="item-preview-img" :src="item.source">
+                        <div class="item-preview-box" :class="{alpha:alpha}">
+                            <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.type !== 'image'" v-on:click="play($event,index)"></i>
+                            <img class="item-preview-img" :src="item.thumb" v-if="!item.playing">
+                        </div>
+                        <div class="item-filename text-limit r1">
+                            <i class="item-media-type icon" :class="mediaIcon[item.type]"></i>
+                            {{item.name}}
+                        </div>
                         <div class="item-progress" v-if="item.progress" :style="{width: item.progress, background: item.progressColor}"></div>
-                        <span class="item-progress-percent" v-if="item.progress">{{item.progress}}</span>
+                        <div class="item-progress-percent" v-if="item.progress">{{item.progress}}</div>
                     </div>
                     <div class="item-tools">
-                        <i class="item-tool icon icon-cog" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>
-                        <i class="item-tool icon" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock}"></i>
-                        <i class="item-tool icon icon-loop2" :class="{rotating:item.rotating}" v-on:click="itemFn($event,index,'convert')" title="转换我"></i>
+                        <i class="item-tool icon icon-cog" :class="{active:item.editable}" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>
+                        <i class="item-tool icon" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock, active:item.lock}"></i>
+                        <i class="item-tool icon icon-loop2" v-on:click="convert(index)" title="转换此文件"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
                     </div>
                 </dt>
-                <dd class="item-info">
-                    <div class="item-info-head">文件：</div>
+                <dd class="item-info item-editable">
+                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <div class="text-limit-2">{{item.name}}</div>
+                        <input type="text" :value="item.toname+'.'+item.toformat" title="输出名称">
+                    </div>
+                </dd>
+                <dd class="item-info">
+                    <div class="item-info-head">截取：</div>
+                    <div class="item-info-body">
+                        <i class="color-1 icon icon-arrow-right"> {{item.starttime | timemat}} - {{item.endtime | timemat}} </i>
                     </div>
                 </dd>
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="text" :value="item.toname+'.'+item.toformat" title="输出名称">
+                        <div class="item-time">
+                            <button v-on:click="itemFn($event,index,'setstart')" title="标记起点">标记起点</button>
+                            <button v-on:click="itemFn($event,index,'setend')" title="标记终点">标记终点</button>
+                        </div>
                     </div>
                 </dd>
                 <dd class="item-info">
@@ -124,28 +142,7 @@
                 <dd class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <select title="选择输出格式" v-model="item.toformat">
-                            <option v-for="format of item.toformats" :value="format">{{format}}</option>
-                        </select>
-                    </div>
-                </dd>
-                <dd class="item-info">
-                    <div class="item-info-head">截取：</div>
-                    <div class="item-info-body">
-                        <i class="color-1 icon icon-arrow-right"> {{item.starttime | timemat}} - {{item.endtime | timemat}} </i>
-                    </div>
-                </dd>
-                <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
-                    <div class="item-info-body">
-                        <input type="range" step="0.001" min="0" :max="item.duration" v-on:change="itemFn($event,index,'curtime')" title="时间滑杆">
-                        <div class="item-time curtime">当前时间：{{item.curtime | timemat}}</div>
-                        <div class="item-time">
-                            <button v-on:click="itemFn($event,index,'prevframe')" title="上一帧"><i class="icon icon-previous2"></i></button>
-                            <button v-on:click="itemFn($event,index,'setstart')" title="标记起点">标记起点</button>
-                            <button v-on:click="itemFn($event,index,'setend')" title="标记终点">标记终点</button>
-                            <button v-on:click="itemFn($event,index,'nextframe')" title="下一帧"><i class="icon icon-next2"></i></button>
-                        </div>
+                        <input type="text" v-model.lazy="item.toformat" title="选择输出格式">
                     </div>
                 </dd>
             </dl>
@@ -156,6 +153,7 @@
     </footer>
 </div>
 <script type="text/javascript" src="../plugins/vue.min.js"></script>
+<script type="text/javascript" src="../plugins/hls.js"></script>
 <script type="text/javascript" src="../js/index.js"></script>
 </body>
 </html>

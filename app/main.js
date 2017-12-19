@@ -2,6 +2,9 @@ const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
 const utils = require('./src/utils');
+const video = document.createElement('video');
+video.className = 'item-preview-img';
+video.controls = true;
 
 new Vue({
 	el: '#app',
@@ -27,7 +30,14 @@ new Vue({
 			veryslow: '非常慢',
 			placebo: '超级慢'
 		},
-		speedLevel: 'medium'
+        speedLevel: 'slow',
+        mediaIcon: {
+            image: 'icon-image',
+            video: 'icon-video-camera',
+            audio: 'icon-headphones'
+        },
+        isConverting: false,
+        alpha: false
 	},
 	methods: {
 		minimize(){
@@ -55,68 +65,62 @@ new Vue({
 		chosefile(e){
 			let vue = this,
 				files = e.target.files,
-				len,
-				file,
-				infostr;
-			if(files && (len = files.length)){
-				for(let i=0; i<len; i++){
-					(function(file){
-						let extend = file.name.slice(file.name.lastIndexOf('.')+1),
-						itemO = {
+				i = 0;
+			if(files && files.length){
+				recycle(files[0]);
+				function recycle(file){
+					let itemO = {
+							id: i,
 							path: file.path,
-							source: config.appRoot+'css/loading.gif',
+                            thumb: config.appRoot+'css/loading.gif',
+                            playing: false,
 							name: file.name,
 							size: file.size,
 							lock: false,
 							width: 0,
 							height: 0,
 							duration: 0,
-							format: extend,
+							format: '',
 							progress: 0,
 							progressColor: '',
 							editable: false,
+                            fps: 0,
 
 							toname: file.name,
 							tosize: 0,
 							towidth: vue.defwidth,
 							toheight: Math.round(vue.defwidth*0.5625),
-							toformat: extend,
-							toformats: [],
-							curtime: 0,
+							toformat: '',
 							starttime: 0,
-							endtime: 0,
-							icon: 'file-empty',
-							rotating: false
+							endtime: 0
 						};
-						vue.items.push(itemO);
-						Media.info(file.path, {
-							success(md){
-								itemO.source = md.source;
-								itemO.width = md.width || 0;
-								itemO.height = md.height || 0;
-								itemO.duration = parseFloat(md.duration) || 0;
-								itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
-								itemO.toheight = md.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
-								itemO.endtime = itemO.duration;
-								itemO.toformats = md.toformats;
-								itemO.mediaType = md.mediaType;
-								itemO.toformat = config.output.format[itemO.mediaType];
-								switch(itemO.mediaType){
-									case 'image': itemO.icon = 'icon-image'; break;
-									case 'video': itemO.icon = 'icon-video-camera'; break;
-									case 'audio': itemO.icon = 'icon-headphones'; break;
-								}
-								itemO.bitv = parseFloat(md.bitv) || 0;
-								itemO.bita = parseFloat(md.bita) || 0;
-								
-								if(itemO.bitv > config.output.bitv){
-									itemO.tosize = config.output.bitv*itemO.duration/8;
-								}else{
-									itemO.tosize = itemO.bitv*itemO.duration/8;
-								}
-							}
-						});
-					})(files[i]);
+					vue.items.push(itemO);
+					Media.info({
+						url: file.path,
+						success: (json)=>{
+                            itemO.format = json.ext;
+							itemO.width = json.width;
+							itemO.height = json.height;
+							itemO.duration = json.duration;
+                            itemO.endtime = json.duration;
+							itemO.type = json.type;
+                            itemO.towidth = itemO.width > vue.defwidth ? vue.defwidth : itemO.width;
+                            itemO.toheight = json.width ? Math.round(itemO.towidth * (itemO.height/itemO.width) ) : 0;
+                            itemO.fps = json.fps;
+                            itemO.toformat = config.output.format[ itemO.type ];
+                            itemO.bitv = parseFloat(json.bitv) || 0;
+                            itemO.bita = parseFloat(json.bita) || 0;
+                            itemO.thumb = json.thumb;
+							i++;
+							if(files[i]) recycle(files[i]);
+						},
+						fail: (err)=>{
+							alert('文件：“'+file.name+'”不支持！错误信息：'+err);
+							vue.items.splice(vue.items.length-1, 1);
+							i++;
+							if(files[i]) recycle(files[i]);
+						}
+					});
 				}
 			}
 		},
@@ -125,120 +129,117 @@ new Vue({
         },
         itemFn(e, index, str){
         	let vue = this,
-        		item = vue.items[index];
+        		item = vue.items[index],
+                tmptime;
         	switch(str){
-        		case 'del': vue.items.splice(index,1); break;
-        		case 'edit': item.editable = !item.editable; break;
-        		case 'lock': item.lock = !item.lock; break;
+        		case 'del':
+                    vue.items.splice(index,1);
+                    break;
+        		case 'edit':
+                    item.editable = !item.editable;
+                    break;
+        		case 'lock':
+                    item.lock = !item.lock;
+                    break;
         		case 'towidth':
-        			item.towidth = parseInt(e.target.value);
+        			item.towidth = parseInt(e.target.value) || 0;
         			item.toheight = Math.round((item.height / item.width) * item.towidth);
         			break;
         		case 'toheight':
-        			item.toheight = parseInt(e.target.value);
+        			item.toheight = parseInt(e.target.value) || 0;
         			item.towidth = Math.round(item.toheight / (item.height / item.width));
         			break;
         		case 'setstart': 
-        			item.starttime = item.curtime;
-        			item.toformat = item.starttime === item.endtime ? 'jpg' : 'mp4';
+                    item.starttime = video.currentTime;
         			break;
         		case 'setend':
-        			item.endtime = item.curtime;
-        			item.toformat = item.starttime === item.endtime ? 'jpg' : 'mp4';
-        			break;
-        		case 'curtime':
-        			item.curtime = parseFloat(e.target.value);
-        			if(item.mediaType === 'video'){
-        				Media.seek(item.path, {
-        					time: item.curtime,
-        					success: (source)=>{
-	        					item.source = source;
-	        				}
-	        			});
-        			}
-        			break;
-        		case 'convert':
-        			if(item.rotating) return false;
-        			item.rotating = true;
-        			item.progress = 0;
-					item.progressColor = '';
-
-        			let r = 255, g = 0, cuttime = item.endtime - item.starttime, tosize = null,
-        			options = {
-        				input: item.path,
-        				ss: item.starttime,
-        				duration: cuttime,
-        				output: vue.output +'/'+ item.toname + '.' + item.toformat,
-        				progress: function(percent){
-        					if(cuttime <= 0 || !cuttime){
-		        				percent = 100;
-		        				r = 60;
-		        				b = 150;
-		        			}
-							if(g < 150){
-								g = Math.round( percent * 3.5 );
-							}else{
-								r = 255 - Math.round( (percent - g/3.5) * 3.5);
-							}
-							item.progress = Math.round(percent) + '%';
-							item.progressColor = 'rgba('+r+','+g+',0,0.5)';
-	        			},
-        				error: function(e){
-        					item.rotating = false;
-        					alert('发生了错误：' + e.message);
-        				},
-        				complete: function(){
-        					item.rotating = false;
-        				}
-        			};
-        			
-        			switch(item.mediaType){
-        				case 'video':
-        					options.size = item.towidth + ':' + item.toheight;
-        					if(cuttime === 0){
-        						//to create image from a frame
-        						options.cammand = '-vframes 1';
-        					}else{
-        						options.cammand = '-b:v '+item.tosize*8/item.duration+' -preset '+vue.speedLevel;
-        					}
-        					Media.convert(options);
-        					break;
-        				case 'audio':
-        					if(cuttime > 0){
-        						cammand = '-preset '+vue.speedLevel;
-        						Media.convert(options);
-        					}
-        					break;
-        				case 'image':
-        					;
-        				break;
-        			}
-        			/*
-        			if(!vue.output){
-        				alert('请选择输出目录!');
-        				return;
-        			}
-        			/*
-        			let cammand = ['-b:v '+item.tosize*8/item.duration];
-        			
-
-        			let r = 255, g = 0;
-        			Media.convert({
-        				cammand: cammand,
-        				input: item.path,
-        				output: +,
-        				progress: function(prog){
-        					if(g < 150){
-        						g = Math.round( prog.percent * 3.5 );
-        					}else{
-        						r = 255 - Math.round((prog.percent - g/3.5) * 3.5);
-        					}
-        					item.progress = Math.round(prog.percent) + '%';
-        					item.progressColor = 'rgba('+r+','+g+',0,0.5)';
-        				}
-        			});*/
+                    item.endtime = video.currentTime;
         			break;
         	}
+        },
+        alphaFn(){
+            this.alpha = !this.alpha;
+        },
+        play(e, index){
+            let item = this.items[index];
+            e.target.parentNode.append(video);
+            for(var i=0, len=this.items.length; i<len; i++){
+                this.items[i].playing = false;
+            }
+            item.playing = true;
+            video.src = item.path;
+            try{
+            	video.play();
+            }catch(err){
+            	//需要转码
+            }
+        },
+        convert(index){
+            console.log(this.items);
+        	/*
+            if(this.isConverting) return;
+            this.isConverting = true;
+            
+            let vue = this,
+                items = index === -1 ? vue.items : [vue.items[index]];
+            cv(items[0]);
+            function cv(item){
+                item.rotating = true;
+                item.progress = 0;
+                item.progressColor = '';
+
+                let r = 255, g = 0, cuttime = item.endtime - item.starttime, tosize = null,
+                options = {
+                    input: item.path,
+                    ss: item.starttime,
+                    duration: cuttime,
+                    output: vue.output +'/'+ item.toname + '.' + item.toformat,
+                    progress: function(percent){
+                        if(cuttime <= 0 || !cuttime){
+                            percent = 100;
+                            r = 60;
+                            b = 150;
+                        }
+                        if(g < 150){
+                            g = Math.round( percent * 3.5 );
+                        }else{
+                            r = 255 - Math.round( (percent - g/3.5) * 3.5);
+                        }
+                        item.progress = Math.round(percent) + '%';
+                        item.progressColor = 'rgba('+r+','+g+',0,0.5)';
+                    },
+                    error: function(e){
+                        item.rotating = false;
+                        alert('发生了错误：' + e.message);
+                    },
+                    complete: function(){
+                        item.rotating = false;
+                    }
+                };
+                
+                switch(item.type){
+                    case 'video':
+                        options.size = item.towidth + ':' + item.toheight;
+                        if(cuttime === 0){
+                            //to create image from a frame
+                            options.cammand = '-vframes 1';
+                        }else{
+                            options.cammand = '-b:v '+item.tosize*8/item.duration+' -preset '+vue.speedLevel;
+                        }
+                        Media.convert(options);
+                        break;
+                    case 'audio':
+                        if(cuttime > 0){
+                            cammand = '-preset '+vue.speedLevel;
+                            Media.convert(options);
+                        }
+                        break;
+                    case 'image':
+                        ;
+                    break;
+                }
+            }
+            */
         },
         nameAllFn(e){
         	this.nameAll = e.target.value;
@@ -270,11 +271,6 @@ new Vue({
 		},
         gotoSetAll(){
         	this.dropSlidedown = !this.dropSlidedown;
-        },
-        startConvert(){
-        	
-        	console.log(this.sizeLimit, this.items);
-        	
         }
 	},
 	filters: {
@@ -285,7 +281,7 @@ new Vue({
 			if(attr === 'size'){
 				return utils.sizemat(val);
 			}else{
-				let tmp = parseFloat(val);
+				let tmp = parseFloat(val).toFixed(2);
 				if(tmp){
 					return utils.sizemat(tmp);
 				}
