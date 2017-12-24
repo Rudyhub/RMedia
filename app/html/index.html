@@ -33,7 +33,7 @@
                 <button v-on:click="alphaFn" title="透明/黑色背景">
                     <i class="icon icon-contrast"></i>
                 </button>
-                <button v-on:click="firstAid" title="急救：程序卡死、崩溃、未知错误时使用">
+                <button v-on:click="firstAid" title="急救：程序卡死、崩溃、未知错误时使用，谨慎使用！">
                     <i class="icon icon-aid-kit"></i>
                 </button>
             </div>
@@ -72,7 +72,7 @@
             <dl class="item" v-for="(item, index) of items" :class="{editable: item.editable, hide: item.hide}">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
-                        <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.type !== 'image' && item.canplay"></i>
+                        <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.type !== 'image' && item.canplay" v-on:click="play($event,index)"></i>
                         <div class="item-preview-box" :class="{alpha:alpha}" v-on:click="play($event,index)" v-child="item.video"></div>
                         <div class="item-filename text-limit r1">
                             <i class="item-media-type icon" :class="mediaIcon[item.type]"></i>

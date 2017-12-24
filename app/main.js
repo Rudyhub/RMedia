@@ -272,19 +272,30 @@ const vue = new Vue({
                 return;
             }
 
-            
-            let i = index === -1 ? 0 : index;
+            let i = index === -1 ? 0 : index,
+                seek = 0,
+                duration = 0,
+                cammand = '';
             function loop(item){
                 if(item.hide){
                     i++;
                     if(vue.items[i]) loop(vue.items[i]);
                     return;
                 }
+                if(item.type === 'image' && !/\.gif$/i.test(item.path)){
+                    seek = 0,
+                    duration = 0;
+                    cammand = '';
+                }else{
+                    seek = item.starttime;
+                    duration = item.endtime - item.starttime;
+                    cammand = '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel;
+                }
                 Media.convert({
                     input: item.path,
-                    seek: item.starttime,
-                    duration: item.endtime - item.starttime,
-                    cammand: '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel,
+                    seek: seek,
+                    duration: duration,
+                    cammand: cammand,
                     output: vue.output +'/'+ item.toname + '.' + item.toformat,
                     progress(percent){
                         item.progress = percent + '%';

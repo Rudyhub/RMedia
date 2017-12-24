@@ -177,7 +177,7 @@ module.exports = {
     },
     convert(o){
         let self = this,
-            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+'|-t|'+o.duration+'|-y|'+o.output,
+            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+(o.duration ? '|-t|'+o.duration : '')+'|-y|'+o.output,
             errmsg = '';
         if(self.ffmpeg){
             o.complete(2,'有视频解转码尚未完成，是否中止？');
