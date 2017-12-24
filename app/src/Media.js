@@ -16,10 +16,22 @@ getProgress = (line,duration)=>{
         }
     }
     return percent;
-}
+};
 module.exports = {
+    //第一个子数组为html支持的格式，第二个需要转码
+    formats: {
+        image: [['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
+        video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
+        audio: [['aac','mp3','wav','mpeg'],['wma','mid']]
+    },
+    is(ext,name,bool){
+        if(!bool){
+            return this.formats[name][0].indexOf(ext) !== -1;
+        }
+        return this.formats[name][0].indexOf(ext) !== -1 && this.formats[name][1].indexOf(ext) !== -1;
+    },
     metadata(url,success,fail){
-        let ext = url.slice(url.lastIndexOf('.')+1),
+        let ext = url.slice(url.lastIndexOf('.')+1).toLowerCase(),
             json = {
                 duration: 0,
                 bit: 0,
@@ -150,7 +162,7 @@ module.exports = {
                 json.thumb = config.audioThumb;
                 o.success(json);
             }else{
-                if(config.formats.image.indexOf(json.ext) !== -1){
+                if(self.is(json.ext,'image')){
                     json.thumb = o.url;
                     o.success(json);
                 }else{
@@ -182,11 +194,9 @@ module.exports = {
             o.complete(2,'有视频解转码尚未完成，是否中止？');
             return;
         }
-        console.log(cammand);
         self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
         self.ffmpeg.stderr.on('data', (stderr)=>{
             errmsg = stderr.toString();
-            console.log(errmsg);
             o.progress( getProgress(errmsg, o.duration) );
         });
         self.ffmpeg.once('close', function(a,b){

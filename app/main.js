@@ -142,7 +142,7 @@ const vue = new Vue({
                             item.towidth = item.width > vue.defwidth ? vue.defwidth : item.width;
                             item.toheight = json.width ? Math.round(item.towidth * (item.height/item.width) ) : 0;
                             item.fps = json.fps;
-                            item.toformat = config.output.format[ item.type ];
+                            item.toformat = json.extconfig.output.format[ item.type ];
                             item.video.poster = json.thumb;
                             item.bitv = json.bitv && json.bitv <= config.output.bitv ? json.bitv : config.output.bitv;
                             item.bita = json.bita && json.bita <= config.output.bita ? json.bita : config.output.bita;
@@ -154,7 +154,7 @@ const vue = new Vue({
                             utils.dialog('提示：',
                             '<p><span>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</span></p>',
                             ['是','否'],
-                            function(code){
+                            (code)=>{
                                 if(code === 1) item.hide = true;
                                 i++;
                                 if(files[i]) recycle(files[i]);
@@ -282,6 +282,7 @@ const vue = new Vue({
                     if(vue.items[i]) loop(vue.items[i]);
                     return;
                 }
+                
                 if(item.type === 'image' && !/\.gif$/i.test(item.path)){
                     seek = 0,
                     duration = 0;

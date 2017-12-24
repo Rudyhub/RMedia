@@ -479,16 +479,16 @@ button:active{
     bottom: 0;
     margin: auto;
     display: table;
-    color: #66a7fb;
+    color: var(--blue1);
     border-radius: .3vw;
     overflow: hidden;
     z-index: 100;
-    box-shadow: #66a7fb 0 0 3px, inset #66a7fb 0 0 3px;
+    box-shadow: var(--blue1) 0 0 3px, inset var(--blue1) 0 0 3px;
     border: 1px solid;
 }
 .dialog-title{
     padding: .5em;
-    box-shadow: #66a7fb 0 0 3px, inset #66a7fb 0 0 3px;
+    box-shadow: var(--blue1) 0 0 3px, inset var(--blue1) 0 0 3px;
     position: relative;
 }
 .dialog-title .icon{
@@ -515,8 +515,8 @@ button:active{
     margin: 1em;
     background: transparent;
     border: 1px solid;
-    color: #66a7fb;
-    box-shadow: #66a7fb 0 0 2px, inset #66a7fb 0 0 2px;
+    color: var(--blue1);
+    box-shadow: var(--blue1) 0 0 2px, inset var(--blue1) 0 0 2px;
     transition: all .5s;
 }
 .dialog-footer button:hover{
