@@ -2,6 +2,7 @@
 <html lang="zh-CN">
 <head>
 	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 	<title>FupConvert媒体处理器</title>
     <link rel="stylesheet" type="text/css" href="../css/icon.css">
 	<link rel="stylesheet" type="text/css" href="../css/index.css">
@@ -80,7 +81,7 @@
                         <div class="item-controls">
                             <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间">
                         </div>
-                        <div class="item-progress-percent" v-if="progress">{{progress}}</div>
+                        <div class="item-progress-percent" v-if="item.progress">{{item.progress}}</div>
                     </div>
                     <div class="item-tools">
                         <i class="item-tool icon icon-cog" :class="{active:item.editable}" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>

@@ -19,10 +19,17 @@
     --r2: 4px;
     --r3: 6px;
     --r4: 8px;
-    --titlefs: 18px;
+    --fs38: 2vw;
+    --fs28: 1.5vw;
+    --fs20: 1.1vw;
+    --fs18: .93vw;
+    --fs16: .83vw;
+    --fs14: .73vw;
+    --fs12: .63vw;
 }
 html,body{
     height: 100%;
+    -webkit-text-size-adjust: none;
 }
 body{
     margin: 0;
@@ -160,26 +167,27 @@ button:active{
 }
 .title{
     background: var(--gray4);
-    font-size: var(--titlefs);
+    font-size: var(--fs18);
     font-weight: normal;
     padding: .5em 1em;
     margin: 0;
 }
 .titlebar-tool{
     position: absolute;
-    top: calc(var(--titlefs) / 2);
-    right: calc(var(--titlefs) / 2);
+    top: calc(var(--fs20) / 2);
+    right: calc(var(--fs20) / 2);
     margin: auto;
 }
 .titlebar-tool button{
     -webkit-app-region: no-drag;
-    width: calc(var(--titlefs) * 1.5);
-    height: calc(var(--titlefs) * 1.5);
-    line-height: 1;
+    width: calc(var(--fs20) * 1.5);
+    height: calc(var(--fs20) * 1.5);
+    line-height: .9;
     box-sizing: border-box;
     border: none;
     position: relative;
     background: var(--gray4);
+    font-size: var(--fs18);
 }
 .titlebar-tool button:hover{
     color: var(--blue1);
@@ -187,8 +195,8 @@ button:active{
 }
 .titlebar-tool i{
     display: inline-block;
-    width: calc(var(--titlefs) * .6);
-    height: calc(var(--titlefs) * .6);
+    width: calc(var(--fs20) * .6);
+    height: calc(var(--fs20) * .6);
     border: 1px solid;
     position: absolute;
     top: 0;
@@ -199,22 +207,22 @@ button:active{
 }
 .titlebar-tool .full i{
     display: inline-block;
-    width: calc(var(--titlefs) * .5);
-    height: calc(var(--titlefs) * .5);
+    width: calc(var(--fs20) * .5);
+    height: calc(var(--fs20) * .5);
     top: auto;
-    bottom: calc(var(--titlefs) * .35);
-    left: calc(var(--titlefs) * .35);
+    bottom: calc(var(--fs20) * .35);
+    left: calc(var(--fs20) * .35);
     margin: 0;
 }
 .titlebar-tool button.full::after{
     content: '';
     display: block;
     position: absolute;
-    width: calc(var(--titlefs) * .5);
-    height: calc(var(--titlefs) * .5);
+    width: calc(var(--fs20) * .5);
+    height: calc(var(--fs20) * .5);
     border: 1px solid;
-    top: calc(var(--titlefs) * .35);
-    right: calc(var(--titlefs) * .35);
+    top: calc(var(--fs20) * .35);
+    right: calc(var(--fs20) * .35);
 }
 
 .body{
@@ -253,7 +261,7 @@ button:active{
 }
 .drop-panel-group{
     padding: 2%;
-    font-size: 14px;
+    font-size: var(--fs14);
     color: #888;
 }
 .drop-panel-group input[type=text]{
@@ -278,7 +286,7 @@ button:active{
     vertical-align: top;
     border-collapse: collapse;
     border-spacing: 0;
-    font-size: 14px;
+    font-size: var(--fs14);
     table-layout: fixed;
 }
 .item.hide{
@@ -320,7 +328,7 @@ button:active{
     background: #000;
 }
 .item-media-type{
-    font-size: 1.1vw;
+    font-size: var(--fs20);
     vertical-align: middle;
 }
 .item-preview-box.alpha{
@@ -339,7 +347,7 @@ button:active{
     right: 0;
     bottom: 0;
     left: 0;
-    font-size: 2vw;
+    font-size: var(--fs38);
     transition: all .5s;
     margin: auto;
     color: #fff;
@@ -352,9 +360,9 @@ button:active{
 .item-progress-percent{
     position: absolute;
     width: 100%;
-    height: 1.5vw;
-    font-size: 1.5vw;
-    line-height: 1.5vw;
+    height: 1em;
+    font-size: var(--fs28);
+    line-height: 1em;
     font-weight: bolder;
     text-align: center;
     color: #fff;
@@ -382,7 +390,7 @@ button:active{
     width: 1.4em;
     height: 1.4em;
     line-height: 1.4em;
-    font-size: .84vw;
+    font-size: var(--fs16);
     color: var(--blue1);
     cursor: pointer;
     transition: all .3s;
@@ -432,7 +440,7 @@ button:active{
 .item-info-head,
 .item-info-body{
     display: inline-block;
-    font-size: 14px;
+    font-size: var(--fs14);
     padding: 2px;
     vertical-align: middle;
     box-sizing: border-box;
@@ -446,7 +454,7 @@ button:active{
     color: var(--gray1);
 }
 .item-info .icon-subdirectory_arrow_right{
-    font-size: 20px;
+    font-size: var(--fs20);
 }
 .item-time{
     box-sizing: border-box;
@@ -464,7 +472,7 @@ button:active{
 
 .dialog{
     width: 30vw;
-    font-size: 14px;
+    font-size: var(--fs14);
     position: fixed;
     top: 0;
     left: 0;
@@ -512,7 +520,7 @@ button:active{
 .footer{
     height: 36px;
     line-height: 36px;
-    font-size: 14px;
+    font-size: var(--fs14);
     background: #535353;
     color: #f0f0f0;
     text-align: center;

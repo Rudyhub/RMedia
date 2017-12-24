@@ -15,8 +15,7 @@ const showThumb = (item)=>{
             console.log(arguments);
         }
     });
-}
-
+};
 const vue = new Vue({
 	el: '#app',
 	data: {
@@ -42,7 +41,6 @@ const vue = new Vue({
 			placebo: '超级慢'
 		},
         speedLevel: 'slow',
-        progress: '',
         mediaIcon: {
             image: 'icon-image',
             video: 'icon-video-camera',
@@ -92,6 +90,7 @@ const vue = new Vue({
                             video: null,
                             canplay: false,
                             playing: false,
+                            progress: 0,
 							name: file.name,
 							size: file.size,
 							lock: false,
@@ -288,14 +287,14 @@ const vue = new Vue({
                     cammand: '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel,
                     output: vue.output +'/'+ item.toname + '.' + item.toformat,
                     progress(percent){
-                        vue.progress = percent + '%';
+                        item.progress = percent + '%';
                     },
                     complete(code,msg){
                         if(code !== 0){
                             utils.dialog('Oh no！','<p>发生了错误！错误详情：'+msg+'</p>');
-                            vue.progress = '';
+                            item.progress = '';
                         }else{
-                            vue.progress = '100%';
+                            item.progress = '100%';
                             if(index === -1){
                                 i++;
                                 if(vue.items[i]) loop(vue.items[i]);
