@@ -1,5 +1,4 @@
 const fs = require('fs'),
-stream = require('stream'),
 childprocess = require('child_process'),
 config = require('./config'),
 
@@ -216,19 +215,18 @@ module.exports = {
         o.cammand = '-preset|ultrafast|-s|'+w+'x'+(h%2 != 0 ? h+1 : h)+'|-b:v|512k';
         self.convert(o);
     },
-    finalImg(url, type, quality, fn){
-        let c = document.createElement('canvas');
-        let cv = c.getContext('2d');
-        let img = new window.Image();
-        img.src = url;
+    compressImg(o){
+        let c = document.createElement('canvas'), cv = c.getContext('2d'), img = new window.Image(), data;
+
+        img.src = o.input;
+        console.log(img);
         img.addEventListener('load', function loaded(){
             img.removeEventListener('load', loaded);
             c.width = img.width;
             c.height = img.height;
             cv.drawImage(img, 0, 0, img.width, img.height);
-            console.log(type);
-            let data = c.toDataURL(type, quality);
-            if(fn) fn( new Buffer(data.replace(/^data:image\/\w+;base64,/, ''), 'base64'), data);
+            data = c.toDataURL((o.mime || 'image/jpg'), (o.quality || .9));
+            fs.writeFileSync(o.output, data);
             c = null;
             cv = null;
             img = null;
