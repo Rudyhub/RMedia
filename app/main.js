@@ -289,7 +289,17 @@ const vue = new Vue({
                 }else{
                     seek = item.starttime;
                     duration = item.endtime - item.starttime;
-                    cammand = '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel;
+                    if(!duration){
+                        //视频转图片
+                        cammand = '-vframes|1';
+                        seek = item.cover;
+                    }else if(duration < 0){
+                        //错误情况：起点大于终点
+                        utils.dialog('错误操作：','<p><span>设置的终点不能在起点之前。</span></p>');
+                        return;
+                    }else{
+                        cammand = '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel;
+                    }
                 }
                 Media.convert({
                     input: item.path,

@@ -182,9 +182,11 @@ module.exports = {
             o.complete(2,'有视频解转码尚未完成，是否中止？');
             return;
         }
+        console.log(cammand);
         self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
         self.ffmpeg.stderr.on('data', (stderr)=>{
             errmsg = stderr.toString();
+            console.log(errmsg);
             o.progress( getProgress(errmsg, o.duration) );
         });
         self.ffmpeg.once('close', function(a,b){

@@ -479,15 +479,16 @@ button:active{
     bottom: 0;
     margin: auto;
     display: table;
-    color: var(--gray4);
+    color: #66a7fb;
     border-radius: .3vw;
     overflow: hidden;
     z-index: 100;
+    box-shadow: #66a7fb 0 0 3px, inset #66a7fb 0 0 3px;
+    border: 1px solid;
 }
 .dialog-title{
-    background: var(--gray2);
     padding: .5em;
-    box-shadow: var(--gray4) 0 2px 2px;
+    box-shadow: #66a7fb 0 0 3px, inset #66a7fb 0 0 3px;
     position: relative;
 }
 .dialog-title .icon{
@@ -497,7 +498,6 @@ button:active{
     top: .5em;
 }
 .dialog-body{
-    background: var(--gray1);
     padding: .5em;
 }
 .dialog-body p:first-child{
@@ -508,12 +508,19 @@ button:active{
     text-align: justify !important;
 }
 .dialog-footer{
-    background: var(--gray1);
     text-align: center;
 }
 .dialog-footer button{
     min-width: 4em;
     margin: 1em;
+    background: transparent;
+    border: 1px solid;
+    color: #66a7fb;
+    box-shadow: #66a7fb 0 0 2px, inset #66a7fb 0 0 2px;
+    transition: all .5s;
+}
+.dialog-footer button:hover{
+    transform: scale(.95);
 }
 
 .footer{
