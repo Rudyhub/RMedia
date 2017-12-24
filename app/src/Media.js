@@ -1,7 +1,23 @@
 const fs = require('fs'),
 stream = require('stream'),
 childprocess = require('child_process'),
-config = require('./config');
+config = require('./config'),
+
+getProgress = (line,duration)=>{
+    let times = line.match(/time=\s*([\d\.:]+)\s+/i),
+        time = 0
+        percent = 0;
+    if(times){
+        let timesplit = times[1].split(':');
+        time = ( parseFloat(timesplit[0])*3600 + parseFloat(timesplit[1])*60 + parseFloat(timesplit[2]) )*1000;
+        if(duration){
+            percent = Math.round(100*time/(duration*1000));
+        }else{
+            percent = 100;
+        }
+    }
+    return percent;
+}
 module.exports = {
     metadata(url,success,fail){
         let ext = url.slice(url.lastIndexOf('.')+1),
@@ -77,8 +93,46 @@ module.exports = {
             console.error(err);
         });
     },
+    thumb(o){
+        let w = o.width || 480,
+            h = o.height || 270,
+            format = o.format === 'jpg' ? 'image2' : (o.format === 'gif' ? 'gif': 'apng'),
+            status = true,
+            ffmpeg,
+            thumb;
+        ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
+            if(!err){
+                let tmp = fs.readFileSync(config.appRoot+'cache/thumb');
+                thumb = window.URL.createObjectURL(new Blob([tmp], {type:'image/'+o.format}));
+                tmp = null;
+            }else{
+                if(status && o.fail){
+                    status = false;
+                    o.fail(err);
+                }
+            }
+        }).once('close', (a,b)=>{
+            if(a === 0){
+                o.success(thumb);
+            }else{
+                if(status && o.fail){
+                    status = false;
+                    o.fail(a,b);
+                }
+            }
+        }).once('error', (e)=>{
+            try{
+                ffmpeg.kill();
+            }catch(e){}
+            if(status && o.fail){
+                status = false;
+                o.fail(e);
+            }
+        });
+    },
     info(options){
-        let o = {
+        let self = this,
+        o = {
             url: options.url || '',
             scale:  options.scale || '320:-1',
             time: options.time || 0,
@@ -91,7 +145,7 @@ module.exports = {
             return;
         }
         if(!o.success) return;
-        this.metadata(o.url,(json)=>{
+        self.metadata(o.url,(json)=>{
             json.thumb = '';
             if(json.type === 'audio'){
                 json.thumb = config.audioThumb;
@@ -101,131 +155,66 @@ module.exports = {
                     json.thumb = o.url;
                     o.success(json);
                 }else{
-                    let time = '', format = o.format, status = true;
-                    if(json.type === 'video'){
-                        time = o.time ? ' -ss '+o.time : ' -ss '+(json.duration / 2);
-                    }
-                    switch(o.format){
-                        case 'jpg': format = 'image2'; break;
-                        case 'gif': format = 'gif'; break;
-                        default: format = 'apng';
-                    }
-                    let ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe'+time+' -i "'+o.url+'" -vframes 1 -vf "scale='+o.scale+'" -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
-                        if(!err){
-                            let thumb = fs.readFileSync(config.appRoot+'cache/thumb');
-                            json.thumb = window.URL.createObjectURL(new Blob([thumb], {type:'image/'+o.format}));
-                            thumb = null;
-                        }else{
-                            if(status && o.fail){
-                                status = false;
-                                o.fail(err);
-                            }
-                        }
-                    }).once('close', (a,b)=>{
-                        if(a === 0){
+                    self.thumb({
+                        input: o.url,
+                        success(thumb){
+                            json.thumb = thumb;
                             o.success(json);
-                        }else{
-                            if(status && o.fail){
-                                status = false;
-                                o.fail(a,b);
-                            }
-                        }
-                    }).once('error', (e)=>{
-                        try{
-                            ffmpeg.kill();
-                        }catch(e){}
-                        if(status && o.fail){
-                            status = false;
-                            o.fail(e);
+                        },
+                        fail(a,b){
+                            o.fail(a,b);
                         }
                     });
                 }
             }
         }, o.fail);
     },
-    convert(o){
-        let cammand = [],
-            ffmpeg;
-        if(o.ss){
-            cammand.push('-ss',o.ss);
-        }
-        cammand.push('-hide_banner','-i',o.input);
-        if(o.cammand){
-            cammand = cammand.concat(o.cammand.split(/\s+/));
-        }
-        if(o.duration){
-            cammand.push('-t',o.duration);
-        }
-        if(o.size && /^\d+:-?\d+$/.test(o.size)){
-            cammand.push('-vf','scale='+o.size);
-        }
-        cammand.push('-y',o.output);
-        let ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',cammand);
-        if(typeof o.progress === 'function'){
-            ffmpeg.stderr.on('data', (stderr)=>{
-                let line = stderr.toString(),
-                    times = line.match(/time=\s*([\d\.:]+)\s+/i),
-                    time = 0
-                    percent = 0;    
-                if(times){
-                    let timesplit = times[1].split(':');
-                    time = ( parseFloat(timesplit[0])*3600 + parseFloat(timesplit[1])*60 + parseFloat(timesplit[2]) )*1000;
-                    if(o.duration){
-                        percent = Math.round(100*time/(o.duration*1000));
-                    }else{
-                        percent = 100;
-                    }
-                    o.progress(percent);
-                }
-            });
-        }
-        ffmpeg.on('exit', function(a,b){
-            if(a === 0){
-                if(typeof o.progress === 'function') o.progress(100);
-                if(typeof o.success === 'function') o.success();
-            }else{
-                if(typeof o.error === 'function') o.error(b);
-            }
-            if(typeof o.complete === 'function'){
-                o.complete(a,b);
-            }
-        });
-        ffmpeg.on('error', function(e,a,b){
-            if(typeof o.error === 'function') o.error(e, a, b);
-        });
-    },
     ffmpeg: null,
-    killAll(){
+    killAll(fn){
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
-            console.log(stderr);
+            if(fn) fn(stderr.toString());
         });
     },
-    decode(url){
-        let ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',['-re','-ss','0','-i',url,'-r','5','-vf','scale=320:-1','-y','-f','image2','pipe:null'],[null,'pipe','inhert']);
-        let wstream = stream.Writable();
-        wstream.write = (chunk)=>{
-            console.log(chunk.toString('base64'));
+    convert(o){
+        let self = this,
+            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+'|-t|'+o.duration+'|-y|'+o.output,
+            errmsg = '';
+        if(self.ffmpeg){
+            o.complete(2,'有视频解转码尚未完成，是否中止？');
+            return;
         }
-        ffmpeg.stdout.pipe(wstream);
-        ffmpeg.stderr.on('data',(e)=>{
-            console.log(e.toString());
+        self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
+        self.ffmpeg.stderr.on('data', (stderr)=>{
+            errmsg = stderr.toString();
+            o.progress( getProgress(errmsg, o.duration) );
         });
-    },
-    play(url,time,callback){
-        if(this.ffmpeg){
-            this.ffmpeg.kill();
-        }
-        this.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',['-ss',time,'-i', url,'-b:v','96k','-vf','scale=320:-1','-f','hls','-hls_playlist_type', 'event', config.appRoot+'cache/list.m3u8']);
-        let isStarted = false;
-        this.ffmpeg.stderr.on('data', (stderr)=>{
-            if(!isStarted) {
-                isStarted = true;
-                callback(config.appRoot+'cache/list.m3u8');
+        self.ffmpeg.once('close', function(a,b){
+            self.ffmpeg.kill();
+            self.ffmpeg = null;
+            if(a === 0){
+                o.complete(0, o.output);
+            }else{
+                o.complete(1, '错误退出：'+errmsg);
             }
         });
-        this.ffmpeg.on('error',()=>{
-            console.log('启动子进程失败。');
+        self.ffmpeg.on('error', function(){
+            self.ffmpeg.kill();
+            self.ffmpeg = null;
+            o.complete(3, '子进程错误：'+err.toString());
         });
+    },
+    preview(o){
+        let self = this,
+            w = 320,
+            h = Math.round(o.scale*w);
+        if(self.ffmpeg){
+            o.complete(2,'有视频解转码尚未完成，是否中止？');
+            return;
+        }
+        h = h%2 !== 0 ? h+1 : h;
+        o.output = config.appRoot+'tmp/tmp.mp4';
+        o.cammand = '-preset|ultrafast|-s|'+w+'x'+(h%2 != 0 ? h+1 : h)+'|-b:v|512k';
+        self.convert(o);
     },
     finalImg(url, type, quality, fn){
         let c = document.createElement('canvas');

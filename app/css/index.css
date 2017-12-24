@@ -117,6 +117,13 @@ input:focus,select:focus{
     position: relative;
     box-sizing: border-box;
 }
+[type=number]::-webkit-outer-spin-button,
+[type=number]::-webkit-inner-spin-button{
+    -webkit-appearance: none;
+}
+[type=number]{
+    text-align: center;
+}
 button:hover{
     background: var(--gray4);
     color: var(--blue1);
@@ -274,6 +281,9 @@ button:active{
     font-size: 14px;
     table-layout: fixed;
 }
+.item.hide{
+    display: none;
+}
 .item-preview-inner{
     height: 10.8vw;
     position: relative;
@@ -285,6 +295,25 @@ button:active{
     width: 100%;
     box-sizing: border-box;
     color: var(--blue1);
+}
+.item-controls{
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    background: rgba(0,0,0,.5);
+    overflow: hidden;
+}
+.item-controls input[type=range]{
+    margin-right: auto;
+    margin-left: auto;
+    display: block;
+    height: .2vw;
+    padding: .2vw;
+    box-sizing: border-box;
+    background: transparent;
+}
+.item-controls input[type=range]::-webkit-slider-runnable-track{
+    background: transparent;
 }
 .item-preview-box{
     height: 100%;
@@ -314,6 +343,7 @@ button:active{
     transition: all .5s;
     margin: auto;
     color: #fff;
+    z-index: 2;
 }
 .item-play-btn.playing{
     opacity: 0;
@@ -382,7 +412,6 @@ button:active{
 }
 .item [type=number]{
     width: 5em;
-    text-align: center;
 }
 .item-info-toname{
     width: 15.6vw;
@@ -423,9 +452,6 @@ button:active{
     box-sizing: border-box;
     margin: 0 .5vw .5vw 0;
 }
-.item-time.curtime{
-    text-align: right;
-}
 .item-editable{
     transition: all .8s;
     max-height: 0;
@@ -436,6 +462,52 @@ button:active{
     max-height: 120px;
 }
 
+.dialog{
+    width: 30vw;
+    font-size: 14px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: auto;
+    display: table;
+    color: var(--gray4);
+    border-radius: .3vw;
+    overflow: hidden;
+    z-index: 100;
+}
+.dialog-title{
+    background: var(--gray2);
+    padding: .5em;
+    box-shadow: var(--gray4) 0 2px 2px;
+    position: relative;
+}
+.dialog-title .icon{
+    cursor: pointer;
+    position: absolute;
+    right: .5em;
+    top: .5em;
+}
+.dialog-body{
+    background: var(--gray1);
+    padding: .5em;
+}
+.dialog-body p:first-child{
+    text-align: center;
+}
+.dialog-body span{
+    display: inline-block;
+    text-align: justify !important;
+}
+.dialog-footer{
+    background: var(--gray1);
+    text-align: center;
+}
+.dialog-footer button{
+    min-width: 4em;
+    margin: 1em;
+}
 
 .footer{
     height: 36px;

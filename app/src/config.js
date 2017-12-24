@@ -4,6 +4,8 @@ module.exports = {
 	appRoot: appRoot,
 	ffmpegRoot: appRoot + 'plugins\\ffmpeg',
 	audioThumb: appRoot + 'css/audio.jpg',
+	loadingGif: appRoot + 'css/loading.gif',
+	
 	//html支持的格式
 	formats: {
 	    image: ['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],
@@ -19,8 +21,8 @@ module.exports = {
 	output: {
 		folder: process.env.USERPROFILE+'/desktop',
 		width: 1280,
-		bitv: 1024000,
-		bita: 128000,
+		bitv: 1024,
+		bita: 128,
 		format: {
 			image: 'jpg',
 			video: 'mp4',

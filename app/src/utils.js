@@ -46,7 +46,45 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
-    
+    dialog(title, msg, btns, fn){
+        let div = document.createElement('div'),
+            html;
+        div.className = 'dialog';
+        html = `<div class="dialog-title">${title}<i class="icon icon-cross"></i></div>
+            <div class="dialog-body">${msg}</div>
+            <div class="dialog-footer">`;
+            
+        if(btns){
+            for( let i=0; i<btns.length; i++){
+                html += '<button name="'+i+'">'+btns[i]+'</button>';
+            }
+        }
+        
+        html += '</div>';
+        div.innerHTML = html;
+        div.addEventListener('click',function(e){
+            if(/^icon\s+icon-\w+$/.test(e.target.className)){
+                if(fn) fn.call(e.target,-1);
+                document.body.removeChild(div);
+                return;
+            }else if(e.target.hasAttribute('name')){
+                if(fn) fn.call(e.target, parseInt(e.target.name));
+                document.body.removeChild(div);
+            }
+        });
+        document.body.appendChild(div);
+    },
+    /*
+    progress(item,txt,percent,r,g){
+        if(g < 150){
+            g = Math.round( percent * 3.5 );
+        }else{
+            r = 255 - Math.round( (percent - g/3.5) * 3.5);
+        }
+        item.progress = txt + Math.round(percent) + '%';
+        item.progressColor = 'rgba('+r+','+g+',0,0.5)';
+    },
+    */
     draggable(node, dragnode){
         let sx = 0,
             sy = 0,
