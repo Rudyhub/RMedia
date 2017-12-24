@@ -272,41 +272,15 @@ const vue = new Vue({
                     });
                 return;
             }
-            if(index === -1){
-                //convert all
-                let i = 0;
-                function loop(item){
-                    if(item.hide){
-                        i++;
-                        if(vue.items[i]) loop(vue.items[i]);
-                        return;
-                    }
-                    Media.convert({
-                        input: item.path,
-                        seek: item.starttime,
-                        duration: item.endtime - item.starttime,
-                        cammand: '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel,
-                        output: vue.output +'/'+ item.toname + '.' + item.toformat,
-                        progress(percent){
-                            vue.progress = percent + '%';
-                        },
-                        complete(code,msg){
-                            if(code !== 0){
-                                utils.dialog('Oh no！','<p>发生了错误！错误详情：'+msg+'</p>');
-                                vue.progress = '';
-                            }else{
-                                vue.progress = '100%';
-                                i++;
-                                if(vue.items[i]) loop(vue.items[i]);
-                            }
-                        }
-                    });
-                };
-                if(vue.items[i])
-                loop(vue.items[i]);
-            }else{
-                //convert one
-                let item = vue.items[index];
+
+            
+            let i = index === -1 ? 0 : index;
+            function loop(item){
+                if(item.hide){
+                    i++;
+                    if(vue.items[i]) loop(vue.items[i]);
+                    return;
+                }
                 Media.convert({
                     input: item.path,
                     seek: item.starttime,
@@ -322,10 +296,16 @@ const vue = new Vue({
                             vue.progress = '';
                         }else{
                             vue.progress = '100%';
+                            if(index === -1){
+                                i++;
+                                if(vue.items[i]) loop(vue.items[i]);
+                            }
                         }
                     }
                 });
-            }
+            };
+            if(vue.items[i])
+            loop(vue.items[i]);
         },
         nameAllFn(e){
         	vue.nameAll = e.target.value;
