@@ -2,7 +2,6 @@ const win = nw.Window.get();
 const config = require('./src/config');
 const Media = require('./src/Media');
 const utils = require('./src/utils');
-
 const showThumb = (item)=>{
     if(!item) return;
     Media.thumb({
@@ -78,6 +77,20 @@ const vue = new Vue({
 		winclose(){
 			win.close();
 		},
+        dragFn(es){
+            let x = es.clientX,
+                y = es.clientY;
+            document.addEventListener('mousemove',move);
+            document.addEventListener('mouseup',up);
+            function move(e){
+                win.x = e.screenX - x;
+                win.y = e.screenY - y;
+            }
+            function up(e){
+                document.removeEventListener('mousemove', move);
+                document.removeEventListener('mouseup', up);
+            }
+        },
 		chosefile(e){
 			let files = e.target.files,
 				i = 0;
@@ -223,10 +236,16 @@ const vue = new Vue({
                         showThumb(item);
                     }
                     break;
-                case 'setstart': 
+                case 'setstart':
                     item.starttime = item.currentTime;
+                    if(item.starttime > item.endtime){
+                        item.endtime = item.starttime;
+                    }
                     break;
                 case 'setend':
+                    if(item.currentTime < item.starttime){
+                        item.starttime = item.currentTime;
+                    }
                     item.endtime = item.currentTime;
                     break;
                 case 'cover':
@@ -245,9 +264,44 @@ const vue = new Vue({
         alphaFn(){
             vue.alpha = !vue.alpha;
         },
+        openCutScreen(e){
+            if(e.button === 2){
+                console.log('cut full screen');
+            }else if(e.button === 0){
+                let doc;
+                nw.Window.open('app/html/cutscreen.html',{
+                    id: 'cutscreen',
+                    position: 'center',
+                    transparent: true,
+                    new_instance: false,
+                    frame: false,
+                    focus: true,
+                    width: 1280,
+                    height: 720,
+                    always_on_top: true
+                },(cut)=>{
+                    cut.on('move',(x,y)=>{
+                        console.log(x,y);
+                    });
+                    cut.on('resize', (w,h)=>{
+                        console.log(w,h);
+                    });
+                    doc = cut.window.document;
+                    doc.onkeyup = function(ev){
+                        if(ev.keyCode === 32){
+                            console.log('空格')
+                        }
+                    }
+                });
+            }
+        },
         firstAid(){
-            Media.killAll((msg)=>{
-                utils.dialog('提示：','<p><span>所有可能的错误程序已被清除！</span><br>详细：'+msg+'</p>');
+            utils.dialog('警告：','<p><span>为了避免失误操作，你必须谨慎选择是否真的启用急救?</span></p>',['启用','关闭'],(code)=>{
+                if(code === 0){
+                    Media.killAll((msg)=>{
+                        utils.dialog('提示：','<p><span>所有可能的错误程序已被清除！</span><br>详细：'+msg+'</p>');
+                    });
+                }
             });
         },
         play(e, index){

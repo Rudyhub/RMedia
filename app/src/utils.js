@@ -74,17 +74,6 @@ module.exports = {
         });
         document.body.appendChild(div);
     },
-    /*
-    progress(item,txt,percent,r,g){
-        if(g < 150){
-            g = Math.round( percent * 3.5 );
-        }else{
-            r = 255 - Math.round( (percent - g/3.5) * 3.5);
-        }
-        item.progress = txt + Math.round(percent) + '%';
-        item.progressColor = 'rgba('+r+','+g+',0,0.5)';
-    },
-    */
     draggable(node, dragnode){
         let sx = 0,
             sy = 0,

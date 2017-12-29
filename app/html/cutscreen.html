@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title>FupConvert媒体处理器</title>
+    <style>
+        html,body{
+            height: 100%;
+        }
+        body{
+            margin: 0;
+            background: transparent;
+            font-size: 16px;
+        }
+        .draggable{
+            -webkit-app-region: drag;
+            position: relative;
+            height: 20px;
+            line-height: 20px;
+            background: #f7b618;
+            color: #333;
+            user-select: none;
+        }
+        .cut-screen{
+            border: 2px solid #f7b618;
+            width: 100%;
+            height: calc(100% - 20px);
+            box-sizing: border-box;
+        }
+        .leading{
+            position: absolute;
+            top: 0;
+            right: 0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="draggable">
+        拖拽栏
+        <span class="leading">请使用【空格键】开始与停止录制，【ESC】键关闭窗口</span>
+    </div>
+    
+    <div class="cut-screen"></div>
+    <script>
+        document.onkeypress = ()=>{
+            
+        }
+    </script>
+</body>
+</html>

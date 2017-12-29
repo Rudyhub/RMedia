@@ -8,6 +8,7 @@
     --black1: #232323;
     --black2: #1d1d1d;
     --black3: #101010;
+    --light1: #f7b618;
     --dur1: .3s;
     --dur2: .5s;
     --dur3: .8s;
@@ -85,6 +86,7 @@ input,select{
     color: var(--gray1);
     padding: .2em;
 }
+input:hover,select:hover,
 input:focus,select:focus{
     transition: all var(--dur1);
     outline: none;
@@ -143,6 +145,9 @@ button:active{
     -webkit-app-region: drag;
     position: relative;
 }
+.my-dragbar{
+    position: relative;
+}
 .text-limit{
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -164,6 +169,7 @@ button:active{
 #app{
     height: 100%;
 }
+[v-cloak]{display: none;}
 .title{
     background: var(--gray4);
     font-size: var(--fs18);
@@ -479,16 +485,17 @@ button:active{
     bottom: 0;
     margin: auto;
     display: table;
-    color: var(--blue1);
+    color: var(--light1);
     border-radius: .3vw;
     overflow: hidden;
     z-index: 100;
-    box-shadow: var(--blue1) 0 0 3px, inset var(--blue1) 0 0 3px;
+    box-shadow: var(--light1) 0 0 3px, inset var(--light1) 0 0 3px;
     border: 1px solid;
+    background: #1d1103de;
 }
 .dialog-title{
     padding: .5em;
-    box-shadow: var(--blue1) 0 0 3px, inset var(--blue1) 0 0 3px;
+    box-shadow: var(--light1) 0 0 3px, inset var(--light1) 0 0 3px;
     position: relative;
 }
 .dialog-title .icon{
@@ -515,8 +522,8 @@ button:active{
     margin: 1em;
     background: transparent;
     border: 1px solid;
-    color: var(--blue1);
-    box-shadow: var(--blue1) 0 0 2px, inset var(--blue1) 0 0 2px;
+    color: var(--light1);
+    box-shadow: var(--blue1) 0 0 2px, inset var(--light1) 0 0 2px;
     transition: all .5s;
 }
 .dialog-footer button:hover{
