@@ -10,15 +10,15 @@
 <body>
 <div id="app" v-cloak>
     <header>
-        <div class="my-dragbar" v-on:mousedown.prevent="dragFn" v-on:dblclick="wintoggle">
-            <h1 class="title">媒体处理器</h1>
+        <div class="titlebar">
+            <h1 class="title draggable">媒体处理器</h1>
             <div class="titlebar-tool">
                 <button v-on:click="minimize">&minus;</button>
                 <button v-on:click="wintoggle" :class="{full: isFullScreen}"><i></i></button>
                 <button v-on:click="winclose">&times;</button>
             </div>
         </div>
-        <section class="section-border">
+        <section>
             <div class="menu">
                 <button>
                     <i class="icon icon-folder-open"></i>
@@ -33,7 +33,7 @@
                 <button v-on:click="alphaFn" title="透明/黑色背景">
                     <i class="icon icon-contrast"></i>
                 </button>
-                <button v-on:contextmenu.prevent="openCutScreen" v-on:click="openCutScreen" title="录制屏幕">
+                <button v-on:click="openCutScreen" title="录制屏幕(默认全屏，按住【ctrl】点击按钮可调出选框)">
                     <i class="icon icon-camera"></i>
                 </button>
                 <button v-on:click="firstAid" title="急救：程序卡死、崩溃、未知错误时使用，谨慎使用！">
@@ -169,6 +169,6 @@
 </div>
 
 <script type="text/javascript" src="../plugins/vue.min.js"></script>
-<script type="text/javascript" src="../js/index.js"></script>
+<script type="text/javascript" src="../src/index.js"></script>
 </body>
 </html>

@@ -170,17 +170,22 @@ button:active{
     height: 100%;
 }
 [v-cloak]{display: none;}
-.title{
+.titlebar{
+    position: relative;
     background: var(--gray4);
+}
+.title{
+    width: calc(100% - 9em);
     font-size: var(--fs18);
     font-weight: normal;
     padding: .5em 1em;
     margin: 0;
+    box-sizing: border-box;
 }
 .titlebar-tool{
     position: absolute;
-    top: calc(var(--fs20) / 2);
-    right: calc(var(--fs20) / 2);
+    top: .3em;
+    right: 1em;
     margin: auto;
 }
 .titlebar-tool button{

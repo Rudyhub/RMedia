@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<title></title>
+    <style>
+        :root{
+            --color1: #005ab7;
+            --color2: #eee;
+        }
+        html,body{
+            height: 100%;
+        }
+        body{
+            margin: 0;
+            background: transparent;
+            font-size: 16px;
+        }
+        .titlebar{
+            position: relative;
+            height: 20px;
+            line-height: 20px;
+            background: var(--color1);
+        }
+        .draggable{
+            -webkit-app-region: drag;
+            margin: 0;
+            width: calc(100% - 100px);
+            height: 100%;
+            font-size: 14px;
+            color: var(--color2);
+            user-select: none;
+            padding-left: .5em;
+            box-sizing: border-box;
+        }
+        .menu{
+            position: absolute;
+            width: 100px;
+            height: 100%;
+            right: 0;
+            top: 0;
+            border: none;
+            color: var(--color2);
+            background: var(--color1);
+            outline: none; 
+        }
+        .cut-screen{
+            border: 1px solid var(--color1);
+            width: 100%;
+            height: calc(100% - 20px);
+            box-sizing: border-box;
+            color: var(--color1);
+        }
+    </style>
+</head>
+<body>
+    <div class="titlebar">
+        <h1 class="draggable">屏幕录制</h1>
+        <select id="menu" class="menu">
+            <option value="0">菜单(快捷键)</option>
+            <option value="1">开始(F2)</option>
+            <option value="2">停止(F2)</option>
+            <option value="3">全屏(alt+F)</option>
+            <option value="4">帮助(F1)</option>
+        </select>
+    </div>
+    <div id="explain" class="cut-screen draggable"></div>
+</body>
+</html>

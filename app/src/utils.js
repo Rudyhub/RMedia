@@ -46,8 +46,9 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
-    dialog(title, msg, btns, fn){
+    dialog(title, msg, btns, fn, context){
         let div = document.createElement('div'),
+            parentNode = context || document.body,
             html;
         div.className = 'dialog';
         html = `<div class="dialog-title">${title}<i class="icon icon-cross"></i></div>
@@ -65,14 +66,15 @@ module.exports = {
         div.addEventListener('click',function(e){
             if(/^icon\s+icon-\w+$/.test(e.target.className)){
                 if(fn) fn.call(e.target,-1);
-                document.body.removeChild(div);
+                parentNode.removeChild(div);
                 return;
             }else if(e.target.hasAttribute('name')){
                 if(fn) fn.call(e.target, parseInt(e.target.name));
-                document.body.removeChild(div);
+                parentNode.removeChild(div);
             }
         });
-        document.body.appendChild(div);
+        parentNode.appendChild(div);
+        return div;
     },
     draggable(node, dragnode){
         let sx = 0,

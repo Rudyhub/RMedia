@@ -1,10 +1,11 @@
 const cwd = process.cwd();
-const appRoot = cwd + '\\app\\';
+const appRoot = cwd + '\\';
 module.exports = {
 	appRoot: appRoot,
 	ffmpegRoot: appRoot + 'plugins\\ffmpeg',
 	audioThumb: appRoot + 'css/audio.jpg',
 	loadingGif: appRoot + 'css/loading.gif',
+	icon: appRoot + 'css/icon.png',
 	output: {
 		folder: process.env.USERPROFILE+'/desktop',
 		width: 1280,
