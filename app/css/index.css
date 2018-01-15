@@ -371,14 +371,13 @@ button:active{
     position: absolute;
     width: 100%;
     height: 1em;
-    font-size: var(--fs28);
+    font-size: var(--fs14);
     line-height: 1em;
     font-weight: bolder;
     text-align: center;
     color: #fff;
     top: 0;
-    bottom: 0;
-    margin: auto 0;
+    background-color: #000000d0;
     z-index: 2;
 }
 .item-preview-img{
