@@ -3,6 +3,7 @@ const config = require('./config');
 const Media = require('./Media');
 const utils = require('./utils');
 const screencap = require('./screencap');
+
 const showThumb = (item)=>{
     if(!item) return;
     Media.thumb({
@@ -240,16 +241,21 @@ const vue = new Vue({
         alphaFn(){
             vue.alpha = !vue.alpha;
         },
-        openCutScreen(e){
-            if(e.ctrlKey){
-                // document.documentElement.style.transform = 'scale(1)';
-                // win.restore();
-            }else{
-                screencap.hide();
-            }
+        screencap(e){
+            utils.dialog('弹窗：',
+            `<h2>注意：</h2>
+            <p>系统或系统主题的原因，偶尔窗口显示不正常，可以忽略它，只需要把窗口边框调整到截取区域的上方即可，因为录制的时候窗口是隐藏的，不会影响录制结果。</p>
+            <p>全屏录制只需要把窗口边框的【宽】【高】拉至最大，甚至大于屏幕即自动全屏。</p>
+            <p>录制过程中使用快捷键 【空格键】 控制 【开始】 与 【结束】。</p>`,
+            ['下一步','取消'],
+            (code)=>{
+                if(code === 0){
+                    screencap();
+                }
+            });
         },
         firstAid(){
-            utils.dialog('警告：','<p><span>为了避免失误操作，你必须谨慎选择是否真的启用急救?</span></p>',['启用','关闭'],(code)=>{
+            utils.dialog('警告：','<p><span>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</span></p>',['启用','关闭'],(code)=>{
                 if(code === 0){
                     Media.killAll((msg)=>{
                         utils.dialog('提示：','<p><span>所有可能的错误程序已被清除！</span><br>详细：'+msg+'</p>');

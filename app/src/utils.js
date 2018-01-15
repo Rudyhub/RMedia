@@ -18,6 +18,17 @@ module.exports = {
             return "error time";
         }
     },
+    datemat(time){
+        let date;
+        if(typeof time === 'number'){
+            date = new Date(time);
+        }else if(typeof time === 'string'){
+            return new Date(time).getTime();
+        }else{
+            date = new Date();
+        }
+        return date.getFullYear() + '-' + (date.getMonth()+1) + '-' + date.getDate()
+    },
     sizemat(b, flag){
         if(!flag){
             if(b < 1024) return b + ' B';
@@ -63,7 +74,8 @@ module.exports = {
         
         html += '</div>';
         div.innerHTML = html;
-        div.addEventListener('click',function(e){
+        function eventFn(e){
+            div.removeEventListener('click', eventFn);
             if(/^icon\s+icon-\w+$/.test(e.target.className)){
                 if(fn) fn.call(e.target,-1);
                 parentNode.removeChild(div);
@@ -72,9 +84,16 @@ module.exports = {
                 if(fn) fn.call(e.target, parseInt(e.target.name));
                 parentNode.removeChild(div);
             }
-        });
+        }
+        div.addEventListener('click', eventFn);
         parentNode.appendChild(div);
-        return div;
+        return {
+            el: div,
+            remove(){
+                parentNode.removeChild(div);
+                div.removeEventListener('click', eventFn);
+            }
+        };
     },
     draggable(node, dragnode){
         let sx = 0,

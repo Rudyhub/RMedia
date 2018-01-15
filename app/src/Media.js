@@ -43,9 +43,12 @@ module.exports = {
                 ext: ext,
                 type: null
             },
-            status = true;
-        let ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
+            status = true,
+
+            ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
+            
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
+
             for(; i < len; i++){
                 line = lines[i].trim();
                 if(/(^stream\s*mapping)|(^output)/i.test(line)) break;
@@ -71,6 +74,7 @@ module.exports = {
                     json.bita = parseFloat(match[1]);
                 }
             }
+
             if(json.width > 0 && json.height > 0){
                 if(json.fps === 0 || json.ext === 'gif'){
                     json.type = 'image';
@@ -80,9 +84,11 @@ module.exports = {
             }else if(json.bita > 0){
                 json.type = 'audio';
             }
+
             if(json.bit <= 0){
                 json.bit = json.bita + json.bitv;
             }
+
         }).once('close',(a,b)=>{
             if(a === 0){
                 if(success) success(json);
@@ -111,6 +117,7 @@ module.exports = {
             status = true,
             ffmpeg,
             thumb;
+            
         ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
             if(!err){
                 let tmp = fs.readFileSync(config.appRoot+'cache/thumb');
