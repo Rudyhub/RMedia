@@ -2,7 +2,7 @@ const win = nw.Window.get();
 const config = require('./config');
 const Media = require('./Media');
 const utils = require('./utils');
-const screencap = require('./screencap');
+const capture = require('./capture');
 
 const showThumb = (item)=>{
     if(!item) return;
@@ -142,7 +142,7 @@ const vue = new Vue({
 						},
 						fail: (err)=>{
                             utils.dialog('提示：',
-                            '<p><span>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</span></p>',
+                            '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
                             ['是','否'],
                             (code)=>{
                                 if(code === 1) item.hide = true;
@@ -241,24 +241,47 @@ const vue = new Vue({
         alphaFn(){
             vue.alpha = !vue.alpha;
         },
-        screencap(e){
-            utils.dialog('弹窗：',
-            `<h2>注意：</h2>
-            <p>系统或系统主题的原因，偶尔窗口显示不正常，可以忽略它，只需要把窗口边框调整到截取区域的上方即可，因为录制的时候窗口是隐藏的，不会影响录制结果。</p>
-            <p>全屏录制只需要把窗口边框的【宽】【高】拉至最大，甚至大于屏幕即自动全屏。</p>
-            <p>录制过程中使用快捷键 【空格键】 控制 【开始】 与 【结束】。</p>`,
-            ['下一步','取消'],
-            (code)=>{
-                if(code === 0){
-                    screencap();
+        capture(e){
+            capture.recorders((list)=>{
+                let i = 0, len, html, dialog;
+                if(list && (len = list.length) ){
+                    html = '<select name="audioDevice">';
+                    for(; i<len; i++){
+                        if(i%2 === 0){
+                            html += '<option value="'+list[i]+'">'+list[i]+'</li>';
+                        }
+                    }
+                    html += '</select>';
+                    dialog = utils.dialog('设置参数：',
+                        `<h3>注意：若不了解以下参数的作用，请保持默认</h3>
+                        <p>帧速率：<input name="fps" type="number" max="30" value="30"/></p>
+                        <p>输出宽度范围：<input name="width" type="number" value="${vue.widthLimit}"/></p>
+                        <p>视频输出比特率：<input name="bitv" type="number" value="${config.output.bitv}"/></p>
+                        <p>音频输出比特率：<input name="bita" type="number" value="${config.output.bita}"/></p>
+                        <p>内部音频录制设备：${html}</p>`,
+                        ['下一步','取消'],
+                        (code)=>{
+                            if(code === 0){
+                                capture.setArea({
+                                    fps: parseInt(dialog.el.querySelector('[name=fps]').value),
+                                    width: parseInt(dialog.el.querySelector('[name=width]').value),
+                                    bitv: parseInt(dialog.el.querySelector('[name=bitv]').value),
+                                    bita: parseInt(dialog.el.querySelector('[name=bita]').value),
+                                    audioDevice: dialog.el.querySelector('[name=audioDevice]').value
+                                });
+                            }
+                        });
+                }else{
+                    utils.dialog('提示：','<p>当前计算机没有可用的录音设备或者未开启，请查看帮助文档。</p>');
                 }
             });
+            
         },
         firstAid(){
-            utils.dialog('警告：','<p><span>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</span></p>',['启用','关闭'],(code)=>{
+            utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
                 if(code === 0){
                     Media.killAll((msg)=>{
-                        utils.dialog('提示：','<p><span>所有可能的错误程序已被清除！</span><br>详细：'+msg+'</p>');
+                        utils.dialog('提示：','<p>所有可能的错误程序已被清除！<br>详细：'+msg+'</p>');
                     });
                 }
             });
@@ -275,7 +298,7 @@ const vue = new Vue({
         convert(index){
             if(Media.ffmpeg){
                 utils.dialog('禁止：',
-                    '<p><span>转码程序正在进行，如果不是错误，请不要选择“强行中断”！</span></p>',
+                    '<p>转码程序正在进行，如果不是错误，请不要选择“强行中断”！</p>',
                     ['关闭','强行中断'],
                     function(code){
                         if(code === 1){
@@ -309,7 +332,7 @@ const vue = new Vue({
                         seek = item.cover;
                     }else if(duration < 0){
                         //错误情况：起点大于终点
-                        utils.dialog('错误操作：','<p><span>设置的终点不能在起点之前。</span></p>');
+                        utils.dialog('错误操作：','<p>设置的终点不能在起点之前。</p>');
                         return;
                     }else{
                         cammand = '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel;

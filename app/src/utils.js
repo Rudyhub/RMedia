@@ -4,9 +4,9 @@ module.exports = {
             mat = (n) => {
                 return n < 10 ? '0'+n : n;
             };
-        if(typeof time === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(time)){
+        if(typeof time === 'string' && /^\d{2}:\d{2}:\d{2}([\.\d]*)$/.test(time)){
             t = time.split(':');
-            return (parseInt(t[0]*3600) + parseInt(t[1]*60) + parseInt(t[2])) * 1000;
+            return (parseInt(t[0]*3600) + parseInt(t[1]*60) + parseFloat(t[2])) * 1000;
         }else if(typeof time === 'number'){
             if(isNaN(time)) return '00:00:00';
             t = time / 1000;
@@ -62,25 +62,26 @@ module.exports = {
             parentNode = context || document.body,
             html;
         div.className = 'dialog';
-        html = `<div class="dialog-title">${title}<i class="icon icon-cross"></i></div>
+        html = `<div class="dialog-title">${title}<i class="icon icon-cross dialog-close"></i></div>
             <div class="dialog-body">${msg}</div>
             <div class="dialog-footer">`;
             
         if(btns){
             for( let i=0; i<btns.length; i++){
-                html += '<button name="'+i+'">'+btns[i]+'</button>';
+                html += '<button class="dialog-btn" name="'+i+'">'+btns[i]+'</button>';
             }
         }
         
         html += '</div>';
         div.innerHTML = html;
         function eventFn(e){
-            div.removeEventListener('click', eventFn);
-            if(/^icon\s+icon-\w+$/.test(e.target.className)){
+            if(/dialog-close/.test(e.target.className)){
+                div.removeEventListener('click', eventFn);
                 if(fn) fn.call(e.target,-1);
                 parentNode.removeChild(div);
                 return;
-            }else if(e.target.hasAttribute('name')){
+            }else if(/dialog-btn/.test(e.target.className)){
+                div.removeEventListener('click', eventFn);
                 if(fn) fn.call(e.target, parseInt(e.target.name));
                 parentNode.removeChild(div);
             }

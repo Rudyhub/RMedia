@@ -153,6 +153,18 @@ button:active{
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
+.text-center{
+    text-align: center;
+}
+.text-justify{
+    text-align: justify;
+}
+.text-left{
+    text-align: left;
+}
+.text-right{
+    text-align: right;
+}
 .r3{
     -webkit-line-clamp: 3;
 }
@@ -510,13 +522,6 @@ button:active{
 }
 .dialog-body{
     padding: .5em;
-}
-.dialog-body p:first-child{
-    text-align: center;
-}
-.dialog-body span{
-    display: inline-block;
-    text-align: justify !important;
 }
 .dialog-footer{
     text-align: center;

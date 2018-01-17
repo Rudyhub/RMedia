@@ -104,9 +104,9 @@ module.exports = {
             mat = (n) => {
                 return n < 10 ? '0'+n : n;
             };
-        if(typeof time === 'string' && /^\d{2}:\d{2}:\d{2}$/.test(time)){
+        if(typeof time === 'string' && /^\d{2}:\d{2}:\d{2}([\.\d]*)$/.test(time)){
             t = time.split(':');
-            return (parseInt(t[0]*3600) + parseInt(t[1]*60) + parseInt(t[2])) * 1000;
+            return (parseInt(t[0]*3600) + parseInt(t[1]*60) + parseFloat(t[2])) * 1000;
         }else if(typeof time === 'number'){
             if(isNaN(time)) return '00:00:00';
             t = time / 1000;
@@ -162,25 +162,26 @@ module.exports = {
             parentNode = context || document.body,
             html;
         div.className = 'dialog';
-        html = `<div class="dialog-title">${title}<i class="icon icon-cross"></i></div>
+        html = `<div class="dialog-title">${title}<i class="icon icon-cross dialog-close"></i></div>
             <div class="dialog-body">${msg}</div>
             <div class="dialog-footer">`;
             
         if(btns){
             for( let i=0; i<btns.length; i++){
-                html += '<button name="'+i+'">'+btns[i]+'</button>';
+                html += '<button class="dialog-btn" name="'+i+'">'+btns[i]+'</button>';
             }
         }
         
         html += '</div>';
         div.innerHTML = html;
         function eventFn(e){
-            div.removeEventListener('click', eventFn);
-            if(/^icon\s+icon-\w+$/.test(e.target.className)){
+            if(/dialog-close/.test(e.target.className)){
+                div.removeEventListener('click', eventFn);
                 if(fn) fn.call(e.target,-1);
                 parentNode.removeChild(div);
                 return;
-            }else if(e.target.hasAttribute('name')){
+            }else if(/dialog-btn/.test(e.target.className)){
+                div.removeEventListener('click', eventFn);
                 if(fn) fn.call(e.target, parseInt(e.target.name));
                 parentNode.removeChild(div);
             }
@@ -230,7 +231,7 @@ const win = nw.Window.get();
 const config = __webpack_require__(0);
 const Media = __webpack_require__(4);
 const utils = __webpack_require__(2);
-const screencap = __webpack_require__(6);
+const capture = __webpack_require__(6);
 
 const showThumb = (item)=>{
     if(!item) return;
@@ -370,7 +371,7 @@ const vue = new Vue({
 						},
 						fail: (err)=>{
                             utils.dialog('提示：',
-                            '<p><span>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</span></p>',
+                            '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
                             ['是','否'],
                             (code)=>{
                                 if(code === 1) item.hide = true;
@@ -469,24 +470,47 @@ const vue = new Vue({
         alphaFn(){
             vue.alpha = !vue.alpha;
         },
-        screencap(e){
-            utils.dialog('弹窗：',
-            `<h2>注意：</h2>
-            <p>系统或系统主题的原因，偶尔窗口显示不正常，可以忽略它，只需要把窗口边框调整到截取区域的上方即可，因为录制的时候窗口是隐藏的，不会影响录制结果。</p>
-            <p>全屏录制只需要把窗口边框的【宽】【高】拉至最大，甚至大于屏幕即自动全屏。</p>
-            <p>录制过程中使用快捷键 【空格键】 控制 【开始】 与 【结束】。</p>`,
-            ['下一步','取消'],
-            (code)=>{
-                if(code === 0){
-                    screencap();
+        capture(e){
+            capture.recorders((list)=>{
+                let i = 0, len, html, dialog;
+                if(list && (len = list.length) ){
+                    html = '<select name="audioDevice">';
+                    for(; i<len; i++){
+                        if(i%2 === 0){
+                            html += '<option value="'+list[i]+'">'+list[i]+'</li>';
+                        }
+                    }
+                    html += '</select>';
+                    dialog = utils.dialog('设置参数：',
+                        `<h3>注意：若不了解以下参数的作用，请保持默认</h3>
+                        <p>帧速率：<input name="fps" type="number" max="30" value="30"/></p>
+                        <p>输出宽度范围：<input name="width" type="number" value="${vue.widthLimit}"/></p>
+                        <p>视频输出比特率：<input name="bitv" type="number" value="${config.output.bitv}"/></p>
+                        <p>音频输出比特率：<input name="bita" type="number" value="${config.output.bita}"/></p>
+                        <p>内部音频录制设备：${html}</p>`,
+                        ['下一步','取消'],
+                        (code)=>{
+                            if(code === 0){
+                                capture.setArea({
+                                    fps: parseInt(dialog.el.querySelector('[name=fps]').value),
+                                    width: parseInt(dialog.el.querySelector('[name=width]').value),
+                                    bitv: parseInt(dialog.el.querySelector('[name=bitv]').value),
+                                    bita: parseInt(dialog.el.querySelector('[name=bita]').value),
+                                    audioDevice: dialog.el.querySelector('[name=audioDevice]').value
+                                });
+                            }
+                        });
+                }else{
+                    utils.dialog('提示：','<p>当前计算机没有可用的录音设备或者未开启，请查看帮助文档。</p>');
                 }
             });
+            
         },
         firstAid(){
-            utils.dialog('警告：','<p><span>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</span></p>',['启用','关闭'],(code)=>{
+            utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
                 if(code === 0){
                     Media.killAll((msg)=>{
-                        utils.dialog('提示：','<p><span>所有可能的错误程序已被清除！</span><br>详细：'+msg+'</p>');
+                        utils.dialog('提示：','<p>所有可能的错误程序已被清除！<br>详细：'+msg+'</p>');
                     });
                 }
             });
@@ -503,7 +527,7 @@ const vue = new Vue({
         convert(index){
             if(Media.ffmpeg){
                 utils.dialog('禁止：',
-                    '<p><span>转码程序正在进行，如果不是错误，请不要选择“强行中断”！</span></p>',
+                    '<p>转码程序正在进行，如果不是错误，请不要选择“强行中断”！</p>',
                     ['关闭','强行中断'],
                     function(code){
                         if(code === 1){
@@ -537,7 +561,7 @@ const vue = new Vue({
                         seek = item.cover;
                     }else if(duration < 0){
                         //错误情况：起点大于终点
-                        utils.dialog('错误操作：','<p><span>设置的终点不能在起点之前。</span></p>');
+                        utils.dialog('错误操作：','<p>设置的终点不能在起点之前。</p>');
                         return;
                     }else{
                         cammand = '-b:v|'+item.bitv+'k|-b:a|'+item.bita+'k|-preset|'+vue.speedLevel;
@@ -907,23 +931,63 @@ winShow = ()=>{
 winHide = ()=>{
 	win.moveTo(-win.width-50, 0);
 },
-record = (x=0, y=0, w=screen.availWidth, h=screen.availHeight)=>{
-	let errmsg = '', ffmpeg, isFull, cammand = ['-f','gdigrab','-framerate','25'];
+recorders = (fn)=>{
+	if(typeof fn === 'function'){
+		let lines, line, list, ffmpeg;
+
+		if(list = window.localStorage.getItem('audioDevice')){
+			list = JSON.parse(list);
+			if(list.length){
+				fn(list);
+				return;
+			}
+		}
+
+		list = [];
+
+		ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
+		ffmpeg.stderr.on('data', (stderr)=>{
+			lines += stderr.toString();
+		});
+		ffmpeg.once('close', (a,b)=>{
+			lines = lines.split(/\n+/);
+			while(line = lines[0]){
+				lines.splice(0,1);
+				if(/DirectShow\s+audio\s+devices/i.test(line)) break;
+			}
+			while(line = lines[0]){
+				lines.splice(0,1);
+				if(/\[dshow[^\]]*?\]/i.test(line)){
+					list.push( line.slice(line.indexOf('\"')+1, line.lastIndexOf('\"')) );
+				}
+			}
+			window.localStorage.setItem('audioDevice', JSON.stringify(list));
+			fn(list);
+			ffmpeg.kill();
+			ffmpeg = null;
+		});
+	}
+},
+record = (audioDevice, x=0, y=0, w=screen.availWidth, h=screen.availHeight, fps=30)=>{
+	let errmsg = '', ffmpeg, isFull, cammand = ['-hide_banner','-f','gdigrab', '-framerate', fps];
 
 	if(x < 0) x = 0;
 	if(y < 0) y = 0;
 	if(w > screen.width) w = screen.width;
 	if(h > screen.height) h = screen.height;
 	if(w < screen.availWidth || h < screen.availHeight) cammand.push('-offset_x', x, '-offset_y', y, '-video_size', w+'x'+h);
-	if(w%2 !== 0) w--;
-	if(h%2 !== 0) h--;
 
-	cammand.push('-i', 'desktop', '-q', '1', '-s', w+'x'+h, '-y', config.appRoot+'tmp/tmp_record.mpg');
+
+	cammand.push('-i', 'desktop');
+
+	if(audioDevice) cammand.push('-f','dshow','-i','audio='+audioDevice);
+
+	cammand.push('-q', '1', '-y', config.appRoot+'tmp/tmp_record.mpg');
 
 	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand);
 
 	ffmpeg.stderr.on('data',(err)=>{
-		errmsg = err.toString();
+		errmsg += err.toString();
 		err = null;
 	});
 	ffmpeg.once('close', (a,b)=>{
@@ -938,75 +1002,97 @@ record = (x=0, y=0, w=screen.availWidth, h=screen.availHeight)=>{
 	});
 	return ffmpeg;
 },
-compress = (path)=>{
-	path = path || config.appRoot+'tmp/tmp_record.mpg';
-	let dialog = utils.dialog('完成：','<p>录制完成，正在优化和压缩处理...</p>'),
-		ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',
-			['-i',path,
-			'-b:v','2048k',
-			'-y',
-			config.output.folder + '/' + utils.datemat() + '.mp4'
-		]),
-		dialogBody = dialog.el.querySelector('.dialog-body');
+compress = (o)=>{
+	let dialog = utils.dialog('完成：','<p>录制完成，正在优化和压缩处理...<span class="percent"></span></p>'),
+		ffmpeg = null,
+		cammand = ['-hide_banner','-i', config.appRoot+'tmp/tmp_record.mpg'],
+		dialogBody = dialog.el.querySelector('.percent'),
+		duration = 0,
+		curtime = 0,
+		linestr = '',
+		errmsg = '';
+
+	if(o.bitv) cammand.push('-b:v', o.bitv+'k');
+	if(o.bita) cammand.push('-b:a', o.bita+'k');
+
+	if(o.width && o.w > o.width){
+		o.h = Math.round((o.h/o.w)*o.width);
+		o.w = o.width;
+	}
+	if(o.w%2 !== 0) o.w--;
+	if(o.h%2 !== 0) o.h--;
+
+	cammand.push('-s', o.w+'x'+o.h, '-y', config.output.folder + '/' + utils.datemat() + '.mp4');
+
+	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',cammand);
 
 	ffmpeg.stderr.on('data', (stderr)=>{
-		dialogBody.innerHTML = stderr.toString();
+		linestr = stderr.toString();
+		errmsg += linestr;
+		if(!duration) duration = utils.timemat(linestr.match(/duration:\s*([\d\:\.]*?),/i)[1]);
+		curtime = utils.timemat(linestr.match(/time=([\d\:\.]*?)\s+/)[1]);
+		dialogBody.innerHTML = Math.round((curtime/duration)*100)+'%';
 	});
 	ffmpeg.once('close', (a,b)=>{
 		if(a === 0){
 			dialog.remove();
 		}else{
-			dialogBody.insertAdjacentHtml('beforeEnd', '<b>有错误： code='+a+' exit='+b+'</b>');
+			dialogBody.innerHTML = '<br>有错误： code='+a+'<br>exit='+b+'<br>detail:'+errmsg;
 		}
 	});
-	ffmpeg.once('error', (err)=>{
-		dialogBody.insertAdjacentHtml('beforeEnd', '<b>有错误：'+err+'</b>');
+	ffmpeg.once('error', ()=>{
+		dialogBody.innerHTML = '<b>有错误：'+errmsg+'</b>';
 	});
 };
 
-module.exports = ()=>{
-	nw.Window.open('html/screencap.html',{
-	    id: 'cutscreen',
-	    position: 'center',
-	    transparent: true,
-	    new_instance: false,
-	    frame: false,
-	    focus: true,
-	    width: 1280,
-	    height: 720,
-	    always_on_top: true
-	}, (childWin)=>{
-		let childDoc = childWin.window.document,
-			ffmpeg = null;
-		function startFn(e){
-			childDoc.removeEventListener('keyup', startFn);
-	        if(e.keyCode === 32){
-	            winHide();
-	            ffmpeg =  record(childWin.x, childWin.y, childWin.width, childWin.height);
-	            childWin.close(true);
-	            childWin = null;
-	            document.addEventListener('keyup', stopFn);
-	        }
-	    }
-	    function stopFn(e){
-        	document.removeEventListener('keyup',stopFn);
-        	if(e.keyCode === 32){
-        		winShow();
-        		ffmpeg.stdin.write('q\n');
-				ffmpeg.kill();
+module.exports = {
+	recorders,
+	setArea(o){
+		nw.Window.open('html/capture.html',{
+		    id: 'cutscreen',
+		    position: 'center',
+		    transparent: true,
+		    new_instance: false,
+		    frame: false,
+		    focus: true,
+		    width: 1280,
+		    height: 720,
+		    always_on_top: true
+		}, (childWin)=>{
+			let childDoc = childWin.window.document,
 				ffmpeg = null;
-				compress();
-        	}
-        }
-		childDoc.addEventListener('keyup', startFn);
+			o.w = childWin.width;
+			o.h = childWin.height;
+			function startFn(e){
+				childDoc.removeEventListener('keyup', startFn);
+		        if(e.keyCode === 32){
+		            winHide();
+		            ffmpeg =  record(o.audioDevice, childWin.x, childWin.y, o.w, o.h, o.fps);
+		            childWin.close(true);
+		            childWin = null;
+		            document.addEventListener('keyup', stopFn);
+		        }
+		    }
+		    function stopFn(e){
+	        	document.removeEventListener('keyup',stopFn);
+	        	if(e.keyCode === 32){
+	        		winShow();
+	        		ffmpeg.stdin.write('q\n');
+					ffmpeg.kill();
+					ffmpeg = null;
+					compress(o);
+	        	}
+	        }
+			childDoc.addEventListener('keyup', startFn);
 
-		childWin.once('close', ()=>{
-			childDoc.removeEventListener('keyup', startFn);
-			document.removeEventListener('keyup', stopFn);
-			childWin.close(true);
-			childWin = null;
+			childWin.once('close', ()=>{
+				childDoc.removeEventListener('keyup', startFn);
+				document.removeEventListener('keyup', stopFn);
+				childWin.close(true);
+				childWin = null;
+			});
 		});
-	});
+	}
 };
 
 /***/ })
