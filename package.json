@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "do": "xcopy app test\\app\\ /y /e"
+    "do": "xcopy app test\\app\\ /y /e",
+    "build": "webpack && cd ./app && /www/fupconvert/test/nw ."
   },
   "repository": {
     "type": "git",

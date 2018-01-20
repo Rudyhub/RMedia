@@ -1,24 +1,11 @@
 const fs = require('fs'),
 childprocess = require('child_process'),
 config = require('./config'),
+utils = require('./utils');
 
-getProgress = (line,duration)=>{
-    let times = line.match(/time=\s*([\d\.:]+)\s+/i),
-        time = 0
-        percent = 0;
-    if(times){
-        let timesplit = times[1].split(':');
-        time = ( parseFloat(timesplit[0])*3600 + parseFloat(timesplit[1])*60 + parseFloat(timesplit[2]) )*1000;
-        if(duration){
-            percent = Math.round(100*time/(duration*1000));
-        }else{
-            percent = 100;
-        }
-    }
-    return percent;
-};
 module.exports = {
-    //第一个子数组为html支持的格式，第二个需要转码
+    ffmpeg: null,
+    //第一个子数组为支持直接预览的格式，第二个需要转码
     formats: {
         image: [['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
         video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
@@ -46,7 +33,7 @@ module.exports = {
             status = true,
 
             ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
-            
+                console.log(stderr.toString());
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
 
             for(; i < len; i++){
@@ -97,7 +84,6 @@ module.exports = {
                     status = false;
                     fail(a,b);
                 }
-                console.error('error: '+a, b);
             }
         }).once('error', (err)=>{
             try{
@@ -107,17 +93,22 @@ module.exports = {
                 status = false;
                 fail(err);
             }
-            console.error(err);
         });
     },
     thumb(o){
-        let w = o.width || 480,
-            h = o.height || 270,
+        let wmax = o.widthLimit || 480,
+            w = o.width || wmax,
+            h = o.height || wmax*.5625,
             format = o.format === 'jpg' ? 'image2' : (o.format === 'gif' ? 'gif': 'apng'),
             status = true,
             ffmpeg,
             thumb;
-            
+        if(w > wmax){
+            h = Math.round((o.height/o.width)*wmax);
+            w = Math.round(wmax);
+        }
+        if(h%2 !== 0) h--;
+        if(w%2 !== 0) w--;
         ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
             if(!err){
                 let tmp = fs.readFileSync(config.appRoot+'cache/thumb');
@@ -148,33 +139,29 @@ module.exports = {
             }
         });
     },
-    info(options){
-        let self = this,
-        o = {
-            url: options.url || '',
-            scale:  options.scale || '320:-1',
-            time: options.time || 0,
-            format: options.format || 'png',
-            success: options.success || null,
-            fail: options.fail || null
-        };
-        if(!o.url) {
-            alert('无效媒体文件地址!');
+    info(o){
+        let self = this;
+        if(!o.input) {
+            utils.dialog('地址错误：','<p>无效媒体文件地址!</p>');
             return;
         }
         if(!o.success) return;
-        self.metadata(o.url,(json)=>{
+        self.metadata(o.input,(json)=>{
             json.thumb = '';
             if(json.type === 'audio'){
                 json.thumb = config.audioThumb;
                 o.success(json);
             }else{
                 if(self.is(json.ext,'image')){
-                    json.thumb = o.url;
+                    json.thumb = o.input;
                     o.success(json);
                 }else{
                     self.thumb({
-                        input: o.url,
+                        widthLimit: o.widthLimit,
+                        format: o.format,
+                        input: o.input,
+                        width: json.width,
+                        height: json.height,
                         success(thumb){
                             json.thumb = thumb;
                             o.success(json);
@@ -187,24 +174,55 @@ module.exports = {
             }
         }, o.fail);
     },
-    ffmpeg: null,
     killAll(fn){
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
             if(fn) fn(stderr.toString());
         });
     },
+    onExists(file, stderr, stdin){
+        let self = this;
+        self.exitCode = 0;
+        if(/File[\s\S]*?already[\s\S]*?exists[\s\S]*?Overwrite[\s\S]*?\[y\/N\]/i.test(stderr.toString())){
+            utils.dialog(
+                '提示：',
+                '<p>文件：'+file+'已存在，是否覆盖？<p>',
+                ['覆盖','退出'],
+                (code)=>{
+                    if(code === 0){
+                        stdin.write('y\n');
+                    }else{
+                        stdin.write('N\n');
+                    }
+                    self.exitCode = 1;
+                });
+        }
+    },
     convert(o){
         let self = this,
-            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+(o.duration ? '|-t|'+o.duration : '')+'|-y|'+o.output,
-            errmsg = '';
+            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+(o.duration ? '|-t|'+o.duration : '')+'|'+o.output+(o.thumbCmd || ''),
+            errmsg = '',
+            percent = 0,
+            time = 0,
+            line;
         if(self.ffmpeg){
-            o.complete(2,'有视频解转码尚未完成，是否中止？');
+            o.complete(2,'退出码：2，详细：有视频解转码尚未完成，是否中止？');
             return;
         }
         self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
         self.ffmpeg.stderr.on('data', (stderr)=>{
-            errmsg = stderr.toString();
-            o.progress( getProgress(errmsg, o.duration) );
+            self.onExists(o.output, stderr, self.ffmpeg.stdin);
+            line = stderr.toString()
+            errmsg += line;
+            time = line.match(/time=\s*([\d\.:]+)\s+/i);
+            if(time){
+                time = utils.timemat(time[1]);
+                if(o.duration){
+                    percent = Math.round(100*time/(o.duration*1000));
+                }else{
+                    percent = 100;
+                }
+            }
+            o.progress(percent);
         });
         self.ffmpeg.once('close', function(a,b){
             self.ffmpeg.kill();
@@ -212,44 +230,52 @@ module.exports = {
             if(a === 0){
                 o.complete(0, o.output);
             }else{
-                o.complete(1, '错误退出：'+errmsg);
+                if(self.exitCode === 1) return;
+                o.complete(1, '退出码：1，详细：'+errmsg);
             }
         });
         self.ffmpeg.on('error', function(){
             self.ffmpeg.kill();
             self.ffmpeg = null;
-            o.complete(3, '子进程错误：'+err.toString());
+            o.complete(3, '退出码：3，详细：'+errmsg);
         });
     },
-    preview(o){
-        let self = this,
-            w = 320,
-            h = Math.round(o.scale*w);
-        if(self.ffmpeg){
-            o.complete(2,'有视频解转码尚未完成，是否中止？');
-            return;
-        }
-        h = h%2 !== 0 ? h+1 : h;
-        o.output = config.appRoot+'tmp/tmp.mp4';
-        o.cammand = '-preset|ultrafast|-s|'+w+'x'+(h%2 != 0 ? h+1 : h)+'|-b:v|512k';
-        self.convert(o);
-    },
+    exitCode: 0,
     compressImg(o){
-        let c = document.createElement('canvas'), cv = c.getContext('2d'), img = new window.Image(), data;
+        let self = this,
+            w = 0,
+            h = 0;
+        self.metadata(o.input, (json)=>{
+            w = json.width;
+            h = json.height;
+            if(w > config.output.width){
+                h = Math.round(config.output.width*h/w);
+                w = config.output.width;
+            }
 
-        img.src = o.input;
-        console.log(img);
-        img.addEventListener('load', function loaded(){
-            img.removeEventListener('load', loaded);
-            c.width = img.width;
-            c.height = img.height;
-            cv.drawImage(img, 0, 0, img.width, img.height);
-            data = c.toDataURL((o.mime || 'image/jpg'), (o.quality || .9));
-            fs.writeFileSync(o.output, data);
-            c = null;
-            cv = null;
-            img = null;
-            data = null;
+            o.complete(0);
+
+            self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', ['-hide_banner','-i', o.input, '-s', w+'x'+h, '-compression_level', Math.round((1-o.quality)*100), o.output]);
+            self.ffmpeg.stderr.on('data', (stderr)=>{
+                self.onExists(o.output, stderr, self.ffmpeg.stdin);
+            });
+            self.ffmpeg.once('close',(a,b)=>{
+                self.ffmpeg.kill();
+                self.ffmpeg = null;
+                if(a === 0){
+                    o.complete(100);
+                }else{
+                    if(self.exitCode === 0) return;
+                    utils.dialog('失败：','<p>压缩失败！</p>');
+                }
+            });
+            self.ffmpeg.once('error',()=>{
+                self.ffmpeg.kill();
+                self.ffmpeg = null;
+                utils.dialog('失败：','<p>错误！</p>');
+            });
+        }, (msg)=>{
+            utils.dialog('失败：','<p>获取媒体元数据信息失败！</p>');
         });
     }
 };
