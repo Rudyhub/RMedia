@@ -262,6 +262,10 @@ button:active{
 .menu button{
     margin: 0;
 }
+.menu .active{
+    color: var(--light1);
+    border-color: var(--light1);
+}
 .drop-panel{
     position: absolute;
     background: var(--black1);
@@ -298,10 +302,12 @@ button:active{
     text-align: left;
 }
 
+.columns{
+    font-size: 0;
+}
 .item{
-    display: inline-table;
+    display: inline-block;
     width: 19vw;
-    margin: .4vw;
     border: 1px solid;
     position: relative;
     box-sizing: border-box;
@@ -310,6 +316,8 @@ button:active{
     border-spacing: 0;
     font-size: var(--fs14);
     table-layout: fixed;
+    margin: .4vw;
+    transition: margin .5s;
 }
 .item.hide{
     display: none;
@@ -417,11 +425,10 @@ button:active{
     transition: all .3s;
     box-sizing: border-box;
     border-radius: 4px;
-    border: 1px solid transparent;
 }
 .item-tool.active,
 .item-tool:hover{
-    border-color: var(--blue1);
+    color: var(--light1);
 }
 .rotating{
     animation: rotating 1s linear infinite;
@@ -440,7 +447,7 @@ button:active{
     width: 98%;
 }
 .item [type=number]{
-    width: 5em;
+    width: 3.5em;
 }
 .item-info-toname{
     width: 15.6vw;

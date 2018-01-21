@@ -33,7 +33,7 @@ module.exports = {
             status = true,
 
             ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
-                console.log(stderr.toString());
+                // console.log(stderr.toString());
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
 
             for(; i < len; i++){

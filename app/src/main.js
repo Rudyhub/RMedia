@@ -3,6 +3,8 @@ const config = require('./config');
 const Media = require('./Media');
 const utils = require('./utils');
 const capture = require('./capture');
+const crypto = require('crypto');
+const videoEl = document.createElement('video');
 
 const showThumb = (item)=>{
     if(!item) return;
@@ -10,22 +12,26 @@ const showThumb = (item)=>{
         input: item.path,
         time: item.currentTime,
         success(src){
-            item.video.poster = src;
+            item.thumb = src;
         },
         fail(){
             console.log(arguments);
         }
     });
 };
+
 const vue = new Vue({
 	el: '#app',
 	data: {
-		items: [],
+        appInfo: config.appInfo,
+		items: {},
 		output: config.output.folder,
 		isFullScreen: true,
 		defwidth: config.output.width,
 		dropSlidedown: false,
 		nameAll: 'fup',
+        editable: false,
+        listPanel: false,
 		widthLimit: 1280,
 		heightLimit: 720,
 		sizeLimit: 0,
@@ -70,73 +76,78 @@ const vue = new Vue({
 		},
 		chosefile(e){
 			let files = e.target.files,
-				i = 0;
+				i = 0,
+                item,
+                md5;
 			if(files && files.length){
 				recycle(files[0]);
 				function recycle(file){
-                    let item = {
-							path: file.path,
-                            hide: false,
-                            video: null,
-                            canplay: false,
-                            playing: false,
-                            progress: 0,
-							name: file.name,
-							size: file.size,
-							lock: false,
-							width: 0,
-							height: 0,
-							duration: 0,
-							format: '',
-							editable: false,
-                            fps: 0,
-                            currentTime: 0,
-							toname: file.name,
-							tosize: 0,
-							towidth: vue.defwidth,
-							toheight: Math.round(vue.defwidth*0.5625),
-							toformat: '',
-							starttime: 0,
-							endtime: 0,
-                            cover: 0,
-                            bitv: 0,
-                            bita: 0
-						},
-                        video = document.createElement('video');
+                    md5 = crypto.createHash('md5');
+                    md5.update(file.path);
+                    md5 = md5.digest('hex');
 
-                    video.className = 'item-preview-img';
-                    video.src = file.path;
-                    video.poster = config.loadingGif;
-                    item.video = video;
-                    item.canplay = !!video.canPlayType(file.type);
-                    video.ontimeupdate = ()=>{
-                        item.currentTime = video.currentTime;
+                    item = {
+                        path: file.path,
+                        thumb: config.loadingGif,
+                        canplay: !!videoEl.canPlayType(file.type),
+                        playing: 0,
+                        progress: 0,
+                        lock: 1,
+                        editable: 0,
+                        bitv: 0,
+                        bita: 0,
+                        type: '',
+
+                        duration: 0,
+                        starttime: 0,
+                        endtime: 0,
+                        currentTime: 0,
+                        covertime: 0,
+
+                        name: file.name,
+                        toname: file.name.slice(0, file.name.lastIndexOf('.')),
+
+                        size: file.size,
+                        tosize: file.size,
+
+                        width: 0,
+                        towidth: 0,
+                        height: 0,
+                        toheight: 0,
+
+                        format: '',
+                        toformat: '',
+
+                        fps: 0,
+                        tofps: 0
                     };
-                    video.onplay = ()=>{
-                        item.playing = true;
-                    };
-                    video.onpause = ()=>{
-                        item.playing = false;
-                    }
-					vue.items.push(item);
+
+                    vue.$set(vue.items, md5, item);
+
 					Media.info({
 						input: file.path,
 						success: (json)=>{
-                            item.format = json.ext;
-							item.width = json.width;
-							item.height = json.height;
-							item.duration = json.duration;
-                            item.endtime = json.duration;
-                            item.cover = json.duration/2;
-							item.type = json.type;
-                            item.towidth = item.width > vue.defwidth ? vue.defwidth : item.width;
-                            item.toheight = json.width ? Math.round(item.towidth * (item.height/item.width) ) : 0;
-                            item.fps = json.fps;
-                            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
-                            item.video.poster = json.thumb;
+                            item.thumb = json.thumb;
                             item.bitv = json.bitv && json.bitv <= config.output.bitv ? json.bitv : config.output.bitv;
                             item.bita = json.bita && json.bita <= config.output.bita ? json.bita : config.output.bita;
+                            item.type = json.type;
+
+                            item.duration = json.duration;
+                            item.endtime = json.duration;
+
                             item.tosize = (item.bitv+item.bita)*1000*item.duration/8;
+
+							item.width = json.width;
+                            item.towidth = item.width > vue.defwidth ? vue.defwidth : item.width;
+							item.height = json.height;
+                            item.toheight = json.width ? Math.round(item.towidth * (item.height/item.width) ) : 0;
+
+							item.format = json.ext;
+                            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
+
+                            item.fps = json.fps;
+                            item.tofps = json.fps;
+
 							i++;
 							if(files[i]) recycle(files[i]);
 						},
@@ -145,7 +156,7 @@ const vue = new Vue({
                             '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
                             ['是','否'],
                             (code)=>{
-                                if(code === 1) item.hide = true;
+                                if(code === 1) vue.$delete(vue.items, md5);
                                 i++;
                                 if(files[i]) recycle(files[i]);
                             });
@@ -175,15 +186,13 @@ const vue = new Vue({
                     item.lock = !item.lock;
                     break;
                 case 'currentTime':
-                    if(item.canplay){
-                        item.video.pause();
-                    }
+                    document.getElementById('id-'+index).pause();
                     item.currentTime = parseFloat(target.value);
                     break;
                 case 'timeSlide':
                     if(item.canplay){
-                        item.video.currentTime = item.currentTime;
-                    }else{
+                        document.getElementById('id-'+index).currentTime = item.currentTime;
+                    }else if(item.type === 'video'){
                         showThumb(item);
                     }
                     break;
@@ -194,9 +203,10 @@ const vue = new Vue({
                         item.currentTime = 0;
                     }
                     if(item.canplay){
-                        item.video.pause();
-                        item.video.currentTime = item.currentTime;
-                    }else{
+                        let video = document.getElementById('id-'+index);
+                        video.pause();
+                        video.currentTime = item.currentTime;
+                    }else if(item.type === 'video'){
                         showThumb(item);
                     }
                     break;
@@ -207,9 +217,10 @@ const vue = new Vue({
                         item.currentTime = item.duration;
                     }
                     if(item.canplay){
-                        item.video.pause();
-                        item.video.currentTime = item.currentTime;
-                    }else{
+                        let video = document.getElementById('id-'+index);
+                        video.pause();
+                        video.currentTime = item.currentTime;
+                    }else if(item.type === 'video'){
                         showThumb(item);
                     }
                     break;
@@ -225,18 +236,41 @@ const vue = new Vue({
                     }
                     item.endtime = item.currentTime;
                     break;
-                case 'cover':
-                    item.cover = item.currentTime;
+                case 'setcover':
+                    item.covertime = item.currentTime;
                     break;
         		case 'towidth':
         			item.towidth = parseInt(target.value) || 0;
+                    if(item.towidth > vue.widthLimit){
+                        item.towidth = vue.widthLimit;
+                    }
         			item.toheight = Math.round((item.height / item.width) * item.towidth);
         			break;
         		case 'toheight':
         			item.toheight = parseInt(target.value) || 0;
+                    if(item.toheight > vue.heightLimit){
+                        item.toheight = vue.heightLimit;
+                    }
         			item.towidth = Math.round(item.toheight / (item.height / item.width));
         			break;
         	}
+        },
+        videoFn(e, index, type){
+            let item = vue.items[index],
+                video = e.target;
+            switch(type){
+                case 'timeupdate':
+                    item.currentTime = video.currentTime;
+                    break;
+                case 'play':
+                    item.playing = true;
+                    break;
+                case 'pause':
+                    item.playing = false;
+            }
+        },
+        listPanelFn(){
+            vue.listPanel = !vue.listPanel;
         },
         alphaFn(){
             vue.alpha = !vue.alpha;
@@ -287,12 +321,15 @@ const vue = new Vue({
             });
         },
         play(e, index){
-            let item = vue.items[index];
+            let item = vue.items[index],
+                video;
             if(!item.canplay) return;
-            if(item.video.paused){
-                item.video.play();
+            video = e.target.parentNode.querySelector('video');
+            video.currentTime = item.currentTime;
+            if(video.paused){
+                video.play();
             }else{
-                item.video.pause();
+                video.pause();
             }
         },
         convert(index){
@@ -415,12 +452,25 @@ const vue = new Vue({
         },
         nameAllFn(e){
         	vue.nameAll = e.target.value;
-        	let len = vue.items.length, i = 0, n = 0;
-        	for(; i < len; i++){
-        		if(vue.items[i].lock){
-        			vue.items[i].toname = utils.namemat(vue.nameAll, ++n);
-        		}
-        	}
+        	let item, i = 0;
+            for(k in vue.items){
+                item = vue.items[k];
+                i++;
+                if(item.lock){
+                    item.toname = utils.namemat(vue.nameAll, i);
+                }
+            }
+        },
+        allEditable(){
+            vue.editable = !vue.editable;
+            let item, i = 0;
+            for(k in vue.items){
+                item = vue.items[k];
+                i++;
+                if(item.lock){
+                    item.editable = vue.editable;
+                }
+            }
         },
         sizeLimitFn(e){
         	vue.sizeLimit = e.target.value;
@@ -461,7 +511,10 @@ const vue = new Vue({
 				}
 			}
 			return 'auto';
-		}
+		},
+        mathRound(val){
+            return Math.round(val);
+        }
 	},
     directives: {
         child: {

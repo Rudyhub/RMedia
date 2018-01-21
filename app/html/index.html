@@ -24,13 +24,20 @@
                     <i class="icon icon-folder-open"></i>
                     <input v-on:change="chosefile" type="file" title="打开文件" multiple>
                 </button>
-                <button class="start-btn" title="开始" v-on:click="convert(-1)" title="批量转换">
+                <button>
+                    <i class="icon icon-floppy-disk"></i>
+                    <input v-on:change="chosedir" type="file" :title="'选择保存目录，当前目录：'+output" nwdirectory>
+                </button>
+                <button class="start-btn" title="开始转换所有文件" v-on:click="convert(-1)">
                     <i class="icon icon-loop2"></i>
                 </button>
-                <button v-on:click="gotoSetAll" title="全局设置">
+                <button :class="{active: listPanel}" v-on:click="listPanelFn" title="功能菜单">
+                    <i class="icon icon-list"></i>
+                </button>
+                <button :class="{active: editable}" v-on:click="allEditable" title="展开所有锁定文件的设置面板">
                     <i class="icon icon-cog"></i>
                 </button>
-                <button v-on:click="alphaFn" title="透明/黑色背景">
+                <button :class="{active: alpha}" v-on:click="alphaFn" title="透明/黑色背景">
                     <i class="icon icon-contrast"></i>
                 </button>
                 <button v-on:click="capture" title="录制屏幕">
@@ -40,6 +47,7 @@
                     <i class="icon icon-aid-kit"></i>
                 </button>
             </div>
+
             <div class="drop-panel" :class="{slidedown:dropSlidedown}">
                 <div class="drop-panel-group">
                     <button class="save-as">
@@ -72,11 +80,13 @@
     </header>
     <div class="body">
         <section class="columns">
-            <dl class="item" v-for="(item, index) of items" :class="{editable: item.editable, hide: item.hide}">
-                <dt class="item-preview">
+            <div class="item" v-for="(item, index) of items" :class="{editable: item.editable}">
+                <div class="item-preview">
                     <div class="item-preview-inner">
-                        <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.type !== 'image' && item.canplay" v-on:click="play($event,index)"></i>
-                        <div class="item-preview-box" :class="{alpha:alpha}" v-on:click="play($event,index)" v-child="item.video"></div>
+                        <div class="item-preview-box" :class="{alpha:alpha}" v-on:click="play($event,index)">
+                            <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.canplay"></i>
+                            <video :id="'id-'+index" class="item-preview-img" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
+                        </div>
                         <div class="item-filename text-limit r1">
                             <i class="item-media-type icon" :class="mediaIcon[item.type]"></i>
                             {{item.name}}
@@ -88,84 +98,90 @@
                     </div>
                     <div class="item-tools">
                         <i class="item-tool icon icon-cog" :class="{active:item.editable}" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>
-                        <i class="item-tool icon" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{'icon-lock': item.lock,'icon-unlocked':!item.lock, active:item.lock}"></i>
+                        <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-loop2" v-on:click="convert(index)" title="转换此文件"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
                     </div>
-                </dt>
-                <dd class="item-info item-editable">
+                </div>
+                <div class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
-                        <input type="text" :value="item.toname+'.'+item.toformat" title="输出名称">
+                        <input type="text" :value="item.toname" title="输出名称">
                     </div>
-                </dd>
-                <dd class="item-info">
-                    <div class="item-info-head">截取：</div>
-                    <div class="item-info-body">
-                        {{item.currentTime | timemat}}
-                        <i class="color-1 icon icon-arrow-right">
-                        {{item.starttime | timemat}}-{{item.endtime | timemat}} {{item.cover | timemat}}</i>
-                    </div>
-                </dd>
-                <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
-                    <div class="item-info-body">
-                        <div class="item-time">
-                            <button :title="'上'+tunstep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
-                            <input type="number" v-model="tunstep" title="设置微调量">
-                            <button :title="'下'+tunstep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
-                        </div>
-                        <div class="item-time">
-                            <button v-on:click="itemFn($event,index,'setstart')" title="当前时间设置为片段起点">标记起点</button>
-                            <button v-on:click="itemFn($event,index,'setend')" title="当前时间设置为片段终点">标记终点</button>
-                            <button v-on:click="itemFn($event,index,'cover')" title="当前时间输出为封面图">标记封面</button>
+                </div>
+                <div v-if="item.type !== 'image' && item.duration > 0">
+                    <div class="item-info">
+                        <div class="item-info-head">截取：</div>
+                        <div class="item-info-body">
+                            {{item.currentTime | timemat}}
+                            <i class="color-1 icon icon-arrow-right">
+                            {{item.starttime | timemat}}-{{item.endtime | timemat}} {{item.cover | timemat}}</i>
                         </div>
                     </div>
-                </dd>
-                <dd class="item-info">
+                    <div class="item-info item-editable">
+                        <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
+                        <div class="item-info-body">
+                            <div class="item-time">
+                                微调：
+                                <button :title="'上'+tunstep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
+                                <input type="number" v-model="tunstep" title="设置微调量">
+                                <button :title="'下'+tunstep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
+                                {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
+                            </div>
+                            <div class="item-time">
+                                <button v-on:click="itemFn($event,index,'setstart')" title="当前时间设置为片段起点">标记起点</button>
+                                <button v-on:click="itemFn($event,index,'setend')" title="当前时间设置为片段终点">标记终点</button>
+                                <button v-on:click="itemFn($event,index,'setcover')" title="当前时间输出为封面图">标记封面</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="item-info">
                     <div class="item-info-head">大小：</div>
                     <div class="item-info-body">{{item.size | sizemat('size')}}
                         <i class="color-1 icon icon-arrow-right" v-if="item.type==='image'"> {{item.tosize | sizemat(item.size)}} </i>
                         <i class="color-1 icon icon-arrow-right" v-else> {{item.tosize | sizemat('tosize')}} </i>
                     </div>
-                </dd>
-                <dd class="item-info item-editable">
+                </div>
+                <div class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <input type="range" min="0" :max="item.size" v-model="item.tosize" title="调节输出大小">
                     </div>
-                </dd>
-                <dd class="item-info">
-                    <div class="item-info-head">尺寸：</div>
-                    <div class="item-info-body">
-                        {{item.width}} &times; {{item.height}} 
-                        <i class="color-1 icon icon-arrow-right"> {{item.towidth}} &times; {{item.toheight}} </i>
+                </div>
+                <div v-if="item.type === 'image' || item.type === 'video'">
+                    <div class="item-info">
+                        <div class="item-info-head">尺寸：</div>
+                        <div class="item-info-body">
+                            {{item.width}} &times; {{item.height}} 
+                            <i class="color-1 icon icon-arrow-right"> {{item.towidth}} &times; {{item.toheight}} </i>
+                        </div>
                     </div>
-                </dd>
-                <dd class="item-info item-editable">
-                    <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
-                    <div class="item-info-body">
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
-                        &times;
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
-                        像素
+                    <div class="item-info item-editable">
+                        <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
+                        <div class="item-info-body">
+                            <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
+                            &times;
+                            <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
+                            像素
+                        </div>
                     </div>
-                </dd>
-                <dd class="item-info">
+                </div>
+                <div class="item-info">
                     <div class="item-info-head">格式：</div>
                     <div class="item-info-body">{{item.format}} <i class="color-1 icon icon-arrow-right"> {{item.toformat}} </i></div>
-                </dd>
-                <dd class="item-info item-editable">
+                </div>
+                <div class="item-info item-editable">
                     <div class="item-info-head"><i class="icon icon-subdirectory_arrow_right"></i></div>
                     <div class="item-info-body">
                         <input type="text" v-model.lazy="item.toformat" title="选择输出格式">
                     </div>
-                </dd>
-            </dl>
+                </div>
+            </div>
         </section>
     </div>
     <footer class="footer draggable">
-        <script>document.write('&copy; 2017-'+new Date().getFullYear()+' wenweipo.com')</script>
+        version: {{appInfo.version}} - author: {{appInfo.author}} - {{appInfo.homepage}}
     </footer>
 </div>
 
