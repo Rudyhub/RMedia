@@ -253,45 +253,57 @@ button:active{
     overflow: auto;
     position: relative;
 }
-.menu{
+.toolbar{
     padding: 5px;
     box-sizing: border-box;
     background: var(--gray4);
     border-top: 2px solid var(--black1);
 }
-.menu button{
+.toolbar-item{
     margin: 0;
+    overflow: hidden;
 }
-.menu .active{
-    color: var(--light1);
-    border-color: var(--light1);
+.drop-menu{
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    transform: scale(0);
+    transform-origin: top left;
+    transition: transform .5s;
+    list-style: none;
+    z-index: 10;
 }
+.drop-menu-item{
+    margin: 1px 0;
+    position: relative;
+}
+.drop-menu-btn{
+    width: 100%;
+    text-align: justify;
+}
+
 .drop-panel{
     position: absolute;
     background: var(--black1);
     border: 1px solid;
     border-radius: var(--r3);
-    width: 28vw;
+    top: 0;
+    left: calc(100% + 1px);
     z-index: 10;
     overflow: hidden;
-    transition: all .8s;
-    transform: scaleY(0);
-    transform-origin: top;
-    border-color: var(--blue1);
-}
-.drop-panel:focus{
-    border-color: var(--blue1);
-}
-.drop-panel.slidedown{
-    transform: scaleY(1);
+    transition: all .5s;
+    transform: scale(0);
+    transform-origin: top left;
+    border-color: var(--light1);
 }
 .drop-panel-group{
     padding: 2%;
     font-size: var(--fs14);
     color: #888;
+    white-space: nowrap;
 }
 .drop-panel-group input[type=text]{
-    width: calc(98% - 8em);
+    width: 8em;
 }
 .drop-panel-group input[type=number]{
     width: 4em;
@@ -420,14 +432,16 @@ button:active{
     height: 1.4em;
     line-height: 1.4em;
     font-size: var(--fs16);
-    color: var(--blue1);
+    color: var(--gray2);
     cursor: pointer;
     transition: all .3s;
     box-sizing: border-box;
     border-radius: 4px;
 }
-.item-tool.active,
 .item-tool:hover{
+    color: var(--blue1);   
+}
+.item-tool.active{
     color: var(--light1);
 }
 .rotating{
@@ -553,4 +567,13 @@ button:active{
     background: #535353;
     color: #f0f0f0;
     text-align: center;
+}
+
+
+.active-light1{
+    color: var(--light1);
+    border-color: var(--light1);
+}
+.zoom-in{
+    transform: scale(1);
 }

@@ -277,5 +277,22 @@ module.exports = {
         }, (msg)=>{
             utils.dialog('失败：','<p>获取媒体元数据信息失败！</p>');
         });
+    },
+    rename(oldname, newname, callback){
+        fs.access(newname, (err)=>{
+            if(!err){
+                callback('文件【'+newname+'】'+'已存在!');
+            }else{
+                fs.rename(oldname, newname, callback);
+            }
+        });
+    },
+    copyFile(oldname, newname, flag,callback){
+        if(flag){
+            fs.copyFile(oldname, newname, callback);
+        }else{
+            console.log(newname)
+            fs.copyFile(oldname, newname, fs.constants.COPYFILE_EXCL, callback);
+        }
     }
 };

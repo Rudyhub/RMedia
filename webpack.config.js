@@ -1,10 +1,4 @@
-// const copy = require('./copy');
-// const basePath = process.cwd()+'/';
 // const BabiliPlugin = require("babili-webpack-plugin");
-
-//copy app for testing
-// copy(basePath+'app/', basePath+'test/');
-
 
 module.exports = {
     entry:  __dirname + "/app/src/main.js",
