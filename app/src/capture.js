@@ -108,11 +108,11 @@ const capture = {
 		if(o.mode === 0 || o.mode === 2) scale = sh / sw;
 		//如果有视频
 		if(o.mode !== 4){
-			cammand = ['-hide_banner', '-r', o.fps, '-f','gdigrab', '-i', 'desktop', '-vcodec', 'libx264', '-b:v', o.bitv+'k', '-pix_fmt', 'yuv420p', '-profile:v', 'high','-y', output];
+			cammand = ['-hide_banner', '-r', o.fps, '-f','gdigrab', '-i', 'desktop', '-rtbufsize', '2048M', '-vcodec', 'libx264', '-b:v', o.bitv+'k', '-pix_fmt', 'yuv420p', '-profile:v', 'high','-y', output];
 		}
 		//如果有音频
 		if(o.mode === 0 || o.mode === 1){
-			cammand.splice(7, 0, '-f','dshow','-i','audio='+o.audioDevice, '-acodec', 'aac', '-b:a', o.bita+'k');
+			cammand.splice(9, 0, '-f','dshow','-i','audio='+o.audioDevice, '-acodec', 'aac', '-b:a', o.bita+'k');
 		}
 		//如果不是全屏
 		if(o.mode === 1 || o.mode === 3){
@@ -140,7 +140,7 @@ const capture = {
 		if(o.mode === 4){
 			cammand = ['-hide_banner', '-f', 'dshow', '-i', 'audio='+o.audioDevice, '-b:a', o.bita+'k', '-y', output];
 		}
-
+		console.log(cammand);
 		complete = ()=>{
 			capture.back();
 			if(!isComplete && (typeof capture.complete === 'function')){
