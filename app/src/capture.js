@@ -1,130 +1,46 @@
 const win = nw.Window.get(),
 config = require('./config'),
 utils = require('./utils'),
-childprocess = require('child_process'),
-winShow = ()=>{
-	win.maximize();
-},
-winHide = ()=>{
-	win.moveTo(-win.width-50, 0);
-},
-recorders = (fn)=>{
-	if(typeof fn === 'function'){
-		let lines, line, list, ffmpeg;
+{spawn} = require('child_process'),
+fs = require('fs');
 
-		if(list = window.localStorage.getItem('audioDevice')){
-			list = JSON.parse(list);
-			if(list.length){
-				fn(list);
-				return;
-			}
-		}
+const capture = {
+	ffmpeg: null,
+	audioDevices(fn){
+		if(typeof fn === 'function'){
+			let lines, line, list, ffmpeg, error = null;
 
-		list = [];
+			list = [];
 
-		ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
-		ffmpeg.stderr.on('data', (stderr)=>{
-			lines += stderr.toString();
-		});
-		ffmpeg.once('close', (a,b)=>{
-			lines = lines.split(/\n+/);
-			while(line = lines[0]){
-				lines.splice(0,1);
-				if(/DirectShow\s+audio\s+devices/i.test(line)) break;
-			}
-			while(line = lines[0]){
-				lines.splice(0,1);
-				if(/\[dshow[^\]]*?\]/i.test(line)){
-					list.push( line.slice(line.indexOf('\"')+1, line.lastIndexOf('\"')) );
+			ffmpeg = spawn(config.ffmpegRoot+'\\ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
+			ffmpeg.stderr.on('data', (stderr)=>{
+				lines += stderr.toString();
+			});
+			ffmpeg.once('exit', (a,b)=>{
+				lines = lines.split(/\n+/);
+				while(line = lines[0]){
+					lines.splice(0,1);
+					if(/DirectShow\s+audio\s+devices/i.test(line)) break;
 				}
-			}
-			window.localStorage.setItem('audioDevice', JSON.stringify(list));
-			fn(list);
-			ffmpeg.kill();
-			ffmpeg = null;
-		});
-	}
-},
-record = (audioDevice, x=0, y=0, w=screen.availWidth, h=screen.availHeight, fps=30)=>{
-	let errmsg = '', ffmpeg, isFull, cammand = ['-hide_banner','-f','gdigrab', '-framerate', fps];
-
-	if(x < 0) x = 0;
-	if(y < 0) y = 0;
-	if(w > screen.width) w = screen.width;
-	if(h > screen.height) h = screen.height;
-	if(w < screen.availWidth || h < screen.availHeight) cammand.push('-offset_x', x, '-offset_y', y, '-video_size', w+'x'+h);
-
-
-	cammand.push('-i', 'desktop');
-
-	if(audioDevice) cammand.push('-f','dshow','-i','audio='+audioDevice);
-
-	cammand.push('-q', '1', '-y', config.appRoot+'tmp/tmp_record.mpg');
-
-	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand);
-
-	ffmpeg.stderr.on('data',(err)=>{
-		errmsg += err.toString();
-		err = null;
-	});
-	ffmpeg.once('close', (a,b)=>{
-		if(a === 1){
-			winShow();
-			utils.dialog('错误：','<p>错误信息： code : '+a+'<br>info: '+b+'<br>detail:'+errmsg+'</p>');
+				while(line = lines[0]){
+					lines.splice(0,1);
+					if(/\[dshow[^\]]*?\]/i.test(line)){
+						list.push( line.slice(line.indexOf('\"')+1, line.lastIndexOf('\"')) );
+					}
+				}
+				if(!list.length){
+					error = new Error('获取录音设备失败，当前计算机没有可用的录音设备或者未开启，请查看帮助文档。');
+				}
+				fn(error, list);
+			});
+			ffmpeg.once('error',(err)=>{
+				if(!error) fn(err, list);
+			});
+			this.ffmpeg = ffmpeg;
 		}
-	});
-	ffmpeg.once('error', (err)=>{
-		winShow();
-		utils.dialog('错误：','<p>错误信息： '+errmsg+'</p>');
-	});
-	return ffmpeg;
-},
-compress = (o)=>{
-	let dialog = utils.dialog('完成：','<p>录制完成，正在优化和压缩处理...<span class="percent"></span></p>'),
-		ffmpeg = null,
-		cammand = ['-hide_banner','-i', config.appRoot+'tmp/tmp_record.mpg'],
-		dialogBody = dialog.el.querySelector('.percent'),
-		duration = 0,
-		curtime = 0,
-		linestr = '',
-		errmsg = '';
-
-	if(o.bitv) cammand.push('-b:v', o.bitv+'k');
-	if(o.bita) cammand.push('-b:a', o.bita+'k');
-
-	if(o.width && o.w > o.width){
-		o.h = Math.round((o.h/o.w)*o.width);
-		o.w = o.width;
-	}
-	if(o.w%2 !== 0) o.w--;
-	if(o.h%2 !== 0) o.h--;
-
-	cammand.push('-s', o.w+'x'+o.h, '-y', config.output.folder + '/' + utils.datemat() + '.mp4');
-
-	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',cammand);
-
-	ffmpeg.stderr.on('data', (stderr)=>{
-		linestr = stderr.toString();
-		errmsg += linestr;
-		if(!duration) duration = utils.timemat(linestr.match(/duration:\s*([\d\:\.]*?),/i)[1]);
-		curtime = utils.timemat(linestr.match(/time=([\d\:\.]*?)\s+/)[1]);
-		dialogBody.innerHTML = Math.round((curtime/duration)*100)+'%';
-	});
-	ffmpeg.once('close', (a,b)=>{
-		if(a === 0){
-			dialog.remove();
-		}else{
-			dialogBody.innerHTML = '<br>有错误： code='+a+'<br>exit='+b+'<br>detail:'+errmsg;
-		}
-	});
-	ffmpeg.once('error', ()=>{
-		dialogBody.innerHTML = '<b>有错误：'+errmsg+'</b>';
-	});
-};
-
-module.exports = {
-	recorders,
-	setArea(o){
+	},
+	setArea(initWidth, initHeight, fn){
+		if(typeof fn !== 'function') return false;
 		nw.Window.open('html/capture.html',{
 		    id: 'cutscreen',
 		    position: 'center',
@@ -132,42 +48,141 @@ module.exports = {
 		    new_instance: false,
 		    frame: false,
 		    focus: true,
-		    width: 1280,
-		    height: 720,
+		    width: initWidth,
+		    height: initHeight,
 		    always_on_top: true
 		}, (childWin)=>{
-			let childDoc = childWin.window.document,
-				ffmpeg = null;
-			o.w = childWin.width;
-			o.h = childWin.height;
-			function startFn(e){
-				childDoc.removeEventListener('keyup', startFn);
-		        if(e.keyCode === 32){
-		            winHide();
-		            ffmpeg =  record(o.audioDevice, childWin.x, childWin.y, o.w, o.h, o.fps);
-		            childWin.close(true);
-		            childWin = null;
-		            document.addEventListener('keyup', stopFn);
-		        }
-		    }
-		    function stopFn(e){
-	        	document.removeEventListener('keyup',stopFn);
-	        	if(e.keyCode === 32){
-	        		winShow();
-	        		ffmpeg.stdin.write('q\n');
-					ffmpeg.kill();
-					ffmpeg = null;
-					compress(o);
-	        	}
-	        }
-			childDoc.addEventListener('keyup', startFn);
+			let childDoc = childWin.window.document;
+			let onEnter = (e)=>{
+				//on Enter
+				if(e.keyCode === 13){
+					childDoc.removeEventListener('keyup',onEnter);
+					fn(childWin.x, childWin.y, childWin.width, childWin.height);
+					childWin.close();
+				}
+				//on Esc
+				else if(e.keyCode === 27){
+					childDoc.removeEventListener('keyup',onEnter);
+					childWin.close();
+				}
+			}
+			childDoc.addEventListener('keyup', onEnter);
+		});
+	},
+	progress: null,
+	complete: null,
+	go(){
+		win.moveTo(-screen.width-50, 0);
+	},
+	back(){
+		win.maximize();
+	},
+	shortcut(key,fail){
+		let self = this;
+		try{
+			document.removeEventListener('keyup', keyupFn);
+		}catch(err){}
 
-			childWin.once('close', ()=>{
-				childDoc.removeEventListener('keyup', startFn);
-				document.removeEventListener('keyup', stopFn);
-				childWin.close(true);
-				childWin = null;
-			});
+		document.addEventListener('keyup', keyupFn);
+		function keyupFn(e){
+			if(e.keyCode === 113 || e.keyCode === 27){
+				document.removeEventListener('keyup',keyupFn);
+				self.back();
+				self.end();
+			}
+		}
+	},
+	end(){
+		if(this.ffmpeg){
+			this.ffmpeg.stdin.end('q\n');
+		}
+	},
+	start(output, o){
+		let ffmpeg, cammand, line, log, error, isComplete, complete, sw, sh, w, h, scale, rw, rh;
+		log = [];
+		error = null;
+		isComplete = false;
+		sw = screen.width;
+		sh = screen.height;
+		//如果是全屏
+		if(o.mode === 0 || o.mode === 2) scale = sh / sw;
+		//如果有视频
+		if(o.mode !== 4){
+			cammand = ['-hide_banner', '-r', o.fps, '-f','gdigrab', '-i', 'desktop', '-vcodec', 'libx264', '-b:v', o.bitv+'k', '-pix_fmt', 'yuv420p', '-profile:v', 'high','-y', output];
+		}
+		//如果有音频
+		if(o.mode === 0 || o.mode === 1){
+			cammand.splice(7, 0, '-f','dshow','-i','audio='+o.audioDevice, '-acodec', 'aac', '-b:a', o.bita+'k');
+		}
+		//如果不是全屏
+		if(o.mode === 1 || o.mode === 3){
+			w = o.width;
+			h = o.height;
+			scale = h / w;
+			//不能超出屏幕
+			if((w + o.x) > sw) w = sw - o.x;
+			if((h + o.y) > sh) h = sh - o.y;
+			//不能为单数
+			if(w % 2 !== 0) w--;
+			if(h % 2 !== 0) h--;
+
+			cammand.splice(3, 0, '-offset_x', o.x,'-offset_y', o.y,'-video_size', w+'x'+h);
+		}
+		//缩放匹配宽度上限
+		if(scale){
+			rw = o.widthLimit;
+			rh = Math.round(rw * scale);
+			if(rw % 2 !== 0) rw--;
+			if(rh % 2 !== 0) rh--;
+			cammand.splice(cammand.length - 2, 0, '-s', rw+'x'+rh);
+		}
+		//如果只有音频
+		if(o.mode === 4){
+			cammand = ['-hide_banner', '-f', 'dshow', '-i', 'audio='+o.audioDevice, '-b:a', o.bita+'k', '-y', output];
+		}
+
+		complete = ()=>{
+			capture.back();
+			if(!isComplete && (typeof capture.complete === 'function')){
+				capture.complete(error);
+				isComplete = true;
+			}
+		};
+
+		fs.access(output, (err)=>{
+			if(!err){
+				error = new Error('<p>输出的文件：'+output+'已存在或不可访问，请选择其他输出目录或者在菜单的“批处理设置”中修改名称后重试</p>');
+				error.code = 3;
+				complete();
+			}else{
+				capture.shortcut();
+				capture.go();
+				ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
+				ffmpeg.stderr.on('data', (stderr)=>{
+					line = stderr.toString();
+					if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
+						capture.progress(line[1]);
+					}
+					log.push(stderr.toString());
+				});
+				ffmpeg.once('close', (a, b)=>{
+					if(a !== 0){
+						error = new Error('<p>录制失败：</p><p>'+log.join('</p><p>')+'</p>');
+						error.code = 1;
+					}
+					complete();
+				});
+				ffmpeg.once('error', ()=>{
+					if(!error){
+						error = new Error('<p>启动失败：</p><p>'+log.join('</p><p>')+'</p>');
+						error.code = 2;
+					}
+					complete();
+				});
+				this.ffmpeg = ffmpeg;
+			}
 		});
 	}
-};
+}
+
+module.exports = capture;

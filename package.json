@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "do": "xcopy app test\\app\\ /y /e",
-    "build": "webpack && cd ./app && /www/fupconvert/test/nw ."
+    "nw": "cd ./app && start ..\\test\\nw.exe ."
   },
   "repository": {
     "type": "git",

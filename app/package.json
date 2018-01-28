@@ -9,11 +9,10 @@
     "title": "FupConvert",
     "icon": "css/icon.png",
     "toolbar": false,
-    "width": 1920,
-    "height": 1080,
     "resizable": true,
     "show_in_taskbar": true,
     "frame": false,
+    "transparent": true,
     "kiosk": false,
     "position": "center"
   },

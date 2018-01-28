@@ -13,92 +13,113 @@
         <div class="titlebar">
             <h1 class="title draggable">媒体处理器</h1>
             <div class="titlebar-tool">
-                <button v-on:click="minimize">&minus;</button>
-                <button v-on:click="wintoggle" :class="{full: isFullScreen}"><i></i></button>
-                <button v-on:click="winclose">&times;</button>
+                <button v-on:click="titlebarFn('min')">&minus;</button>
+                <button v-on:click="titlebarFn('toggle')" :class="{full: winToggle}"><i></i></button>
+                <button v-on:click="titlebarFn('close')">&times;</button>
             </div>
         </div>
         <section>
+            <!-- 一级工菜单 -->
             <div class="toolbar">
-                <button class="toolbar-item">
-                    <i class="icon icon-folder-open"></i>
-                    <input v-on:change="chosefile" type="file" title="打开文件" multiple>
+                <button  class="toolbar-item" :class="{'active-1': toolbar.mainSubmenu}" v-on:click="toolbarFn($event,'mainSubmenu')" title="主要功能">
+                    <i class="icon icon-list"></i> 主要功能
                 </button>
                 <button class="toolbar-item">
-                    <i class="icon icon-floppy-disk"></i>
-                    <input v-on:change="chosedir" type="file" :title="'选择保存目录，当前目录：'+output" nwdirectory ref="outputEl">
+                    <i class="icon icon-folder-open"></i> 选择文件
+                    <input v-on:change="toolbarFn($event,'chosefile')" type="file" title="打开文件" multiple>
                 </button>
-                <button  class="toolbar-item" :class="{'active-light1': dropMenu1}" v-on:click="dropMenuFn1" title="功能菜单">
-                    <i class="icon icon-list"></i>
+                <button class="toolbar-item">
+                    <i class="icon icon-floppy-disk"></i> 保存到
+                    <input v-on:change="toolbarFn($event,'chosedir')" type="file" :title="'选择输出目录，当前：'+output" nwdirectory ref="outputEl">
                 </button>
-                <button  class="toolbar-item" :class="{'active-light1': editable}" v-on:click="allEditable" title="展开所有锁定文件的设置面板">
-                    <i class="icon icon-cog"></i>
+                <button class="toolbar-item" :class="{'active-1': toolbar.lock}" v-on:click="toolbarFn($event,'lock')">
+                    <i class="icon icon-pushpin"></i> 锁定
                 </button>
-                <button class="toolbar-item" v-on:click="clearFn" title="清空">
-                    <i class="icon icon-bin"></i>
+                <button  class="toolbar-item" :class="{'active-1': toolbar.editable}" v-on:click="toolbarFn($event,'editable')" title="展开所有锁定文件的设置面板">
+                    <i class="icon icon-cog"></i> 展开
                 </button>
-                <button class="toolbar-item" title="开始转换所有文件" v-on:click="convert(-1)">
-                    <i class="icon icon-loop2"></i>
+                <button class="toolbar-item" title="开始转换所有文件" v-on:click="toolbarFn($event,'convert')">
+                    <i class="icon icon-loop2"></i> 批转换
                 </button>
-                <button  class="toolbar-item" :class="{'active-light1': alpha}" v-on:click="alphaFn" title="透明/黑色背景">
-                    <i class="icon icon-contrast"></i>
+                <button  class="toolbar-item" :class="{'active-1': toolbar.showAlpha}" v-on:click="toolbarFn($event,'showAlpha')" title="透明/黑色背景">
+                    <i class="icon icon-contrast"></i> 显示透明
+                </button>
+                <button class="toolbar-item" v-on:click="toolbarFn($event,'clear')" title="清空">
+                    <i class="icon icon-bin"></i> 清空
                 </button>
             </div>
+            <!-- 二级菜单 -->
+            <ul class="submenu" :class="{'zoom-in': toolbar.mainSubmenu}" ref="mainSubmenu">
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'batchParams'}" v-on:click="mainSubmenuFn($event,'batchParams')"><i class="icon icon-hammer"></i> 批处理设置</button>
 
-            <ul class="drop-menu" :class="{'zoom-in': dropMenu1}" ref="dropMenu1">
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'setParams'}" v-on:click="menuFn1($event,'setParams')"><i class="icon icon-hammer"></i> 批处理设置</button>
-
-                    <div class="drop-panel" :class="{'zoom-in': dropMenuActive === 'setParams'}">
+                    <div class="drop-panel" :class="{'zoom-in': active.mainSubmenu === 'batchParams'}">
                         <div class="drop-panel-group">
-                            压缩速度级别：
-                            <select v-model="speedLevel">
-                                <option v-for="(speed, key) of speeds" :value="key">{{speed}}</option>
-                            </select>
-                            （速度越慢效果越好）
-                        </div>
-                        <div class="drop-panel-group">
-                            输出名称(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                            <input type="text" v-model.lazy="nameAll" title="名称末尾用0填充，如“00”表示01，02，03...">
-                        </div>
-                        <div class="drop-panel-group">
-                            宽度上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                            <input type="number" min="0" v-on:input="whLimitFn($event,'width')" :value="widthLimit"> &times;
-                            高度上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                            <input type="number" min="0" v-on:input="whLimitFn($event,'height')" :value="heightLimit">
-                        </div>
-                        <div class="drop-panel-group">
-                            大小上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                            <input type="text" v-on:input="sizeLimitFn" :value="sizeLimit" title="单位：大写B、KB、MB，不写单位则默认：B">
+                            <p>
+                                压缩速度级别：
+                                <select v-model.lazy="batchParams.speed">
+                                    <option value="ultrafast">无敌快</option>
+                                    <option value="superfast">超级快</option>
+                                    <option value="veryfast">非常快</option>
+                                    <option value="faster">比较快</option>
+                                    <option value="fast">正常快</option>
+                                    <option value="medium">普通</option>
+                                    <option value="slow">正常慢</option>
+                                    <option value="slower">比较慢</option>
+                                    <option value="veryslow">非常慢</option>
+                                    <option value="placebo">超级慢</option>
+                                </select>
+                                （速度越慢效果越好）
+                            </p>
+                            <p>
+                                输出名称(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
+                                <input type="text" v-model="batchParams.nameAll" title="名称末尾用0填充，如“00”表示01，02，03...">
+                                （命名规则说明见【批量重命名】）
+                                <br>
+                                <br>
+                                预览：{{batchParams.nameAll | viewNamemat}}
+                            </p>
+                            <p>
+                                宽度上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
+                                <input type="number" min="0" v-on:input="batchParamsFn($event,'widthLimit')" :value="batchParams.widthLimit" ref="widthLimitEl">
+                                &times;
+                                高度上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
+                                <input type="number" min="0" v-on:input="batchParamsFn($event,'heightLimit')" :value="batchParams.heightLimit" ref="heightLimitEl">
+                            </p>
+                            <p>
+                                大小上限(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
+                                <input type="number" min="0" ref="sizeLimitEl" value="0"> MB
+                            </p>
                         </div>
                         <div class="drop-panel-group text-center">
-                            <button v-on:click="panelFn('setParams',1)">确定</button>
-                            <button v-on:click="panelFn('setParams',0)">取消</button>
+                            <button v-on:click="batchParamsFn($event,0)">确定</button>
+                            <button v-on:click="batchParamsFn($event,-1)">取消</button>
                         </div>
                     </div>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'vtogif'}" v-on:click="menuFn1($event,'vtogif')"><i class="icon icon-point-right"></i> 视频转动图</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'vtogif'}" v-on:click="mainSubmenuFn($event,'vtogif')"><i class="icon icon-point-right"></i> 视频转动图</button>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'giftov'}" v-on:click="menuFn1($event,'giftov')"><i class="icon icon-point-right"></i> 动图转视频</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'giftov'}" v-on:click="mainSubmenuFn($event,'giftov')"><i class="icon icon-point-right"></i> 动图转视频</button>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'ptogif'}" v-on:click="menuFn1($event,'ptogif')"><i class="icon icon-point-right"></i> 多图转动图</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'ptogif'}" v-on:click="mainSubmenuFn($event,'ptogif')"><i class="icon icon-point-right"></i> 多图转动图</button>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'vtoa'}" v-on:click="menuFn1($event,'vtoa')"><i class="icon icon-point-right"></i> 视频转音频</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'vtoa'}" v-on:click="mainSubmenuFn($event,'vtoa')"><i class="icon icon-point-right"></i> 视频转音频</button>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'nameAll'}" v-on:click="menuFn1($event,'nameAll')"><i class="icon icon-point-right"></i> 批量重命名</button>
-                    <div class="drop-panel" :class="{'zoom-in': dropMenuActive === 'nameAll'}">
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'nameAll'}" v-on:click="mainSubmenuFn($event,'nameAll')"><i class="icon icon-point-right"></i> 批量重命名</button>
+
+                    <div class="drop-panel" :class="{'zoom-in': active.mainSubmenu === 'nameAll'}">
                         <div class="drop-panel-group">
                             <b>设置系列化名称</b>(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                            <input type="text" v-model.lazy="nameAll">
+                            <input type="text" v-model="batchParams.nameAll">
                         </div>
                         <div class="drop-panel-group">
                             <b>名称以最末尾的数字串为系列号累加，如：</b>
-                            <p>
+                            <p class="tip">
                                 “000”表示：001，002，003，...<br>
                                 “11”表示：12，13，14，...<br>
                                 “00”为默认值：01，02，03...
@@ -106,20 +127,60 @@
                         </div>
                         <div class="drop-panel-group">
                             <b>以mp4为例预览：</b>
-                            <p>{{nameAll | viewNamemat}}</p>
+                            <p class="tip">{{batchParams.nameAll | viewNamemat}}</p>
                         </div>
                         <div class="drop-panel-group text-center">
-                            <button v-on:click="panelFn('nameAll',1)">移动到</button>
-                            <button v-on:click="panelFn('nameAll',2)">复制到</button>
-                            <button v-on:click="panelFn('nameAll',0)">取消</button>
+                            <button v-on:click="nameAllFn(1)">移动</button>
+                            <button v-on:click="nameAllFn(2)">复制</button>
+                            <button v-on:click="nameAllFn(-1)">取消</button>
                         </div>
                     </div>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'capture'}" v-on:click="menuFn1($event,'capture')"><i class="icon icon-camera"></i> 屏幕录制</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'capture'}" v-on:click="mainSubmenuFn($event,'capture')"><i class="icon icon-camera"></i> 屏幕录制</button>
+
+                    <div class="drop-panel" :class="{'zoom-in': active.mainSubmenu === 'capture'}">
+                        <div class="drop-panel-group">
+                            <h3>【参数设置】：</h3>
+                            <p>
+                                选择录制模式：
+                                <select v-on:change="captureFn($event, 1)">
+                                    <option value="0">全屏有声视频</option>
+                                    <option value="1">小屏有声视频</option>
+                                    <option value="2">全屏无声视频</option>
+                                    <option value="3">小屏无声视频</option>
+                                    <option value="4">无画面仅录音</option>
+                                </select>
+                            </p>
+                            <p>视频输出帧速率：<input type="number" v-model.lazy="capParams.fps" :disabled="capParams.mode==4">fps</p>
+                            <p>视频输出比特率：<input type="number" v-model.lazy="capParams.bitv" :disabled="capParams.mode==4">kb/s</p>
+                            <p>音频输出比特率：<input type="number" v-model.lazy="capParams.bita" :disabled="capParams.mode==2 || capParams.mode==3"/>kb/s</p>
+                            <p>音频录制设备：
+                                <select v-if="capParams.audioDevices.length > 0" v-model.lazy="capParams.audioDevice" :disabled="capParams.mode==2 || capParams.mode==3">
+                                    <option v-for="audioDevice of capParams.audioDevices" :value="audioDevice">{{audioDevice}}</option>
+                                </select>
+                                <select v-else :disabled="capParams.mode==2 || capParams.mode==3">
+                                    <option value="">无录音设备</option>
+                                </select>
+                                <button v-on:click="captureFn($event,2)" :disabled="capParams.mode==2 || capParams.mode==3"><i class="icon icon-refrash"></i>扫描录音设备</button>
+                            </p>
+                            <p>输出后匹配宽度： <input type="number" v-model.lazy="capParams.widthLimit" :disabled="capParams.mode==4">px</p>
+                            <p>当前录制区域：
+                                <button v-on:click="captureFn($event,3)" :disabled="capParams.mode!=1 && capParams.mode!=3">调整录制区域</button>
+                                <br>
+                                <span class="text-indent tip">顶部: {{capParams.y}} px &nbsp;&nbsp; 左边: {{capParams.x}} px </span>
+                                <br>
+                                <span class="text-indent tip">宽度: {{capParams.width}} px &nbsp;&nbsp; 高度: {{capParams.height}} px </span>
+                            </p>
+                        </div>
+                        <div class="drop-panel-group text-center">
+                            <button v-on:click="captureFn($event,0)">开始录制</button>
+                            <button v-on:click="captureFn($event,-1)">取消</button>
+                        </div>
+                    </div>
                 </li>
-                <li class="drop-menu-item">
-                    <button class="drop-menu-btn" :class="{'active-light1': dropMenuActive === 'firstAid'}" v-on:click="menuFn1($event,'firstAid')"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
+                <li class="submenu-item">
+                    <button class="submenu-btn" :class="{'active-1': active.mainSubmenu === 'firstAid'}" v-on:click="mainSubmenuFn($event,'firstAid')"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
                 </li>
             </ul>
         </section>
@@ -129,11 +190,11 @@
             <div class="item" v-for="(item, index) of items" :class="{editable: item.editable}">
                 <div class="item-preview">
                     <div class="item-preview-inner">
-                        <div class="item-preview-box" :class="{alpha:alpha}" v-on:click="play($event,index)">
+                        <div class="item-preview-box" :class="{alpha: toolbar.showAlpha}" v-on:click="play($event,index)">
                             <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.canplay"></i>
                             <video :ref="'id'+index" class="item-preview-img" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
                         </div>
-                        <div class="item-filename text-limit r1">
+                        <div class="item-filename text-limit-r1">
                             <i class="item-media-type icon" :class="mediaIcon[item.type]"></i>
                             {{item.name}}
                         </div>
@@ -146,6 +207,7 @@
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-cog" :class="{active:item.editable}" v-on:click="itemFn($event,index,'edit')" title="设置参数"></i>
                         <i class="item-tool icon icon-loop2" v-on:click="convert(index)" title="转换此文件"></i>
+                        <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
                     </div>
                 </div>

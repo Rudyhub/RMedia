@@ -60,7 +60,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 3);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -77,15 +77,16 @@ module.exports = {
 	},
 	appRoot: appRoot,
 	ffmpegRoot: appRoot + 'plugins\\ffmpeg',
-	audioThumb: appRoot + 'css/audio.jpg',
-	loadingGif: appRoot + 'css/loading.gif',
-	icon: appRoot + 'css/icon.png',
+	audioThumb: appRoot + 'css\\audio.jpg',
+	loadingGif: appRoot + 'css\\loading.gif',
+	icon: appRoot + 'css\\icon.png',
 	output: {
-		folder: process.env.USERPROFILE+'/desktop',
+		folder: process.env.USERPROFILE+'\\desktop',
 		width: 1280,
 		height: 720,
 		bitv: 1024,
 		bita: 128,
+		fps: 25,
 		format: {
 			image: 'jpg',
 			video: 'mp4',
@@ -240,18 +241,31 @@ module.exports = {
 /* 2 */
 /***/ (function(module, exports) {
 
-module.exports = require("child_process");
+module.exports = require("fs");
 
 /***/ }),
 /* 3 */
+/***/ (function(module, exports) {
+
+module.exports = require("child_process");
+
+/***/ }),
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const win = nw.Window.get();
 const config = __webpack_require__(0);
-const Media = __webpack_require__(4);
+const Media = __webpack_require__(5);
 const utils = __webpack_require__(1);
 const capture = __webpack_require__(6);
 const videoEl = document.createElement('video');
+
+win.on('loaded',()=>{
+    win.width = screen.availWidth;
+    win.height = screen.availHeight;
+    win.x = win.y = 0;
+    win.show();
+});
 
 const showThumb = (item)=>{
     if(!item) return;
@@ -267,143 +281,390 @@ const showThumb = (item)=>{
     });
 };
 
+
 const vue = new Vue({
 	el: '#app',
 	data: {
         appInfo: config.appInfo,
 		output: config.output.folder,
-        widthLimit: config.output.width,
-        heightLimit: config.output.height,
         items: {}, 
-		isFullScreen: true,
-		nameAll: 'fup',
-        editable: false,
-        dropMenu1: false,
-        dropMenuActive: '',
-        dropPanel: false,
-		sizeLimit: 0,
-		speeds: config.output.speeds,
-        speedLevel: config.output.speedLevel,
+		winToggle: true,
+        batchParams: {
+            speed: 'slow',
+            nameAll: 'fup00',
+            widthLimit: config.output.width,
+            heightLimit: config.output.height,
+            sizeLimit: 0
+        },
+        toolbar: {
+            mainSubmenu: 0,
+            editable: 0,
+            showAlpha: 0,
+            lock: 1
+        },
+        active: {
+            mainSubmenu: ''
+        },
         mediaIcon: {
             image: 'icon-image',
             video: 'icon-video-camera',
             audio: 'icon-headphones'
         },
-        alpha: false,
+        capParams: {
+            mode: 0,
+            bitv: config.output.bitv,
+            bita: config.output.bita,
+            widthLimit: config.output.width,
+            width: screen.width,
+            height: screen.height,
+            x: 0,
+            y: 0,
+            fps: config.output.fps,
+            audioDevices: [],
+            audioDevice: ''
+        },
         tunstep: 2
 	},
 	methods: {
-		minimize(){
-			win.minimize();
-		},
-		wintoggle(){
-			let w = screen.availWidth, h = screen.availHeight;
-            if(win.width < w || win.height < h){
-                win.maximize();
-                vue.isFullScreen = true;
-            }else{
-                win.resizeTo(w*.8, h*.8);
-                vue.isFullScreen = false;
+        titlebarFn(name){
+            switch(name){
+                case 'min':
+                {
+                    win.minimize();
+                }
+                break;
+                case 'toggle':
+                {
+                    let w = screen.width * .8,
+                        h = Math.round(w * .5625),
+                        x = (screen.width - w) / 2,
+                        y = (screen.height - h) / 2;
+                    if(vue.winToggle = !vue.winToggle){
+                        win.maximize();
+                    }else{
+                        win.moveTo(x, y);
+                        win.resizeTo(w, h);
+                    }
+                }
+                break;
+                case 'close':
+                {
+                    win.close(true);
+                    win = null;
+                }
             }
-		},
-		winclose(){
-			win.close(true);
-            win = null;
-		},
-		chosefile(e){
-			let files = e.target.files,
-				i = 0,
+        },
+        toolbarFn(e,name){
+            let target = e.target,
+                i = 0,
                 item,
                 key;
-			if(files.length){
-                vue.clearFn();
-				recycle(files[0]);
-				function recycle(file){
-                    item = {
-                        path: file.path,
-                        thumb: config.loadingGif,
-                        canplay: !!videoEl.canPlayType(file.type),
-                        playing: 0,
-                        progress: 0,
-                        lock: 1,
-                        editable: vue.editable,
-                        bitv: 0,
-                        bita: 0,
-                        type: '',
+            vue.toolbar[name] = !vue.toolbar[name];
+            switch(name){
+                case 'mainSubmenu':
+                {
+                    let mainSubmenu = vue.$refs.mainSubmenu;
 
-                        duration: 0,
-                        starttime: 0,
-                        endtime: 0,
-                        currentTime: 0,
-                        covertime: 0,
+                    vue.active.mainSubmenu = 1;
+                    if(target.tagName !== 'BUTTON'){
+                        target = target.parentNode;
+                    }
+                    mainSubmenu.style.top = (target.offsetTop + target.offsetHeight)+ 'px';
+                    mainSubmenu.style.left = target.offsetLeft + 'px';
+                }
+                break;
+                case 'chosefile':
+                {
+                    let files = target.files;
+                    if(files.length){
+                        for(key in vue.items) vue.$delete(vue.items, key);
+                        recycle(files[0]);
+                        function recycle(file){
+                            item = {
+                                path: file.path,
+                                thumb: config.loadingGif,
+                                canplay: !!videoEl.canPlayType(file.type),
+                                playing: 0,
+                                progress: 0,
+                                lock: vue.toolbar.lock,
+                                editable: vue.toolbar.editable,
+                                alpha: vue.toolbar.showAlpha,
+                                bitv: 0,
+                                bita: 0,
+                                type: '',
 
-                        name: file.name,
-                        toname: file.name.slice(0, file.name.lastIndexOf('.')),
+                                duration: 0,
+                                starttime: 0,
+                                endtime: 0,
+                                currentTime: 0,
+                                covertime: 0,
 
-                        size: file.size,
-                        tosize: file.size,
+                                name: file.name,
+                                toname: file.name.slice(0, file.name.lastIndexOf('.')),
 
-                        scale: 0,
-                        width: 0,
-                        towidth: 0,
-                        height: 0,
-                        toheight: 0,
+                                size: file.size,
+                                tosize: file.size,
 
-                        format: '',
-                        toformat: '',
+                                scale: 0,
+                                width: 0,
+                                towidth: 0,
+                                height: 0,
+                                toheight: 0,
 
-                        fps: 0,
-                        tofps: 0
-                    };
+                                format: '',
+                                toformat: '',
 
-                    vue.$set(vue.items, key = Object.keys(vue.items).length, item);
+                                fps: 0,
+                                tofps: 0
+                            };
 
-					Media.info({
-						input: file.path,
-						success: (json)=>{
-                            item.thumb = json.thumb;
-                            item.bitv = json.bitv <= config.output.bitv ? json.bitv : config.output.bitv;
-                            item.bita = json.bita <= config.output.bita ? json.bita : config.output.bita;
-                            item.type = json.type;
+                            vue.$set(vue.items, key = Object.keys(vue.items).length, item);
 
-                            item.duration = json.duration;
-                            item.endtime = json.duration;
+                            Media.info({
+                                input: file.path,
+                                success: (json)=>{
+                                    item.thumb = json.thumb;
+                                    item.bitv = json.bitv <= config.output.bitv ? json.bitv : config.output.bitv;
+                                    item.bita = json.bita <= config.output.bita ? json.bita : config.output.bita;
+                                    item.type = json.type;
 
-                            item.tosize = (item.bitv+item.bita)*1000*item.duration/8;
+                                    item.duration = json.duration;
+                                    item.endtime = json.duration;
 
-                            item.scale = json.height / json.width;
-                            item.width = item.towidth = json.width;
-                            item.height = item.toheight = json.height;
+                                    item.tosize = (item.bitv+item.bita)*1000*item.duration/8;
 
-							item.format = json.ext;
-                            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
+                                    item.scale = json.height / json.width;
+                                    item.width = item.towidth = json.width;
+                                    item.height = item.toheight = json.height;
 
-                            item.fps = json.fps;
-                            item.tofps = json.fps;
+                                    item.format = json.ext;
+                                    item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
 
-							i++;
-							if(files[i]) recycle(files[i]);
-						},
-						fail: (err)=>{
-                            utils.dialog('提示：',
-                            '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
-                            ['是','否'],
-                            (code)=>{
-                                if(code === 1) vue.$delete(vue.items, key);
-                                i++;
-                                if(files[i]) recycle(files[i]);
+                                    item.fps = json.fps;
+                                    item.tofps = json.fps;
+
+                                    i++;
+                                    if(files[i]) recycle(files[i]);
+                                },
+                                fail: (err)=>{
+                                    utils.dialog('提示：',
+                                    '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
+                                    ['是','否'],
+                                    (code)=>{
+                                        if(code === 1) vue.$delete(vue.items, key);
+                                        i++;
+                                        if(files[i]) recycle(files[i]);
+                                    });
+                                }
                             });
-						}
-					});
-				}
-			}
-		},
-		chosedir(e, fn){
-            vue.output = e.target.files[0].path || '';
+                        }
+                    }
+                }
+                break;
+                case 'chosedir':
+                {
+                    vue.output = target.files[0].path || '';
+                }
+                break;
+                case 'editable':
+                {
+                    for(key in vue.items){
+                        item = vue.items[key];
+                        i++;
+                        if(item.lock){
+                            item.editable = vue.toolbar.editable;
+                        }
+                    }
+                }
+                break;
+                case 'lock':
+                {
+                    for(key in vue.items) vue.items[key].lock = vue.toolbar.lock;
+                }
+                break;
+                case 'clear':
+                {
+                    for(key in vue.items) vue.$delete(vue.items, key);
+                }
+                break;
+                case 'convert':
+                {
+                    //convert all
+                }
+                break;    
+                case 'showAlpha':
+                {
+                    vue.showAlpha = !vue.showAlpha;
+                }
+            }
         },
-        clearFn(){
-            for(let k in vue.items){
-                vue.$delete(vue.items, k);
+        mainSubmenuFn(e,name){
+            let target, panel;
+            vue.active.mainSubmenu = name;
+            switch(name){
+                case 'vtogif':
+                    break;
+                case 'giftov':
+                    break;
+                case 'ptogif':
+                    break;
+                case 'vtoa':
+                    break;
+                case 'capture':
+                    break;
+                case 'firstAid':
+                    utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
+                        if(code === 0){
+                            Media.killAll((msg)=>{
+                                utils.dialog('提示：','<p>所有可能的错误程序已被清除！<br>详细：'+msg+'</p>');
+                            });
+                        }
+                    });
+            }
+        },
+        batchParamsFn(e,name){
+            let target = e.target,
+                val = parseInt(target.value) || 0;
+            switch(name){
+                case 'widthLimit':
+                {
+                    target.value = val > config.output.width ? config.output.width : val;
+                }
+                break;
+                case 'heightLimit':
+                {
+                    target.value = val > config.output.height ? config.output.height : val;
+                }
+                break;
+                case 0:
+                {
+                    let sizeLimit = parseFloat(vue.$refs.sizeLimitEl.value) || 0,
+                        item,
+                        key,
+                        n = 0;
+                    vue.active.mainSubmenu = 0;
+                    vue.batchParams.widthLimit = parseInt(vue.$refs.widthLimitEl.value) || 0;
+                    vue.batchParams.heightLimit = parseInt(vue.$refs.heightLimitEl.value) || 0;
+                    vue.batchParams.sizeLimit = sizeLimit*1024*1024;
+                    for( key in vue.items){
+                        item = vue.items[key];
+                        if(item.lock){
+                            item.toname = utils.namemat(vue.batchParams.nameAll, ++n) +'.'+ item.format;
+                        }
+                    }
+                }
+                break;
+                case -1:
+                {
+                    vue.active.mainSubmenu = 0;
+                }
+            }
+        },
+        nameAllFn(code){
+            vue.active.mainSubmenu = 0;
+            if(code === -1) return;
+
+            let nameAllCallback, recycle, output, n;
+                n = 0;
+                i = 0;
+                k = Object.keys(vue.items)[0];
+                item = vue.items[k];
+                
+                nameAllCallback = (err)=>{
+                    item = vue.items[k];
+                    if(err){
+                        utils.dialog('警告：','有文件重命名失败，详细错误：'+err.toString(),['关闭'], ()=>{
+                            if(item) recycle(item);
+                        });
+                    }else{
+                        if(item) recycle(item);
+                    }
+                };
+                recycle = (item)=>{
+                    k = Object.keys(vue.items)[++n];
+                    if(item.lock){
+                        i++;
+                        output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
+                        if(code === 1){
+                            Media.rename(item.path, output, nameAllCallback);
+                        }else if(code === 2){
+                            Media.copyFile(item.path, output, nameAllCallback);
+                        }
+                    }
+                };
+                if(item){
+                    recycle(item)
+                }else{
+                    utils.dialog('失败：','没有输入文件！');
+                }
+        },
+        captureFn(e,code){
+            let params = vue.capParams,
+                output;
+            switch(code){
+                case 1:
+                {
+                    params.mode = parseInt(e.target.value);
+                }
+                break;
+                case 2:
+                {
+                    capture.audioDevices((err, list)=>{
+                        if(err){
+                            utils.dialog('失败：','<p>'+err+'</p>');
+                        }else{
+                            let i = 0, len, devices = params.audioDevices;
+                            len = list.length;
+                            devices.splice(0, devices.length);
+                            for(; i<len; i++){
+                                if(i%2 === 0){
+                                    devices.push(list[i]);
+                                }
+                            }
+                            params.audioDevice = devices[0];
+                        }
+                    });
+                }
+                break;
+                case 3:
+                {
+                    capture.setArea(640, 360, (x, y, w, h)=>{
+                        params.x = x;
+                        params.y = y;
+                        params.width = w;
+                        params.height = h;
+                    });
+                }
+                break;
+                case 0:
+                {
+                    if(params.mode !== 4 && params.fps > 60){
+                        utils.dialog('提示：','<p>帧速率不能超过 60</p>');
+                        return;
+                    }
+                    if(params.mode !== 2 && params.mode !== 3 && !params.audioDevice){
+                        utils.dialog('提示：','<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>');
+                        return;
+                    }
+                    output = vue.output + '\\'+vue.batchParams.nameAll;
+                    if(params.mode === 4){
+                        output += '.mp3';
+                    }else{
+                        output += '.mp4';
+                    }
+                    capture.progress = (time)=>{
+                        console.log(time);
+                    }
+                    capture.complete = (err)=>{
+                        if(err) utils.dialog('失败：','<p>错误码：'+err.code+'</p>'+err.message);
+                    }
+                    capture.start(output, vue.capParams);
+                }
+                break;
+                case -1:
+                {
+                    vue.active.mainSubmenu = '';
+                }
             }
         },
         itemFn(e, index, str){
@@ -413,26 +674,42 @@ const vue = new Vue({
                 tmptime;
         	switch(str){
         		case 'del':
+                {
                     vue.$delete(vue.items, index);
-                    break;
+                }
+                break;
         		case 'edit':
+                {
                     item.editable = !item.editable;
-                    break;
+                }
+                break;
         		case 'lock':
+                {
                     item.lock = !item.lock;
-                    break;
+                }
+                break;
+                case 'alpha':
+                {
+                    item.alpha = !item.alpha;
+                }
+                break;
                 case 'currentTime':
+                {
                     vue.$refs['id'+index][0].pause();
                     item.currentTime = parseFloat(target.value);
-                    break;
+                }
+                break;
                 case 'timeSlide':
+                {
                     if(item.canplay){
                         vue.$refs['id'+index][0].currentTime = item.currentTime;
                     }else if(item.type === 'video'){
                         showThumb(item);
                     }
-                    break;
+                }
+                break;
                 case 'prevFrame':
+                {
                     if(item.currentTime > step){
                         item.currentTime -= step;
                     }else{
@@ -445,8 +722,10 @@ const vue = new Vue({
                     }else if(item.type === 'video'){
                         showThumb(item);
                     }
-                    break;
+                }
+                break;
                 case 'nextFrame':
+                {
                     if(item.currentTime < item.duration - step){
                         item.currentTime += step;
                     }else{
@@ -459,30 +738,40 @@ const vue = new Vue({
                     }else if(item.type === 'video'){
                         showThumb(item);
                     }
-                    break;
+                }
+                break;
                 case 'setstart':
+                {
                     item.starttime = item.currentTime;
                     if(item.starttime > item.endtime){
                         item.endtime = item.starttime;
                     }
-                    break;
+                }
+                break;
                 case 'setend':
+                {
                     if(item.currentTime < item.starttime){
                         item.starttime = item.currentTime;
                     }
                     item.endtime = item.currentTime;
-                    break;
+                }
+                break;
                 case 'setcover':
+                {
                     item.covertime = item.currentTime;
-                    break;
+                }
+                break;
         		case 'towidth':
+                {
         			item.towidth = parseInt(target.value) || 0;
                     item.toheight = Math.round(item.towidth * item.scale);
-        			break;
+        		}
+                break;
         		case 'toheight':
+                {
         			item.toheight = parseInt(target.value) || 0;
                     item.towidth = Math.round(item.toheight / item.scale);
-        			break;
+        		}
         	}
         },
         videoFn(e, index, type){
@@ -498,147 +787,6 @@ const vue = new Vue({
                 case 'pause':
                     item.playing = false;
             }
-        },
-        dropMenuFn1(e){
-            let target = e.target,
-                dropMenu1 = vue.$refs.dropMenu1;
-
-            vue.dropMenu1 = !vue.dropMenu1;
-            if(target.tagName !== 'BUTTON'){
-                target = target.parentNode;
-            }
-            dropMenu1.style.top = (target.offsetTop + target.offsetHeight)+ 'px';
-            dropMenu1.style.left = target.offsetLeft + 'px';
-        },
-        menuFn1(e,type){
-            let target, panel;
-            vue.dropMenuActive = type;
-            vue.dropPanel = type;
-            switch(type){
-                case 'vtogif':
-                    break;
-                case 'giftov':
-                    break;
-                case 'ptogif':
-                    break;
-                case 'vtoa':
-                    break;
-                case 'capture':
-                    capture.recorders((list)=>{
-                        let i = 0, len, html, dialog;
-                        if(list && (len = list.length) ){
-                            html = '<select name="audioDevice">';
-                            for(; i<len; i++){
-                                if(i%2 === 0){
-                                    html += '<option value="'+list[i]+'">'+list[i]+'</li>';
-                                }
-                            }
-                            html += '</select>';
-                            dialog = utils.dialog('设置参数：',
-                                `<h3>注意：若不了解以下参数的作用，请保持默认</h3>
-                                <p>帧速率：<input name="fps" type="number" max="30" value="30"/></p>
-                                <p>输出宽度范围：<input name="width" type="number" value="${vue.widthLimit}"/></p>
-                                <p>视频输出比特率：<input name="bitv" type="number" value="${config.output.bitv}"/></p>
-                                <p>音频输出比特率：<input name="bita" type="number" value="${config.output.bita}"/></p>
-                                <p>内部音频录制设备：${html}</p>`,
-                                ['下一步','取消'],
-                                (code)=>{
-                                    if(code === 0){
-                                        capture.setArea({
-                                            fps: parseInt(dialog.el.querySelector('[name=fps]').value),
-                                            width: parseInt(dialog.el.querySelector('[name=width]').value),
-                                            bitv: parseInt(dialog.el.querySelector('[name=bitv]').value),
-                                            bita: parseInt(dialog.el.querySelector('[name=bita]').value),
-                                            audioDevice: dialog.el.querySelector('[name=audioDevice]').value
-                                        });
-                                    }
-                                });
-                        }else{
-                            utils.dialog('提示：','<p>当前计算机没有可用的录音设备或者未开启，请查看帮助文档。</p>');
-                        }
-                    });
-                    break;
-                case 'firstAid':
-                    utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
-                        if(code === 0){
-                            Media.killAll((msg)=>{
-                                utils.dialog('提示：','<p>所有可能的错误程序已被清除！<br>详细：'+msg+'</p>');
-                            });
-                        }
-                    });
-            }
-        },
-        panelFn(type,code){
-            vue.dropPanel1 = 0;
-            vue.dropMenuActive = '';
-            let item, k, i;
-            if(!code) return;
-            switch(type){
-                case 'setParams':
-                    i = 0;
-                    for(k in vue.items){
-                        item = vue.items[k];
-                        if(item.lock){
-                            i++;
-                            item.toname = utils.namemat(vue.nameAll, i);
-                            if(item.type !== 'audio'){
-                                if(item.scale > vue.heightLimit / vue.widthLimit){
-                                    if(item.toheight > vue.heightLimit){
-                                        item.toheight = vue.heightLimit;
-                                    }
-                                    item.towidth = Math.round(item.toheight / item.scale);
-                                }else{
-                                    if(item.towidth > vue.widthLimit){
-                                        item.towidth = vue.widthLimit;
-                                    }
-                                    item.toheight = Math.round(item.towidth * item.scale);
-                                }
-                            }
-                        }
-                    }
-                    break;
-                case 'nameAll':
-                    let nameAllCallback, recycle, outputChange, outputEl, output, n;
-
-                    n = 0;
-                    i = 0;
-                    k = Object.keys(vue.items)[0];
-                    outputEl = vue.$refs.outputEl;
-                    item = vue.items[k];
-                    vue.output = '';
-                    outputChange = ()=>{
-                        outputEl.removeEventListener('change', outputChange);
-                        if(item) recycle(item);
-                    };
-                    nameAllCallback = (err)=>{
-                        item = vue.items[k];
-                        if(err){
-                            utils.dialog('警告：','有文件重命名失败，详细错误：'+err.toString(),['关闭'], ()=>{
-                                if(item) recycle(item);
-                            });
-                        }else{
-                            if(item) recycle(item);
-                        }
-                    };
-                    recycle = (item)=>{
-                        k = Object.keys(vue.items)[++n];
-                        if(item.lock){
-                            i++;
-                            output = vue.output +'/'+ utils.namemat(vue.nameAll, i) +'.'+ item.format;
-                            if(code === 1){
-                                Media.rename(item.path, output, nameAllCallback);
-                            }else if(code === 2){
-                                Media.copyFile(item.path, output, false, nameAllCallback);
-                            }
-                        }
-                    };
-
-                    outputEl.addEventListener('change', outputChange);
-                    outputEl.click();
-            }
-        },
-        alphaFn(){
-            vue.alpha = !vue.alpha;
         },
         play(e, index){
             let item = vue.items[index],
@@ -769,39 +917,6 @@ const vue = new Vue({
             };
             if(vue.items[i])
             loop(vue.items[i]);
-        },
-        allEditable(){
-            vue.editable = !vue.editable;
-            let item, k, i = 0;
-            for(k in vue.items){
-                item = vue.items[k];
-                i++;
-                if(item.lock){
-                    item.editable = vue.editable;
-                }
-            }
-        },
-        sizeLimitFn(e){
-        	vue.sizeLimit = e.target.value;
-        	let len = vue.items.length, i = 0, n = 0;
-        	for(; i < len; i++){
-        		if(vue.items[i].lock){
-        			n = utils.sizemat(e.target.value, true);
-        			vue.items[i].tosize = n < vue.items[i].size ? n : vue.items[i].size;
-        		}
-        	}
-		},
-		whLimitFn(e,n){
-			vue[n+'Limit'] = parseInt(e.target.value);
-			let len = vue.items.length, i = 0;
-        	for(; i < len; i++){
-        		if(vue.items[i].lock){
-        			vue.items[i]['to'+n] = vue[n+'Limit'] < vue.items[i][n] ? vue[n+'Limit'] : vue.items[i][n];
-        		}
-        	}
-		},
-        gotoSetAll(){
-        	vue.dropSlidedown = !vue.dropSlidedown;
         }
 	},
 	filters: {
@@ -844,11 +959,11 @@ const vue = new Vue({
 });
 
 /***/ }),
-/* 4 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const fs = __webpack_require__(5),
-childprocess = __webpack_require__(2),
+const fs = __webpack_require__(2),
+childprocess = __webpack_require__(3),
 config = __webpack_require__(0),
 utils = __webpack_require__(1);
 
@@ -1136,21 +1251,16 @@ module.exports = {
             }
         });
     },
-    copyFile(oldname, newname, flag,callback){
-        if(flag){
-            fs.copyFile(oldname, newname, callback);
-        }else{
-            console.log(newname)
-            fs.copyFile(oldname, newname, fs.constants.COPYFILE_EXCL, callback);
-        }
+    copyFile(oldname, newname, callback){
+        fs.access(newname, (err)=>{
+            if(!err){
+                callback('文件【'+newname+'】'+'已存在!');
+            }else{
+                fs.copyFile(oldname, newname, callback);
+            }
+        });
     }
 };
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports) {
-
-module.exports = require("fs");
 
 /***/ }),
 /* 6 */
@@ -1159,130 +1269,46 @@ module.exports = require("fs");
 const win = nw.Window.get(),
 config = __webpack_require__(0),
 utils = __webpack_require__(1),
-childprocess = __webpack_require__(2),
-winShow = ()=>{
-	win.maximize();
-},
-winHide = ()=>{
-	win.moveTo(-win.width-50, 0);
-},
-recorders = (fn)=>{
-	if(typeof fn === 'function'){
-		let lines, line, list, ffmpeg;
+{spawn} = __webpack_require__(3),
+fs = __webpack_require__(2);
 
-		if(list = window.localStorage.getItem('audioDevice')){
-			list = JSON.parse(list);
-			if(list.length){
-				fn(list);
-				return;
-			}
-		}
+const capture = {
+	ffmpeg: null,
+	audioDevices(fn){
+		if(typeof fn === 'function'){
+			let lines, line, list, ffmpeg, error = null;
 
-		list = [];
+			list = [];
 
-		ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
-		ffmpeg.stderr.on('data', (stderr)=>{
-			lines += stderr.toString();
-		});
-		ffmpeg.once('close', (a,b)=>{
-			lines = lines.split(/\n+/);
-			while(line = lines[0]){
-				lines.splice(0,1);
-				if(/DirectShow\s+audio\s+devices/i.test(line)) break;
-			}
-			while(line = lines[0]){
-				lines.splice(0,1);
-				if(/\[dshow[^\]]*?\]/i.test(line)){
-					list.push( line.slice(line.indexOf('\"')+1, line.lastIndexOf('\"')) );
+			ffmpeg = spawn(config.ffmpegRoot+'\\ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
+			ffmpeg.stderr.on('data', (stderr)=>{
+				lines += stderr.toString();
+			});
+			ffmpeg.once('exit', (a,b)=>{
+				lines = lines.split(/\n+/);
+				while(line = lines[0]){
+					lines.splice(0,1);
+					if(/DirectShow\s+audio\s+devices/i.test(line)) break;
 				}
-			}
-			window.localStorage.setItem('audioDevice', JSON.stringify(list));
-			fn(list);
-			ffmpeg.kill();
-			ffmpeg = null;
-		});
-	}
-},
-record = (audioDevice, x=0, y=0, w=screen.availWidth, h=screen.availHeight, fps=30)=>{
-	let errmsg = '', ffmpeg, isFull, cammand = ['-hide_banner','-f','gdigrab', '-framerate', fps];
-
-	if(x < 0) x = 0;
-	if(y < 0) y = 0;
-	if(w > screen.width) w = screen.width;
-	if(h > screen.height) h = screen.height;
-	if(w < screen.availWidth || h < screen.availHeight) cammand.push('-offset_x', x, '-offset_y', y, '-video_size', w+'x'+h);
-
-
-	cammand.push('-i', 'desktop');
-
-	if(audioDevice) cammand.push('-f','dshow','-i','audio='+audioDevice);
-
-	cammand.push('-q', '1', '-y', config.appRoot+'tmp/tmp_record.mpg');
-
-	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand);
-
-	ffmpeg.stderr.on('data',(err)=>{
-		errmsg += err.toString();
-		err = null;
-	});
-	ffmpeg.once('close', (a,b)=>{
-		if(a === 1){
-			winShow();
-			utils.dialog('错误：','<p>错误信息： code : '+a+'<br>info: '+b+'<br>detail:'+errmsg+'</p>');
+				while(line = lines[0]){
+					lines.splice(0,1);
+					if(/\[dshow[^\]]*?\]/i.test(line)){
+						list.push( line.slice(line.indexOf('\"')+1, line.lastIndexOf('\"')) );
+					}
+				}
+				if(!list.length){
+					error = new Error('获取录音设备失败，当前计算机没有可用的录音设备或者未开启，请查看帮助文档。');
+				}
+				fn(error, list);
+			});
+			ffmpeg.once('error',(err)=>{
+				if(!error) fn(err, list);
+			});
+			this.ffmpeg = ffmpeg;
 		}
-	});
-	ffmpeg.once('error', (err)=>{
-		winShow();
-		utils.dialog('错误：','<p>错误信息： '+errmsg+'</p>');
-	});
-	return ffmpeg;
-},
-compress = (o)=>{
-	let dialog = utils.dialog('完成：','<p>录制完成，正在优化和压缩处理...<span class="percent"></span></p>'),
-		ffmpeg = null,
-		cammand = ['-hide_banner','-i', config.appRoot+'tmp/tmp_record.mpg'],
-		dialogBody = dialog.el.querySelector('.percent'),
-		duration = 0,
-		curtime = 0,
-		linestr = '',
-		errmsg = '';
-
-	if(o.bitv) cammand.push('-b:v', o.bitv+'k');
-	if(o.bita) cammand.push('-b:a', o.bita+'k');
-
-	if(o.width && o.w > o.width){
-		o.h = Math.round((o.h/o.w)*o.width);
-		o.w = o.width;
-	}
-	if(o.w%2 !== 0) o.w--;
-	if(o.h%2 !== 0) o.h--;
-
-	cammand.push('-s', o.w+'x'+o.h, '-y', config.output.folder + '/' + utils.datemat() + '.mp4');
-
-	ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe',cammand);
-
-	ffmpeg.stderr.on('data', (stderr)=>{
-		linestr = stderr.toString();
-		errmsg += linestr;
-		if(!duration) duration = utils.timemat(linestr.match(/duration:\s*([\d\:\.]*?),/i)[1]);
-		curtime = utils.timemat(linestr.match(/time=([\d\:\.]*?)\s+/)[1]);
-		dialogBody.innerHTML = Math.round((curtime/duration)*100)+'%';
-	});
-	ffmpeg.once('close', (a,b)=>{
-		if(a === 0){
-			dialog.remove();
-		}else{
-			dialogBody.innerHTML = '<br>有错误： code='+a+'<br>exit='+b+'<br>detail:'+errmsg;
-		}
-	});
-	ffmpeg.once('error', ()=>{
-		dialogBody.innerHTML = '<b>有错误：'+errmsg+'</b>';
-	});
-};
-
-module.exports = {
-	recorders,
-	setArea(o){
+	},
+	setArea(initWidth, initHeight, fn){
+		if(typeof fn !== 'function') return false;
 		nw.Window.open('html/capture.html',{
 		    id: 'cutscreen',
 		    position: 'center',
@@ -1290,45 +1316,144 @@ module.exports = {
 		    new_instance: false,
 		    frame: false,
 		    focus: true,
-		    width: 1280,
-		    height: 720,
+		    width: initWidth,
+		    height: initHeight,
 		    always_on_top: true
 		}, (childWin)=>{
-			let childDoc = childWin.window.document,
-				ffmpeg = null;
-			o.w = childWin.width;
-			o.h = childWin.height;
-			function startFn(e){
-				childDoc.removeEventListener('keyup', startFn);
-		        if(e.keyCode === 32){
-		            winHide();
-		            ffmpeg =  record(o.audioDevice, childWin.x, childWin.y, o.w, o.h, o.fps);
-		            childWin.close(true);
-		            childWin = null;
-		            document.addEventListener('keyup', stopFn);
-		        }
-		    }
-		    function stopFn(e){
-	        	document.removeEventListener('keyup',stopFn);
-	        	if(e.keyCode === 32){
-	        		winShow();
-	        		ffmpeg.stdin.write('q\n');
-					ffmpeg.kill();
-					ffmpeg = null;
-					compress(o);
-	        	}
-	        }
-			childDoc.addEventListener('keyup', startFn);
+			let childDoc = childWin.window.document;
+			let onEnter = (e)=>{
+				//on Enter
+				if(e.keyCode === 13){
+					childDoc.removeEventListener('keyup',onEnter);
+					fn(childWin.x, childWin.y, childWin.width, childWin.height);
+					childWin.close();
+				}
+				//on Esc
+				else if(e.keyCode === 27){
+					childDoc.removeEventListener('keyup',onEnter);
+					childWin.close();
+				}
+			}
+			childDoc.addEventListener('keyup', onEnter);
+		});
+	},
+	progress: null,
+	complete: null,
+	go(){
+		win.moveTo(-screen.width-50, 0);
+	},
+	back(){
+		win.maximize();
+	},
+	shortcut(key,fail){
+		let self = this;
+		try{
+			document.removeEventListener('keyup', keyupFn);
+		}catch(err){}
 
-			childWin.once('close', ()=>{
-				childDoc.removeEventListener('keyup', startFn);
-				document.removeEventListener('keyup', stopFn);
-				childWin.close(true);
-				childWin = null;
-			});
+		document.addEventListener('keyup', keyupFn);
+		function keyupFn(e){
+			if(e.keyCode === 113 || e.keyCode === 27){
+				document.removeEventListener('keyup',keyupFn);
+				self.back();
+				self.end();
+			}
+		}
+	},
+	end(){
+		if(this.ffmpeg){
+			this.ffmpeg.stdin.end('q\n');
+		}
+	},
+	start(output, o){
+		let ffmpeg, cammand, line, log, error, isComplete, complete, sw, sh, w, h, scale, rw, rh;
+		log = [];
+		error = null;
+		isComplete = false;
+		sw = screen.width;
+		sh = screen.height;
+		//如果是全屏
+		if(o.mode === 0 || o.mode === 2) scale = sh / sw;
+		//如果有视频
+		if(o.mode !== 4){
+			cammand = ['-hide_banner', '-r', o.fps, '-f','gdigrab', '-i', 'desktop', '-vcodec', 'libx264', '-b:v', o.bitv+'k', '-pix_fmt', 'yuv420p', '-profile:v', 'high','-y', output];
+		}
+		//如果有音频
+		if(o.mode === 0 || o.mode === 1){
+			cammand.splice(7, 0, '-f','dshow','-i','audio='+o.audioDevice, '-acodec', 'aac', '-b:a', o.bita+'k');
+		}
+		//如果不是全屏
+		if(o.mode === 1 || o.mode === 3){
+			w = o.width;
+			h = o.height;
+			scale = h / w;
+			//不能超出屏幕
+			if((w + o.x) > sw) w = sw - o.x;
+			if((h + o.y) > sh) h = sh - o.y;
+			//不能为单数
+			if(w % 2 !== 0) w--;
+			if(h % 2 !== 0) h--;
+
+			cammand.splice(3, 0, '-offset_x', o.x,'-offset_y', o.y,'-video_size', w+'x'+h);
+		}
+		//缩放匹配宽度上限
+		if(scale){
+			rw = o.widthLimit;
+			rh = Math.round(rw * scale);
+			if(rw % 2 !== 0) rw--;
+			if(rh % 2 !== 0) rh--;
+			cammand.splice(cammand.length - 2, 0, '-s', rw+'x'+rh);
+		}
+		//如果只有音频
+		if(o.mode === 4){
+			cammand = ['-hide_banner', '-f', 'dshow', '-i', 'audio='+o.audioDevice, '-b:a', o.bita+'k', '-y', output];
+		}
+
+		complete = ()=>{
+			capture.back();
+			if(!isComplete && (typeof capture.complete === 'function')){
+				capture.complete(error);
+				isComplete = true;
+			}
+		};
+
+		fs.access(output, (err)=>{
+			if(!err){
+				error = new Error('<p>输出的文件：'+output+'已存在或不可访问，请选择其他输出目录或者在菜单的“批处理设置”中修改名称后重试</p>');
+				error.code = 3;
+				complete();
+			}else{
+				capture.shortcut();
+				capture.go();
+				ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
+				ffmpeg.stderr.on('data', (stderr)=>{
+					line = stderr.toString();
+					if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
+						capture.progress(line[1]);
+					}
+					log.push(stderr.toString());
+				});
+				ffmpeg.once('close', (a, b)=>{
+					if(a !== 0){
+						error = new Error('<p>录制失败：</p><p>'+log.join('</p><p>')+'</p>');
+						error.code = 1;
+					}
+					complete();
+				});
+				ffmpeg.once('error', ()=>{
+					if(!error){
+						error = new Error('<p>启动失败：</p><p>'+log.join('</p><p>')+'</p>');
+						error.code = 2;
+					}
+					complete();
+				});
+				this.ffmpeg = ffmpeg;
+			}
 		});
 	}
-};
+}
+
+module.exports = capture;
 
 /***/ })
 /******/ ]);
