@@ -98,8 +98,11 @@ const capture = {
 		}
 	},
 	start(output, o){
-		let ffmpeg, cammand, line, log, error, isComplete, complete, sw, sh, w, h, scale, rw, rh;
-		log = [];
+		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
+		//删除日志文件
+		try{
+			fs.unlinkSync(config.logPath);
+		}catch(err){}
 		error = null;
 		isComplete = false;
 		sw = screen.width;
@@ -140,48 +143,66 @@ const capture = {
 		if(o.mode === 4){
 			cammand = ['-hide_banner', '-f', 'dshow', '-i', 'audio='+o.audioDevice, '-b:a', o.bita+'k', '-y', output];
 		}
-		console.log(cammand);
-		complete = ()=>{
+		checkOutput();
+		function checkOutput(){
+			fs.access(output, (err)=>{
+				if(!err){
+					utils.dialog(
+					'提示：',
+					`<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`,
+					['覆盖','重试','取消'],
+					(code)=>{
+						if(code === 0){
+							begin();
+						}else if(code === 1){
+							checkOutput();
+						}
+					});
+				}else{
+					begin();
+				}
+			});
+		}
+		function begin(){
+			log = fs.createWriteStream(config.logPath, {  
+				flags: 'a',  
+				encoding: 'utf-8',  
+				mode: 0666
+			});
+			capture.shortcut();
+			capture.go();
+			ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
+			ffmpeg.stderr.on('data', (stderr)=>{
+				line = stderr.toString();
+				if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
+					capture.progress(line[1]);
+				}
+				log.write('<p>'+stderr.toString()+'</p>');
+			});
+			ffmpeg.once('close', (a, b)=>{
+				if(a !== 0){
+					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error.code = 1;
+				}
+				complete();
+			});
+			ffmpeg.once('error', ()=>{
+				if(!error){
+					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error.code = 2;
+				}
+				complete();
+			});
+			capture.ffmpeg = ffmpeg;
+		}
+		function complete(){
 			capture.back();
 			if(!isComplete && (typeof capture.complete === 'function')){
 				capture.complete(error);
 				isComplete = true;
 			}
-		};
-
-		fs.access(output, (err)=>{
-			if(!err){
-				error = new Error('<p>输出的文件：'+output+'已存在或不可访问，请选择其他输出目录或者在菜单的“批处理设置”中修改名称后重试</p>');
-				error.code = 3;
-				complete();
-			}else{
-				capture.shortcut();
-				capture.go();
-				ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
-				ffmpeg.stderr.on('data', (stderr)=>{
-					line = stderr.toString();
-					if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
-						capture.progress(line[1]);
-					}
-					log.push(stderr.toString());
-				});
-				ffmpeg.once('close', (a, b)=>{
-					if(a !== 0){
-						error = new Error('<p>录制失败：</p><p>'+log.join('</p><p>')+'</p>');
-						error.code = 1;
-					}
-					complete();
-				});
-				ffmpeg.once('error', ()=>{
-					if(!error){
-						error = new Error('<p>启动失败：</p><p>'+log.join('</p><p>')+'</p>');
-						error.code = 2;
-					}
-					complete();
-				});
-				this.ffmpeg = ffmpeg;
-			}
-		});
+			log.end();
+		}
 	}
 }
 

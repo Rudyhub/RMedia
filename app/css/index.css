@@ -34,7 +34,6 @@ html,body{
 }
 body{
     margin: 0;
-    background: transparent;
     color: var(--gray2);
     overflow: hidden;
 }
@@ -101,6 +100,16 @@ input[disabled]{
     color: var(--gray) !important;
     box-shadow: none;
     border-color: var(--gray3);
+}
+[type=checkbox]{
+    width: 1em;
+    height: 1em;
+    border-radius: .2em;
+}
+[type=checkbox]:checked{
+    background: #88543b;
+    box-shadow: var(--light1) 0 0 .4em;
+    border-color: var(--light1);
 }
 [type=file]{
     -webkit-appearance: none;
@@ -203,7 +212,12 @@ button:active{
 .text-limit-r3{
     -webkit-line-clamp: 3;
 }
-
+.float-l{
+    float: left;
+}
+.float-r{
+    float: right;
+}
 
 .color-1{
     color: var(--blue2);
@@ -212,7 +226,6 @@ button:active{
 #app{
     height: 100%;
     background: var(--black1);
-    border-radius: .5vw;
     overflow: hidden;
 }
 [v-cloak]{display: none;}
@@ -351,7 +364,7 @@ button:active{
     font-size: 12px;
 }
 
-.columns{
+.item-list{
     font-size: 0;
 }
 .item{
@@ -368,14 +381,12 @@ button:active{
     margin: .4vw;
     transition: margin .5s;
 }
-.item.hide{
-    display: none;
-}
 .item-preview-inner{
     height: 10.8vw;
     position: relative;
 }
-.item-filename{
+.item-media-type{
+    font-size: var(--fs20);
     padding: .2vw;
     position: absolute;
     top: 0;
@@ -384,18 +395,18 @@ button:active{
     color: var(--blue1);
 }
 .item-controls{
-    position: absolute;
-    bottom: 0;
     width: 100%;
-    background: rgba(0,0,0,.5);
-    overflow: hidden;
+    padding: .5vw;
+    font-size: var(--fs14);
+    box-sizing: border-box;
+    text-align: center;
 }
 .item-controls input[type=range]{
     margin-right: auto;
     margin-left: auto;
     display: block;
     height: .2vw;
-    padding: .2vw;
+    padding: .2vw 0;
     box-sizing: border-box;
     background: transparent;
 }
@@ -405,10 +416,6 @@ button:active{
 .item-preview-box{
     height: 100%;
     background: #000;
-}
-.item-media-type{
-    font-size: var(--fs20);
-    vertical-align: middle;
 }
 .item-preview-box.alpha{
     background-image: linear-gradient(45deg, #e2e2e2 25%, transparent 25%, transparent),
@@ -431,6 +438,7 @@ button:active{
     margin: auto;
     color: #fff;
     z-index: 2;
+    filter: drop-shadow(#000 0 0 1px);
 }
 .item-play-btn.playing{
     opacity: 0;
@@ -481,16 +489,32 @@ button:active{
 .item-tool.active{
     color: var(--light1);
 }
-.rotating{
-    animation: rotating 1s linear infinite;
+.item-row{
+    margin: 0;
+    overflow: hidden;
+    font-size: 0;
+    white-space: nowrap;
+    border-bottom: 2px solid var(--black3);
 }
-@keyframes rotating{
-    0%{ transform: rotateZ(0); } 100%{transform: rotateZ(360deg);}
+.item-old,
+.item-new{
+    width: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    font-size: var(--fs16);
+    padding: .3em .5em;
+    box-sizing: border-box;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
-
+.item-old{
+    border-right: 1px solid var(--black3);
+}
+.item-size-range{
+    position: fixed;
+}
 .item input,
 .item select{
-    margin: .5vw 0;
     color: var(--blue1);
 }
 .item [type=text],
@@ -500,54 +524,7 @@ button:active{
 .item [type=number]{
     width: 3.5em;
 }
-.item-info-toname{
-    width: 15.6vw;
-}
-.item-progress{
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 0;
-    height: 100%;
-    z-index: 1;
-    background: rgba(180, 0, 0, 0.5);
-}
-.item-info{
-    font-size: 0;
-    margin: 0;
-}
-.item-info-head,
-.item-info-body{
-    display: inline-block;
-    font-size: var(--fs14);
-    padding: 2px;
-    vertical-align: middle;
-    box-sizing: border-box;
-}
-.item-info-head{
-    width: 50px;
-    text-align: center;
-}
-.item-info-body{
-    width: calc(100% - 50px);
-    color: var(--gray1);
-}
-.item-info .icon-subdirectory_arrow_right{
-    font-size: var(--fs20);
-}
-.item-time{
-    box-sizing: border-box;
-    margin: 0 .5vw .5vw 0;
-}
-.item-editable{
-    transition: all .8s;
-    max-height: 0;
-    overflow: hidden;
-    background: var(--black2);
-}
-.editable .item-editable{
-    max-height: 120px;
-}
+
 
 .dialog{
     width: 30vw;

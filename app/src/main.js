@@ -43,17 +43,11 @@ const vue = new Vue({
         },
         toolbar: {
             mainSubmenu: 0,
-            editable: 0,
             showAlpha: 0,
             lock: 1
         },
         active: {
             mainSubmenu: ''
-        },
-        mediaIcon: {
-            image: 'icon-image',
-            video: 'icon-video-camera',
-            audio: 'icon-headphones'
         },
         capParams: {
             mode: 0,
@@ -99,6 +93,9 @@ const vue = new Vue({
                 }
             }
         },
+        tt(e){
+            console.log(e.target.clientX, e.target);
+        },
         toolbarFn(e,name){
             let target = e.target,
                 i = 0,
@@ -132,7 +129,6 @@ const vue = new Vue({
                                 playing: 0,
                                 progress: 0,
                                 lock: vue.toolbar.lock,
-                                editable: vue.toolbar.editable,
                                 alpha: vue.toolbar.showAlpha,
                                 bitv: 0,
                                 bita: 0,
@@ -143,12 +139,13 @@ const vue = new Vue({
                                 endtime: 0,
                                 currentTime: 0,
                                 covertime: 0,
+                                cover: false,
 
                                 name: file.name,
                                 toname: file.name.slice(0, file.name.lastIndexOf('.')),
 
                                 size: file.size,
-                                tosize: file.size,
+                                quality: 0,
 
                                 scale: 0,
                                 width: 0,
@@ -176,7 +173,7 @@ const vue = new Vue({
                                     item.duration = json.duration;
                                     item.endtime = json.duration;
 
-                                    item.tosize = (item.bitv+item.bita)*1000*item.duration/8;
+                                    item.quality = (((item.bitv+item.bita)*1000*item.duration/8/item.size)*100).toFixed(2);
 
                                     item.scale = json.height / json.width;
                                     item.width = item.towidth = json.width;
@@ -211,17 +208,6 @@ const vue = new Vue({
                     vue.output = target.files[0].path || '';
                 }
                 break;
-                case 'editable':
-                {
-                    for(key in vue.items){
-                        item = vue.items[key];
-                        i++;
-                        if(item.lock){
-                            item.editable = vue.toolbar.editable;
-                        }
-                    }
-                }
-                break;
                 case 'lock':
                 {
                     for(key in vue.items) vue.items[key].lock = vue.toolbar.lock;
@@ -248,6 +234,7 @@ const vue = new Vue({
             vue.active.mainSubmenu = name;
             switch(name){
                 case 'vtogif':
+                    
                     break;
                 case 'giftov':
                     break;
@@ -421,11 +408,6 @@ const vue = new Vue({
         		case 'del':
                 {
                     vue.$delete(vue.items, index);
-                }
-                break;
-        		case 'edit':
-                {
-                    item.editable = !item.editable;
                 }
                 break;
         		case 'lock':
@@ -668,19 +650,7 @@ const vue = new Vue({
 		timemat(t){
 			return utils.timemat(t*1000);
 		},
-		sizemat(val,attr){
-			if(attr === 'size'){
-				return utils.sizemat(val);
-			}else if(typeof attr === 'number'){
-                return Math.round(parseFloat(val/attr)*100) + '%';
-            }else{
-				let tmp = parseFloat(val).toFixed(2);
-				if(tmp){
-					return utils.sizemat(tmp);
-				}
-			}
-			return 'auto';
-		},
+		sizemat: utils.sizemat,
         mathRound(val){
             return Math.round(val);
         },

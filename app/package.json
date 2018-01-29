@@ -12,7 +12,6 @@
     "resizable": true,
     "show_in_taskbar": true,
     "frame": false,
-    "transparent": true,
     "kiosk": false,
     "position": "center"
   },

@@ -80,6 +80,7 @@ module.exports = {
 	audioThumb: appRoot + 'css\\audio.jpg',
 	loadingGif: appRoot + 'css\\loading.gif',
 	icon: appRoot + 'css\\icon.png',
+	logPath: appRoot + 'cache\\log.txt',
 	output: {
 		folder: process.env.USERPROFILE+'\\desktop',
 		width: 1280,
@@ -298,17 +299,11 @@ const vue = new Vue({
         },
         toolbar: {
             mainSubmenu: 0,
-            editable: 0,
             showAlpha: 0,
             lock: 1
         },
         active: {
             mainSubmenu: ''
-        },
-        mediaIcon: {
-            image: 'icon-image',
-            video: 'icon-video-camera',
-            audio: 'icon-headphones'
         },
         capParams: {
             mode: 0,
@@ -354,6 +349,9 @@ const vue = new Vue({
                 }
             }
         },
+        tt(e){
+            console.log(e.target.clientX, e.target);
+        },
         toolbarFn(e,name){
             let target = e.target,
                 i = 0,
@@ -387,7 +385,6 @@ const vue = new Vue({
                                 playing: 0,
                                 progress: 0,
                                 lock: vue.toolbar.lock,
-                                editable: vue.toolbar.editable,
                                 alpha: vue.toolbar.showAlpha,
                                 bitv: 0,
                                 bita: 0,
@@ -398,12 +395,13 @@ const vue = new Vue({
                                 endtime: 0,
                                 currentTime: 0,
                                 covertime: 0,
+                                cover: false,
 
                                 name: file.name,
                                 toname: file.name.slice(0, file.name.lastIndexOf('.')),
 
                                 size: file.size,
-                                tosize: file.size,
+                                quality: 0,
 
                                 scale: 0,
                                 width: 0,
@@ -431,7 +429,7 @@ const vue = new Vue({
                                     item.duration = json.duration;
                                     item.endtime = json.duration;
 
-                                    item.tosize = (item.bitv+item.bita)*1000*item.duration/8;
+                                    item.quality = (((item.bitv+item.bita)*1000*item.duration/8/item.size)*100).toFixed(2);
 
                                     item.scale = json.height / json.width;
                                     item.width = item.towidth = json.width;
@@ -466,17 +464,6 @@ const vue = new Vue({
                     vue.output = target.files[0].path || '';
                 }
                 break;
-                case 'editable':
-                {
-                    for(key in vue.items){
-                        item = vue.items[key];
-                        i++;
-                        if(item.lock){
-                            item.editable = vue.toolbar.editable;
-                        }
-                    }
-                }
-                break;
                 case 'lock':
                 {
                     for(key in vue.items) vue.items[key].lock = vue.toolbar.lock;
@@ -503,6 +490,7 @@ const vue = new Vue({
             vue.active.mainSubmenu = name;
             switch(name){
                 case 'vtogif':
+                    
                     break;
                 case 'giftov':
                     break;
@@ -676,11 +664,6 @@ const vue = new Vue({
         		case 'del':
                 {
                     vue.$delete(vue.items, index);
-                }
-                break;
-        		case 'edit':
-                {
-                    item.editable = !item.editable;
                 }
                 break;
         		case 'lock':
@@ -923,19 +906,7 @@ const vue = new Vue({
 		timemat(t){
 			return utils.timemat(t*1000);
 		},
-		sizemat(val,attr){
-			if(attr === 'size'){
-				return utils.sizemat(val);
-			}else if(typeof attr === 'number'){
-                return Math.round(parseFloat(val/attr)*100) + '%';
-            }else{
-				let tmp = parseFloat(val).toFixed(2);
-				if(tmp){
-					return utils.sizemat(tmp);
-				}
-			}
-			return 'auto';
-		},
+		sizemat: utils.sizemat,
         mathRound(val){
             return Math.round(val);
         },
@@ -1163,45 +1134,21 @@ module.exports = {
     },
     convert(o){
         let self = this,
-            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+(o.duration ? '|-t|'+o.duration : '')+'|'+o.output+(o.thumbCmd || ''),
-            errmsg = '',
-            percent = 0,
-            time = 0,
+            ffmpeg,
             line;
-        if(self.ffmpeg){
-            o.complete(2,'退出码：2，详细：有视频解转码尚未完成，是否中止？');
-            return;
-        }
-        self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
-        self.ffmpeg.stderr.on('data', (stderr)=>{
-            self.onExists(o.output, stderr, self.ffmpeg.stdin);
-            line = stderr.toString()
-            errmsg += line;
-            time = line.match(/time=\s*([\d\.:]+)\s+/i);
-            if(time){
-                time = utils.timemat(time[1]);
-                if(o.duration){
-                    percent = Math.round(100*time/(o.duration*1000));
-                }else{
-                    percent = 100;
-                }
-            }
-            o.progress(percent);
-        });
-        self.ffmpeg.once('close', function(a,b){
-            self.ffmpeg.kill();
-            self.ffmpeg = null;
-            if(a === 0){
-                o.complete(0, o.output);
-            }else{
-                if(self.exitCode === 1) return;
-                o.complete(1, '退出码：1，详细：'+errmsg);
+        ffmpeg = spawn(ffmpegRoot+'ffmpeg.exe', o.cammand);
+        ffmpeg.stderr.on('data', (stderr)=>{
+            if(o.progress){
+                line = stderr.toString();
+                line = /time=\s*([\d\:\.]+)?/.exec(line);
+                if(line) o.progress(line[1]);
             }
         });
-        self.ffmpeg.on('error', function(){
-            self.ffmpeg.kill();
-            self.ffmpeg = null;
-            o.complete(3, '退出码：3，详细：'+errmsg);
+        ffmpeg.once('close', (a, b)=>{
+            if(o.complete) o.complete(a, b);
+        });
+        ffmpeg.once('error', ()=>{
+            if(o.complete) o.complete(2, '启动处理程序失败');
         });
     },
     exitCode: 0,
@@ -1366,8 +1313,11 @@ const capture = {
 		}
 	},
 	start(output, o){
-		let ffmpeg, cammand, line, log, error, isComplete, complete, sw, sh, w, h, scale, rw, rh;
-		log = [];
+		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
+		//删除日志文件
+		try{
+			fs.unlinkSync(config.logPath);
+		}catch(err){}
 		error = null;
 		isComplete = false;
 		sw = screen.width;
@@ -1408,48 +1358,66 @@ const capture = {
 		if(o.mode === 4){
 			cammand = ['-hide_banner', '-f', 'dshow', '-i', 'audio='+o.audioDevice, '-b:a', o.bita+'k', '-y', output];
 		}
-		console.log(cammand);
-		complete = ()=>{
+		checkOutput();
+		function checkOutput(){
+			fs.access(output, (err)=>{
+				if(!err){
+					utils.dialog(
+					'提示：',
+					`<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`,
+					['覆盖','重试','取消'],
+					(code)=>{
+						if(code === 0){
+							begin();
+						}else if(code === 1){
+							checkOutput();
+						}
+					});
+				}else{
+					begin();
+				}
+			});
+		}
+		function begin(){
+			log = fs.createWriteStream(config.logPath, {  
+				flags: 'a',  
+				encoding: 'utf-8',  
+				mode: 0666
+			});
+			capture.shortcut();
+			capture.go();
+			ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
+			ffmpeg.stderr.on('data', (stderr)=>{
+				line = stderr.toString();
+				if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
+					capture.progress(line[1]);
+				}
+				log.write('<p>'+stderr.toString()+'</p>');
+			});
+			ffmpeg.once('close', (a, b)=>{
+				if(a !== 0){
+					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error.code = 1;
+				}
+				complete();
+			});
+			ffmpeg.once('error', ()=>{
+				if(!error){
+					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error.code = 2;
+				}
+				complete();
+			});
+			capture.ffmpeg = ffmpeg;
+		}
+		function complete(){
 			capture.back();
 			if(!isComplete && (typeof capture.complete === 'function')){
 				capture.complete(error);
 				isComplete = true;
 			}
-		};
-
-		fs.access(output, (err)=>{
-			if(!err){
-				error = new Error('<p>输出的文件：'+output+'已存在或不可访问，请选择其他输出目录或者在菜单的“批处理设置”中修改名称后重试</p>');
-				error.code = 3;
-				complete();
-			}else{
-				capture.shortcut();
-				capture.go();
-				ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
-				ffmpeg.stderr.on('data', (stderr)=>{
-					line = stderr.toString();
-					if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){
-						capture.progress(line[1]);
-					}
-					log.push(stderr.toString());
-				});
-				ffmpeg.once('close', (a, b)=>{
-					if(a !== 0){
-						error = new Error('<p>录制失败：</p><p>'+log.join('</p><p>')+'</p>');
-						error.code = 1;
-					}
-					complete();
-				});
-				ffmpeg.once('error', ()=>{
-					if(!error){
-						error = new Error('<p>启动失败：</p><p>'+log.join('</p><p>')+'</p>');
-						error.code = 2;
-					}
-					complete();
-				});
-				this.ffmpeg = ffmpeg;
-			}
-		});
+			log.end();
+		}
 	}
 }
 

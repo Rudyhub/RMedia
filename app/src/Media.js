@@ -199,45 +199,21 @@ module.exports = {
     },
     convert(o){
         let self = this,
-            cammand = '-hide_banner|'+(o.seek ? '-ss|'+o.seek+'|' : '')+'-i|'+o.input+'|'+(o.cammand || '')+(o.duration ? '|-t|'+o.duration : '')+'|'+o.output+(o.thumbCmd || ''),
-            errmsg = '',
-            percent = 0,
-            time = 0,
+            ffmpeg,
             line;
-        if(self.ffmpeg){
-            o.complete(2,'退出码：2，详细：有视频解转码尚未完成，是否中止？');
-            return;
-        }
-        self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', cammand.split(/\|+/));
-        self.ffmpeg.stderr.on('data', (stderr)=>{
-            self.onExists(o.output, stderr, self.ffmpeg.stdin);
-            line = stderr.toString()
-            errmsg += line;
-            time = line.match(/time=\s*([\d\.:]+)\s+/i);
-            if(time){
-                time = utils.timemat(time[1]);
-                if(o.duration){
-                    percent = Math.round(100*time/(o.duration*1000));
-                }else{
-                    percent = 100;
-                }
-            }
-            o.progress(percent);
-        });
-        self.ffmpeg.once('close', function(a,b){
-            self.ffmpeg.kill();
-            self.ffmpeg = null;
-            if(a === 0){
-                o.complete(0, o.output);
-            }else{
-                if(self.exitCode === 1) return;
-                o.complete(1, '退出码：1，详细：'+errmsg);
+        ffmpeg = spawn(ffmpegRoot+'ffmpeg.exe', o.cammand);
+        ffmpeg.stderr.on('data', (stderr)=>{
+            if(o.progress){
+                line = stderr.toString();
+                line = /time=\s*([\d\:\.]+)?/.exec(line);
+                if(line) o.progress(line[1]);
             }
         });
-        self.ffmpeg.on('error', function(){
-            self.ffmpeg.kill();
-            self.ffmpeg = null;
-            o.complete(3, '退出码：3，详细：'+errmsg);
+        ffmpeg.once('close', (a, b)=>{
+            if(o.complete) o.complete(a, b);
+        });
+        ffmpeg.once('error', ()=>{
+            if(o.complete) o.complete(2, '启动处理程序失败');
         });
     },
     exitCode: 0,

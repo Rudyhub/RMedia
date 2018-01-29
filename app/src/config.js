@@ -11,6 +11,7 @@ module.exports = {
 	audioThumb: appRoot + 'css\\audio.jpg',
 	loadingGif: appRoot + 'css\\loading.gif',
 	icon: appRoot + 'css\\icon.png',
+	logPath: appRoot + 'cache\\log.txt',
 	output: {
 		folder: process.env.USERPROFILE+'\\desktop',
 		width: 1280,
