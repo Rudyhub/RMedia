@@ -57,6 +57,9 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
+    qualitymat(bitv, bita, duration, size){
+        return (((bitv+bita)*1000*duration/8/size)*100).toFixed(2);
+    },
     dialog(title, msg, btns, fn, context){
         let div = document.createElement('div'),
             parentNode = context || document.body,

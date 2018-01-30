@@ -32,7 +32,7 @@ module.exports = {
             },
             status = true,
 
-            ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
+            ffmpeg = childprocess.exec(config.ffmpegRoot+'\\ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
                 // console.log(stderr.toString());
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
 
@@ -65,6 +65,7 @@ module.exports = {
             if(json.width > 0 && json.height > 0){
                 if(json.fps === 0 || json.ext === 'gif'){
                     json.type = 'image';
+                    if(json.ext !== 'gif') json.duration = 0;
                 }else{
                     json.type = 'video'; 
                 }
@@ -109,7 +110,7 @@ module.exports = {
         }
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
-        ffmpeg = childprocess.exec(config.ffmpegRoot+'/ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegRoot+'\\ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
             if(!err){
                 let tmp = fs.readFileSync(config.appRoot+'cache/thumb');
                 thumb = window.URL.createObjectURL(new Blob([tmp], {type:'image/'+o.format}));
@@ -201,19 +202,24 @@ module.exports = {
         let self = this,
             ffmpeg,
             line;
-        ffmpeg = spawn(ffmpegRoot+'ffmpeg.exe', o.cammand);
+
+        if(!o.cammand) return;
+        if(!o.cammand.length) return;
+        o.cammand.unshift('-hide_banner');
+
+        ffmpeg = childprocess.spawn(config.ffmpegRoot+'\\ffmpeg.exe', o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             if(o.progress){
                 line = stderr.toString();
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
-                if(line) o.progress(line[1]);
+                if(line) o.progress( utils.timemat(line[1]) / 1000 );
             }
         });
         ffmpeg.once('close', (a, b)=>{
-            if(o.complete) o.complete(a, b);
+            if(o.complete) o.complete(a, (a !== 0) ? '处理失败 ' + b : b);
         });
-        ffmpeg.once('error', ()=>{
-            if(o.complete) o.complete(2, '启动处理程序失败');
+        ffmpeg.once('error', (err)=>{
+            if(o.complete) o.complete(2, '启动失败 '+err);
         });
     },
     exitCode: 0,
