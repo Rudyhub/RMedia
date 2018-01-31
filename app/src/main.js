@@ -44,9 +44,11 @@ const vue = new Vue({
             sizeLimit: 0
         },
         toolbar: {
-            mainSubmenu: 0,
-            showAlpha: 0,
-            lock: 1
+            drop: 0,
+            toggle: {
+                lock: 1,
+                alpha: 0
+            }
         },
         active: {
             mainSubmenu: ''
@@ -64,6 +66,7 @@ const vue = new Vue({
             audioDevices: [],
             audioDevice: ''
         },
+        toformats: ['mp4','mp3','jpg','png','gif','jpeg','webp','svg','ico','webm','ogg'],
         tunstep: 2
 	},
     created(){
@@ -86,8 +89,8 @@ const vue = new Vue({
                         canplay: !!videoEl.canPlayType(file.type),
                         playing: 0,
                         progress: 0,
-                        lock: vue.toolbar.lock,
-                        alpha: vue.toolbar.showAlpha,
+                        lock: vue.toolbar.toggle.lock,
+                        alpha: vue.toolbar.toggle.alpha,
                         bitv: 0,
                         bita: 0,
                         type: '',
@@ -138,7 +141,7 @@ const vue = new Vue({
                             item.height = item.toheight = json.height;
 
                             item.format = json.ext;
-                            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
+                            item.toformat = vue.toformats.indexOf(item.format) !== -1 ? item.format : config.output.format[ item.type ];
 
                             item.fps = json.fps;
                             item.tofps = json.fps;
@@ -194,37 +197,39 @@ const vue = new Vue({
                 }
             }
         },
-        toolbarFn(e,name){
-            let target = e.target,
+        toolbarFn(e){
+            let target = e.currentTarget,
+                name = target.name,
+                classList = target.classList,
+                dropMenu = vue.$refs[name],
+                prevMenu,
                 key;
 
-            if(name !== 'mainSubmenu') vue.toolbar.mainSubmenu = '';
-            if(vue.toolbar.hasOwnProperty(name)){
-                vue.toolbar[name] = !vue.toolbar[name];
+            if(name !== vue.toolbar.drop){
+                if(prevMenu = vue.$refs[vue.toolbar.drop]) prevMenu.classList.remove('zoom-in');
+            }
+            vue.toolbar.drop = name;
+
+            if(dropMenu){
+                dropMenu.classList.toggle('zoom-in');
+                dropMenu.style.top = (target.offsetTop + target.offsetHeight)+ 'px';
+                dropMenu.style.left = target.offsetLeft + 'px';
+                if(!dropMenu.classList.contains('zoom-in')) vue.toolbar.drop = '';
             }
             switch(name){
-                case 'mainSubmenu':
-                {
-                    let mainSubmenu = vue.$refs.mainSubmenu;
-                    vue.active.mainSubmenu = 1;
-                    if(target.tagName !== 'BUTTON'){
-                        target = target.parentNode;
-                    }
-                    mainSubmenu.style.top = (target.offsetTop + target.offsetHeight)+ 'px';
-                    mainSubmenu.style.left = target.offsetLeft + 'px';
-                }
-                break;
                 case 'chosefile': inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
                 case 'lock':
                 {
-                    for(key in vue.items) vue.items[key].lock = vue.toolbar.lock;
+                    for(key in vue.items) vue.items[key].lock = classList.contains('active-1');
                 }
                 break;
                 case 'clear':
                 {
                     for(key in vue.items) vue.$delete(vue.items, key);
                 }
+                break;
+                case 'help':
                 break;
                 case 'convert':
                 {
@@ -233,9 +238,15 @@ const vue = new Vue({
                     }
                 }
                 break;    
-                case 'showAlpha': vue.showAlpha = !vue.showAlpha;
+                case 'alpha':{
+                    vue.toolbar.toggle.alpha = !vue.toolbar.toggle.alpha;
+                    for(key in vue.items){
+                        vue.items[key].alpha = vue.toolbar.toggle.alpha;
+                    }
+                }
             }
         },
+        /*
         mainSubmenuFn(e,name){
             let target, panel, i = 0, item;
             vue.active.mainSubmenu = name;
@@ -249,6 +260,7 @@ const vue = new Vue({
                 });
             }else{
                 item = vue.items[ Object.keys(vue.items)[i] ];
+
                 switch(name){
                     case 'convert':
                     function convert(){
@@ -385,6 +397,7 @@ const vue = new Vue({
             }
             
         },
+        */
         batchParamsFn(e,name){
             let target = e.target,
                 val = parseInt(target.value) || 0;
@@ -409,7 +422,7 @@ const vue = new Vue({
                         item,
                         key,
                         n = 0;
-                    vue.active.mainSubmenu = 0;
+
                     vue.batchParams.widthLimit = wl;
                     vue.batchParams.heightLimit = hl;
                     vue.batchParams.sizeLimit = sizeLimit*1024*1024;
@@ -429,51 +442,77 @@ const vue = new Vue({
                             item.toname = utils.namemat(vue.batchParams.nameAll, ++n);
                         }
                     }
+                    vue.$refs.batch.classList.remove('zoom-in');
                 }
                 break;
-                case -1:
+                case 1:
                 {
-                    vue.active.mainSubmenu = 0;
+                    for( key in vue.items){
+                        item = vue.items[key];
+                        item.toname = item.name.slice(0, -item.format.length-1);
+                        item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
+                        item.quality = utils.qualitymat(item.bitv, item.bita, item.duration, item.size);
+                        item.startTime = 0;
+                        item.endTime = item.duration;
+                        item.cover = false;
+                        item.coverTime = 0;
+                        item.towidth = item.width;
+                        item.toheight = item.height;
+                    }
                 }
             }
+            vue.$refs.batch.classList.remove('zoom-in');
         },
         nameAllFn(code){
-            vue.active.mainSubmenu = 0;
+            vue.$refs.batch.classList.remove('zoom-in');
             if(code === -1) return;
 
-            let nameAllCallback, recycle, output, n;
-                n = 0;
-                i = 0;
-                k = Object.keys(vue.items)[0];
-                item = vue.items[k];
-                
-                nameAllCallback = (err)=>{
-                    item = vue.items[k];
-                    if(err){
-                        utils.dialog('警告：','有文件重命名失败，详细错误：'+err.toString(),['关闭'], ()=>{
-                            if(item) recycle(item);
-                        });
-                    }else{
-                        if(item) recycle(item);
+            let output, n;
+            n = 0;
+            i = 0;
+            k = Object.keys(vue.items)[0];
+            item = vue.items[k];
+            
+            if(item){
+                recycle(item)
+            }else{
+                utils.dialog('失败：','没有输入文件！');
+            }
+            function recycle(item){
+                k = Object.keys(vue.items)[++n];
+                if(item.lock){
+                    i++;
+                    output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
+                    if(code === 1){
+                        Media.rename(item.path, output, oneComplete);
+                    }else if(code === 2){
+                        Media.copyFile(item.path, output, oneComplete);
                     }
-                };
-                recycle = (item)=>{
-                    k = Object.keys(vue.items)[++n];
-                    if(item.lock){
-                        i++;
-                        output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
-                        if(code === 1){
-                            Media.rename(item.path, output, nameAllCallback);
-                        }else if(code === 2){
-                            Media.copyFile(item.path, output, nameAllCallback);
-                        }
-                    }
-                };
-                if(item){
-                    recycle(item)
-                }else{
-                    utils.dialog('失败：','没有输入文件！');
                 }
+            };
+            function oneComplete(err){
+                item = vue.items[k];
+                if(err){
+                    utils.dialog('警告：','<p>有文件重命名失败，详细错误：'+err.toString()+'</p>',['继续','退出'], (c)=>{
+                        if(c === 0){
+                            if(item){
+                                recycle(item);
+                            }else{
+                                allComplete();
+                            }
+                        }
+                    });
+                }else{
+                    if(item){
+                        recycle(item);
+                    }else{
+                        allComplete();
+                    }
+                }
+            }
+            function allComplete(){
+                utils.dialog('结束！','<p>输出目录：'+vue.output+', 可前往查看系列化重命名结果。</p>');
+            }
         },
         captureFn(e,code){
             let params = vue.capParams,
@@ -530,7 +569,7 @@ const vue = new Vue({
                         output += '.mp4';
                     }
                     capture.progress = (time)=>{
-                        console.log(time);
+                        // console.log(time);
                     }
                     capture.complete = (err)=>{
                         if(err) utils.dialog('失败：','<p>错误码：'+err.code+'</p>'+err.message);
@@ -538,10 +577,33 @@ const vue = new Vue({
                     capture.start(output, vue.capParams);
                 }
                 break;
-                case -1:
-                {
-                    vue.active.mainSubmenu = '';
-                }
+            }
+            if(code === 0 || code === -1){
+                vue.toolbar.drop = '';
+                vue.$refs.capture.classList.remove('zoom-in');
+            }
+        },
+        helpFn(e){
+            let target = e.currentTarget,
+                name = target.name,
+                dropMenu = vue.$refs[name];
+
+            if(dropMenu){
+                dropMenu.classList.toggle('zoom-in');
+                target.classList.toggle('active-1');
+            }else{
+                target.classList.add('active-1');
+            }
+            
+            switch(name){
+                case 'firstAid':
+                    utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
+                        if(code === 0){
+                            Media.killAll();
+                        }
+                        target.classList.remove('active-1');
+                    });
+                break;
             }
         },
         itemFn(e, index, str){

@@ -9,7 +9,7 @@ module.exports = {
     formats: {
         image: [['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
         video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
-        audio: [['aac','mp3','wav','mpeg'],['wma','mid']]
+        audio: [['mp3','wav','mpeg'],['wma','mid']]
     },
     is(ext,name,bool){
         if(!bool){

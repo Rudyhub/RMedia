@@ -330,12 +330,10 @@ button:active{
 }
 
 .drop-panel{
-    position: absolute;
+    position: fixed;
     background: var(--black1);
     border: 1px solid;
     border-radius: var(--r3);
-    top: 0;
-    left: calc(100% + 1px);
     z-index: 10;
     overflow: hidden;
     transition: all .5s;
@@ -343,6 +341,12 @@ button:active{
     transform-origin: top left;
     border-color: var(--light1);
     padding: .5em 1em;
+    box-sizing: border-box;
+}
+.submenu .drop-panel{
+    position: absolute;
+    top: 0;
+    left: calc(100% + 1px);
 }
 .drop-panel-group{
     font-size: var(--fs14);
@@ -587,9 +591,9 @@ button:active{
 
 
 .active-1{
-    color: var(--light1);
-    border-color: var(--light1);
+    color: var(--light1) !important;
+    border-color: var(--light1) !important;
 }
 .zoom-in{
-    transform: scale(1);
+    transform: scale(1) !important;
 }
