@@ -28,7 +28,6 @@ const showThumb = (item)=>{
     });
 };
 
-
 const vue = new Vue({
 	el: '#app',
 	data: {
@@ -74,6 +73,7 @@ const vue = new Vue({
         inputEl.multiple = true;
         outputEl.nwdirectory = true;
         inputEl.addEventListener('change', (e)=>{
+            vue.onDropMenuClose('chosefile');
             let target = e.target,
                 files = target.files,
                 i = 0,
@@ -165,10 +165,17 @@ const vue = new Vue({
         });
 
         outputEl.addEventListener('change', (e)=>{
+            vue.onDropMenuClose('chosedir');
             vue.output = e.target.files[0].path || '';
         });
     },
 	methods: {
+        onDropMenuClose(name){
+            vue.toolbar.drop = '';
+            try{
+                vue.$refs[name].classList.remove('zoom-in');
+            }catch(err){}
+        },
         titlebarFn(name){
             switch(name){
                 case 'min':
@@ -219,17 +226,10 @@ const vue = new Vue({
             switch(name){
                 case 'chosefile': inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
-                case 'lock':
-                {
-                    for(key in vue.items) vue.items[key].lock = classList.contains('active-1');
-                }
-                break;
                 case 'clear':
                 {
                     for(key in vue.items) vue.$delete(vue.items, key);
                 }
-                break;
-                case 'help':
                 break;
                 case 'convert':
                 {
@@ -238,10 +238,10 @@ const vue = new Vue({
                     }
                 }
                 break;    
-                case 'alpha':{
-                    vue.toolbar.toggle.alpha = !vue.toolbar.toggle.alpha;
+                default: {
+                    vue.toolbar.toggle[name] = !vue.toolbar.toggle[name];
                     for(key in vue.items){
-                        vue.items[key].alpha = vue.toolbar.toggle.alpha;
+                        vue.items[key][name] = vue.toolbar.toggle[name];
                     }
                 }
             }
@@ -395,7 +395,6 @@ const vue = new Vue({
                     break;  
                 }
             }
-            
         },
         */
         batchParamsFn(e,name){
@@ -442,7 +441,6 @@ const vue = new Vue({
                             item.toname = utils.namemat(vue.batchParams.nameAll, ++n);
                         }
                     }
-                    vue.$refs.batch.classList.remove('zoom-in');
                 }
                 break;
                 case 1:
@@ -461,10 +459,10 @@ const vue = new Vue({
                     }
                 }
             }
-            vue.$refs.batch.classList.remove('zoom-in');
+            vue.onDropMenuClose('batch');
         },
         nameAllFn(code){
-            vue.$refs.batch.classList.remove('zoom-in');
+            vue.onDropMenuClose('batch');
             if(code === -1) return;
 
             let output, n;
@@ -579,22 +577,15 @@ const vue = new Vue({
                 break;
             }
             if(code === 0 || code === -1){
-                vue.toolbar.drop = '';
-                vue.$refs.capture.classList.remove('zoom-in');
+                vue.onDropMenuClose('capture');
             }
         },
         helpFn(e){
             let target = e.currentTarget,
-                name = target.name,
-                dropMenu = vue.$refs[name];
+                name = target.name;
 
-            if(dropMenu){
-                dropMenu.classList.toggle('zoom-in');
-                target.classList.toggle('active-1');
-            }else{
-                target.classList.add('active-1');
-            }
-            
+            vue.onDropMenuClose('help');
+
             switch(name){
                 case 'firstAid':
                     utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
@@ -604,6 +595,8 @@ const vue = new Vue({
                         target.classList.remove('active-1');
                     });
                 break;
+                case 'helpBook':
+                    nw.Shell.openExternal('https://github.com/mystermangit/fupconvert');
             }
         },
         itemFn(e, index, str){
