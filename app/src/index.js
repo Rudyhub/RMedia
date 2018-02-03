@@ -172,9 +172,6 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
-    qualitymat(bitv, bita, duration, size){
-        return (((bitv+bita)*1000*duration/8/size)*100).toFixed(2);
-    },
     dialog(title, msg, btns, fn, context){
         let div = document.createElement('div'),
             parentNode = context || document.body,
@@ -273,19 +270,6 @@ win.on('loaded',()=>{
     win.show();
 });
 
-const showThumb = (item)=>{
-    if(!item) return;
-    Media.thumb({
-        input: item.path,
-        time: item.currentTime,
-        success(src){
-            item.thumb = src;
-        },
-        fail(){
-            console.log(arguments);
-        }
-    });
-};
 
 const vue = new Vue({
 	el: '#app',
@@ -325,19 +309,20 @@ const vue = new Vue({
             audioDevice: ''
         },
         toformats: ['mp4','mp3','jpg','png','gif','jpeg','webp','svg','ico','webm','ogg'],
-        tunstep: 2
+        framestep: 2
 	},
     created(){
         inputEl.type = outputEl.type = 'file';
         inputEl.multiple = true;
         outputEl.nwdirectory = true;
         inputEl.addEventListener('change', (e)=>{
-            vue.onDropMenuClose('chosefile');
             let target = e.target,
                 files = target.files,
                 i = 0,
                 item,
-                key;
+                key,
+                tobitv,
+                tobita;
             if(files.length){
                 for(key in vue.items) vue.$delete(vue.items, key);
                 recycle(files[0]);
@@ -350,8 +335,6 @@ const vue = new Vue({
                         progress: 0,
                         lock: vue.toolbar.toggle.lock,
                         alpha: vue.toolbar.toggle.alpha,
-                        bitv: 0,
-                        bita: 0,
                         type: '',
                         series: false,
 
@@ -364,6 +347,9 @@ const vue = new Vue({
 
                         name: file.name,
                         toname: file.name.slice(0, file.name.lastIndexOf('.')),
+
+                        bitv: 0,
+                        bita: 0,
 
                         size: file.size,
                         quality: 0,
@@ -387,24 +373,21 @@ const vue = new Vue({
                         input: file.path,
                         success: (json)=>{
                             item.thumb = json.thumb;
-                            item.bitv = json.bitv <= config.output.bitv ? json.bitv : config.output.bitv;
-                            item.bita = json.bita <= config.output.bita ? json.bita : config.output.bita;
                             item.type = json.type;
 
-                            item.duration = item.endTime = json.duration;
+                            item.duration = json.duration;
 
-                            item.quality = utils.qualitymat(item.bitv, item.bita, item.duration, item.size);
-                            
+                            item.bitv = json.bitv || json.bit;
+                            item.bita = json.bita;
+
                             item.scale = json.height / json.width;
-                            item.width = item.towidth = json.width;
-                            item.height = item.toheight = json.height;
+                            item.width = json.width;
+                            item.height = json.height;
 
                             item.format = json.ext;
-                            item.toformat = vue.toformats.indexOf(item.format) !== -1 ? item.format : config.output.format[ item.type ];
-
                             item.fps = json.fps;
-                            item.tofps = json.fps;
 
+                            vue.reItem(item);
                             i++;
                             if(files[i]) recycle(files[i]);
                         },
@@ -427,14 +410,50 @@ const vue = new Vue({
             vue.onDropMenuClose('chosedir');
             vue.output = e.target.files[0].path || '';
         });
+        inputEl.addEventListener('cancel', ()=>{
+            vue.onDropMenuClose('chosefile');
+        });
+        outputEl.addEventListener('cancel', ()=>{
+            vue.onDropMenuClose('chosedir');
+        });
     },
 	methods: {
+        // common function
         onDropMenuClose(name){
             vue.toolbar.drop = '';
             try{
                 vue.$refs[name].classList.remove('zoom-in');
             }catch(err){}
         },
+        getThumb(item){
+            if(!item) return;
+            Media.thumb({
+                input: item.path,
+                time: item.currentTime,
+                success(src){
+                    item.thumb = src;
+                },
+                fail(){
+                    utils.dialog('错误：', '<p>预览生成失败</p><p>'+arguments+'</p>');
+                }
+            });
+        },
+        reItem(item){
+            let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv;
+                tobita = item.bita <= config.output.bita ? item.bita : config.output.bita;
+
+            item.quality = ((tobitv+tobita)/(item.bitv+item.bita)*100).toFixed(2);
+            item.toname = item.name.slice(0, -item.format.length-1);
+            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[item.type];
+            item.startTime = 0;
+            item.endTime = item.duration;
+            item.cover = false;
+            item.coverTime = 0;
+            item.towidth = item.width;
+            item.toheight = item.height;
+            item.tofps = item.fps;
+        },
+        //event function
         titlebarFn(name){
             switch(name){
                 case 'min':
@@ -656,6 +675,27 @@ const vue = new Vue({
             }
         },
         */
+        convertFn(){
+            let items = vue.items,
+                key = Object.keys(items)[0],
+                item = items[key],
+                bita = item.bita < config.output.bita ? item.bita : config.output.bita,
+                bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita),
+                cammand;
+
+            //1.single video to single video
+            cammand = ['-i', item.path, '-b:v', bitv+'k', '-b:a', bita+'k', '-y', vue.output + '\\' + item.toname + '.' + item.toformat];
+            Media.convert({
+                cammand,
+                progress(t){
+                    console.log(t);
+                },
+                complete(code, msg){
+                    console.log(code, msg);
+                }
+            });
+            console.log( cammand,item);
+        },
         batchParamsFn(e,name){
             let target = e.target,
                 val = parseInt(target.value) || 0;
@@ -704,18 +744,7 @@ const vue = new Vue({
                 break;
                 case 1:
                 {
-                    for( key in vue.items){
-                        item = vue.items[key];
-                        item.toname = item.name.slice(0, -item.format.length-1);
-                        item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
-                        item.quality = utils.qualitymat(item.bitv, item.bita, item.duration, item.size);
-                        item.startTime = 0;
-                        item.endTime = item.duration;
-                        item.cover = false;
-                        item.coverTime = 0;
-                        item.towidth = item.width;
-                        item.toheight = item.height;
-                    }
+                    for( key in vue.items) vue.reItem(vue.items[key]);
                 }
             }
             vue.onDropMenuClose('batch');
@@ -858,18 +887,42 @@ const vue = new Vue({
                     nw.Shell.openExternal('https://github.com/mystermangit/fupconvert');
             }
         },
+        videoFn(e, index, type){
+            let item = vue.items[index],
+                video = vue.$refs['id'+index][0];
+            switch(type){
+                case 'timeupdate':
+                    item.currentTime = video.currentTime;
+                    break;
+                case 'play':
+                    item.playing = true;
+                    break;
+                case 'pause':
+                    item.playing = false;
+                    break;
+                default:
+                    if(!item.canplay) return;
+                    video.currentTime = item.currentTime;
+                    if(video.paused){
+                        video.play();
+                    }else{
+                        video.pause();
+                    }
+            }
+        },
         itemFn(e, index, str){
-        	let item = vue.items[index],
+            let item = vue.items[index],
                 target = e.target,
                 step,
                 tmptime;
-        	switch(str){
-        		case 'del':
+
+            switch(str){
+                case 'del':
                 {
                     vue.$delete(vue.items, index);
                 }
                 break;
-        		case 'lock':
+                case 'lock':
                 {
                     item.lock = !item.lock;
                 }
@@ -881,15 +934,7 @@ const vue = new Vue({
                 break;
                 case 'reset':
                 {
-                    item.toname = item.name.slice(0, -item.format.length-1);
-                    item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[ item.type ];
-                    item.quality = utils.qualitymat(item.bitv, item.bita, item.duration, item.size);
-                    item.startTime = 0;
-                    item.endTime = item.duration;
-                    item.cover = false;
-                    item.coverTime = 0;
-                    item.towidth = item.width;
-                    item.toheight = item.height;
+                    vue.reItem(item);
                 }
                 break;
                 case 'currentTime':
@@ -903,7 +948,7 @@ const vue = new Vue({
                     if(item.canplay){
                         vue.$refs['id'+index][0].currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        showThumb(item);
+                        vue.getThumb(item);
                     }
                 }
                 break;
@@ -920,7 +965,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        showThumb(item);
+                        vue.getThumb(item);
                     }
                 }
                 break;
@@ -937,7 +982,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        showThumb(item);
+                        vue.getThumb(item);
                     }
                 }
                 break;
@@ -962,51 +1007,25 @@ const vue = new Vue({
                     item.coverTime = item.currentTime;
                 }
                 break;
-        		case 'towidth':
+                case 'towidth':
                 {
-        			item.towidth = parseInt(target.value) || 0;
+                    item.towidth = parseInt(target.value) || 0;
                     item.toheight = Math.round(item.towidth * item.scale);
-        		}
+                }
                 break;
-        		case 'toheight':
+                case 'toheight':
                 {
-        			item.toheight = parseInt(target.value) || 0;
+                    item.toheight = parseInt(target.value) || 0;
                     item.towidth = Math.round(item.toheight / item.scale);
-        		}
-        	}
-        },
-        videoFn(e, index, type){
-            let item = vue.items[index],
-                video = e.target;
-            switch(type){
-                case 'timeupdate':
-                    item.currentTime = video.currentTime;
-                    break;
-                case 'play':
-                    item.playing = true;
-                    break;
-                case 'pause':
-                    item.playing = false;
-            }
-        },
-        play(e, index){
-            let item = vue.items[index],
-                video;
-            if(!item.canplay) return;
-            video = vue.$refs['id'+index][0];
-            video.currentTime = item.currentTime;
-            if(video.paused){
-                video.play();
-            }else{
-                video.pause();
+                }
             }
         }
-	},
-	filters: {
-		timemat(t){
-			return utils.timemat(t*1000);
-		},
-		sizemat: utils.sizemat,
+    },
+    filters: {
+        timemat(t){
+            return utils.timemat(t*1000);
+        },
+        sizemat: utils.sizemat,
         mathRound(val){
             return Math.round(val);
         },
@@ -1018,16 +1037,10 @@ const vue = new Vue({
             html += '...'
             return html;
         }
-	},
-    directives: {
-        child: {
-            bind(el, binding){
-                el.innerHTML = '';
-                el.appendChild(binding.value);
-            }
-        }
     }
 });
+
+console.log(vue);
 
 /***/ }),
 /* 5 */

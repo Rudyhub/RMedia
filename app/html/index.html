@@ -45,6 +45,7 @@
                 <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
                     <i class="icon icon-question"></i> 帮助
                 </button>
+                <button class="toolbar-item" v-on:click="convertFn">转换</button>
             </div>
             <!-- 二级菜单 -->
 
@@ -153,14 +154,14 @@
     </header>
     <main class="body">
         <section class="item-list">
-            <dl class="item" v-for="(item, index) of items">
+            <dl class="item" v-for="(item,index) of items">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
-                        <div class="item-preview-box" :class="{alpha: item.alpha}" v-on:click="play($event,index)">
+                        <div class="item-preview-box" :class="{alpha: item.alpha}" v-on:click="videoFn($event,index)">
                             <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.canplay"></i>
                             <video :ref="'id'+index" class="item-preview-img" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
                         </div>
-                        <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}" v-once></i>
+                        <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                     </div>
                     <div class="item-tools" :style="{backgroundImage: 'linear-gradient(90deg, #1c4611 '+item.progress+'%, transparent '+item.progress+'%)'}">
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
@@ -173,9 +174,9 @@
                         <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
                         <br>
                         微调：{{item.currentTime | timemat}}
-                        <button :title="'上'+tunstep+'帧'" v-on:click="itemFn($event,index,'prevFrame')" :disabled="item.type=='image'"><i class="icon icon-previous2"></i></button>
-                        <input type="number" v-model="tunstep" title="设置微调量" :disabled="item.type=='image'">
-                        <button :title="'下'+tunstep+'帧'" v-on:click="itemFn($event,index,'nextFrame')" :disabled="item.type=='image'"><i class="icon icon-next2"></i></button>
+                        <button :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')" :disabled="item.type=='image'"><i class="icon icon-previous2"></i></button>
+                        <input type="number" v-model="framestep" title="设置微调量" :disabled="item.type=='image'">
+                        <button :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')" :disabled="item.type=='image'"><i class="icon icon-next2"></i></button>
                         {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
                     </div>
                 </dd>
@@ -186,27 +187,27 @@
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old" v-once>文件：{{item.name}}</div>
+                    <div class="item-old">文件：{{item.name}}</div>
                     <div class="item-new"><input type="text" v-model.lazy="item.toname"></div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old" v-once>格式：{{item.format}}</div>
+                    <div class="item-old">格式：{{item.format}}</div>
                     <div class="item-new">
                         <select v-model="item.toformat">
-                            <option v-for="format of toformats" :value="format" v-once>{{format}}</option>
+                            <option v-for="format of toformats" :value="format">{{format}}</option>
                         </select>
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old" v-once>大小：{{item.size | sizemat}}</div>
+                    <div class="item-old">大小：{{item.size | sizemat}}</div>
                     <div class="item-new">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old" v-once>截取：{{item.duration | timemat}}</div>
+                    <div class="item-old">截取：{{item.duration | timemat}}</div>
                     <div class="item-new">
                         <button v-on:click="itemFn($event,index,'setstart')" :disabled="item.type=='image'" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
                         - 
-                        <button v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'"title="点击即获取当前时间">{{item.endTime | timemat}}</button>
+                        <button v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
                     </div>
                 </dd>
                 <dd class="item-row">
@@ -217,7 +218,7 @@
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old" v-once>分辨率：{{item.width}}&times;{{item.height}}</div>
+                    <div class="item-old">分辨率：{{item.width}}&times;{{item.height}}</div>
                     <div class="item-new">
                         <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" :disabled="item.type=='audio'" title="输出宽">
                         &times;

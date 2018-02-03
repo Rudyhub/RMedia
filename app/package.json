@@ -6,6 +6,8 @@
   "chromium-args": "--enable-webgl --ignore-gpu-blacklist",
   "window": {
     "show": true,
+    "width": 320,
+    "height": 180,
     "title": "FupConvert",
     "icon": "css/icon.png",
     "toolbar": false,
