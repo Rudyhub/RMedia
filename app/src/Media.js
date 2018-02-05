@@ -7,7 +7,7 @@ module.exports = {
     ffmpeg: null,
     //第一个子数组为支持直接预览的格式，第二个需要转码
     formats: {
-        image: [['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
+        image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
         video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
         audio: [['mp3','wav','mpeg'],['wma','mid']]
     },
@@ -206,7 +206,6 @@ module.exports = {
         if(!o.cammand) return;
         if(!o.cammand.length) return;
         o.cammand.unshift('-hide_banner');
-
         ffmpeg = childprocess.spawn(config.ffmpegRoot+'\\ffmpeg.exe', o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             if(o.progress){

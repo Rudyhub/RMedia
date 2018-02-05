@@ -87,7 +87,7 @@
                         <button v-on:click="nameAllFn(1)">移动</button>
                         <button v-on:click="nameAllFn(2)">复制</button>
                     </p>
-                    <b>名称以最末尾的数字串为系列号累加，如：</b>
+                    <b>名称以最末尾的数字串为序列号累加，如：</b>
                     <p class="tip">
                         “000”表示：001，002，003，...<br>
                         “11”表示：12，13，14，...<br>
@@ -181,7 +181,7 @@
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old"><b>输入：</b> <span class="float-r">系列：<input type="checkbox" v-model="item.series"></span></div>
+                    <div class="item-old"><b>输入：</b> <span class="float-r"><input type="checkbox" v-model="item.series"> 序列图</span></div>
                     <div class="item-new"><b>输出：</b>
                         <i class="item-tool icon icon-undo2 float-r" v-on:click="itemFn($event,index,'reset')" title="重置"></i>
                     </div>
@@ -215,6 +215,7 @@
                     <div class="item-new">
                         <input type="checkbox" v-model="item.cover">
                         <button v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
+                        <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover || item.type=='image'">px
                     </div>
                 </dd>
                 <dd class="item-row">

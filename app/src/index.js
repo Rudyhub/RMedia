@@ -308,7 +308,7 @@ const vue = new Vue({
             audioDevices: [],
             audioDevice: ''
         },
-        toformats: ['mp4','mp3','jpg','png','gif','jpeg','webp','svg','ico','webm','ogg'],
+        toformats: ['mp4','mp3','jpg','png','gif','jpeg','webp','ico','webm','ogg'],
         framestep: 2
 	},
     created(){
@@ -316,6 +316,7 @@ const vue = new Vue({
         inputEl.multiple = true;
         outputEl.nwdirectory = true;
         inputEl.addEventListener('change', (e)=>{
+            vue.onDropMenuClose('chosefile');
             let target = e.target,
                 files = target.files,
                 i = 0,
@@ -344,6 +345,7 @@ const vue = new Vue({
                         currentTime: 0,
                         coverTime: 0,
                         cover: false,
+                        coverWidth: 480,
 
                         name: file.name,
                         toname: file.name.slice(0, file.name.lastIndexOf('.')),
@@ -524,177 +526,114 @@ const vue = new Vue({
                 }
             }
         },
-        /*
-        mainSubmenuFn(e,name){
-            let target, panel, i = 0, item;
-            vue.active.mainSubmenu = name;
-            if(name === 'firstAid'){
-                utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
-                    if(code === 0){
-                        Media.killAll((msg)=>{
-                            utils.dialog('提示：','<p>所有可能的错误程序已被清除！<br>详细：'+msg+'</p>');
-                        });
-                    }
-                });
-            }else{
-                item = vue.items[ Object.keys(vue.items)[i] ];
-
-                switch(name){
-                    case 'convert':
-                    function convert(){
-
-                    }
-                    break;
-                    case 'vtogif':
-                    //type == video && toformat == gif
-                    function vtogif(){
-                        if(item.type === 'video'){
-                            let w = item.towidth%2 === 0 ? item.towidth : item.towidth - 1,
-                                h = item.toheight%2 === 0 ? item.toheight : item.toheight - 1,
-                                t = item.endTime - item.startTime,
-                                cammand = ['-i', item.path, '-s', w+'x'+h, '-y', vue.output+'\\'+item.toname + '.gif'];
-                            if(item.endTime < item.duration && t > 0) cammand.unshift('-t', t);
-                            if(item.startTime > 0) cammand.unshift('-ss', item.startTime);
-
-                            Media.convert({
-                                cammand,
-                                progress(cur){
-                                    item.progress = (cur / t)*100;
-                                },
-                                complete(code, msg){
-                                    if(code !== 0){
-                                        utils.dialog('失败','<p>'+msg+'</p>');
-                                    }else{
-                                        item.progress = 100;
-                                    }
-
-                                    item = vue.items[ Object.keys(vue.items)[++i] ];
-                                    if(item) vtogif(item);
-                                }
-                            });
-                        }
-                    }
-                    vtogif();
-                    break;
-                    case 'giftov':
-                    //format == gif && toformat is video
-                    function giftov(){
-                        if(item.format === 'gif'){
-                            let w = item.towidth%2 === 0 ? item.towidth : item.towidth - 1,
-                                h = item.toheight%2 === 0 ? item.toheight : item.toheight - 1;
-
-                            Media.convert({
-                                cammand: ['-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-y', vue.output+'\\'+item.toname + '.mp4'],
-                                progress(){
-                                    item.progress = 50;
-                                },
-                                complete(code, msg){
-                                    if(code !== 0){
-                                        utils.dialog('失败','<p>'+msg+'</p>');
-                                    }else{
-                                        item.progress = 100;
-                                        item = vue.items[ Object.keys(vue.items)[++i] ];
-                                        if(item) giftov(item);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    giftov();
-                    break;
-                    case 'ptogif':
-                    //type = image queue && toformat === gif
-                    function ptogif(){
-                        let reg,
-                            d,
-                            input,
-                            w = item.towidth%2 === 0 ? item.towidth : item.towidth - 1,
-                            h = item.toheight%2 === 0 ? item.toheight : item.toheight - 1;
-                        if(item){
-                            reg = new RegExp('(\\d+)\\.'+item.format+'$','i');
-                            d = reg.exec(item.path);
-                            if(d && d[1]){
-                                input = item.path.replace(reg, function($0,$1){
-                                    return '%0'+$1.length+'d.'+item.format;
-                                });
-                                Media.convert({
-                                    cammand: ['-r', 25,'-i', input, '-s', w+'x'+h, '-y', vue.output+'\\'+item.toname + '.gif'],
-                                    progress(){
-                                        item.progress = 50;
-                                    },
-                                    complete(code, msg){
-                                        if(code !== 0){
-                                            utils.dialog('失败','<p>'+msg+'</p>');
-                                        }else{
-                                            item.progress = 100;
-                                            item = vue.items[ Object.keys(vue.items)[++i] ];
-                                            if(item) ptogif(item);
-                                        }
-                                    }
-                                });
-                            }else{
-                                utils.dialog('失败：',
-                                    `<p>系列图不满足条件！</p>
-                                    <p>系列图名称必须是有规律、等长度、末尾带系列化数字的名称。</p>
-                                    <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                                    <p>然后只需要选择第一张图片即可</p>`);
-                            }
-                        }
-                    }
-                    ptogif();     
-                    break;
-                    case 'vtoa':
-                    //type == video && toformat is audio
-                    function vtoa(){
-                        if(item.bita > 0){
-                            let t = item.endTime - item.startTime,
-                                cammand = ['-i', item.path, '-vn', '-b:a', item.bita+'k', '-y', vue.output+'\\'+item.toname + '.mp3'];
-
-                            if(item.endTime < item.duration && t > 0) cammand.unshift('-t', t);
-                            if(item.startTime > 0) cammand.unshift('-ss', item.startTime);
-                            Media.convert({
-                                cammand,
-                                progress(cur){
-                                    item.progress = (cur / t)*100;
-                                },
-                                complete(code, msg){
-                                    if(code !== 0){
-                                        utils.dialog('失败','<p>'+msg+'</p>');
-                                    }else{
-                                        item.progress = 100;
-                                        item = vue.items[ Object.keys(vue.items)[++i] ];
-                                        if(item) vtoa(item);
-                                    }
-                                }
-                            });
-                        }
-                    }
-                    vtoa();
-                    break;  
-                }
-            }
-        },
-        */
         convertFn(){
-            let items = vue.items,
-                key = Object.keys(items)[0],
-                item = items[key],
+            let item = vue.items[ Object.keys(vue.items)[0] ],
                 bita = item.bita < config.output.bita ? item.bita : config.output.bita,
                 bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita),
-                cammand;
+                w = item.towidth,
+                h = item.toheight,
+                total = item.endTime - item.startTime,
+                output = vue.output + '\\' + item.toname + '.' + item.toformat,
+                cammand = [];
+            //如果是序列图
+            if(item.series){
+                if(item.type !== 'image'){
+                    utils.dialog('错误：','<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>');
+                    return;
+                }
+                if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
+                    utils.dialog('错误：','<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>');
+                    return;
+                }
+                let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
+                    match = reg.exec(item.path);
+                if(match && match[1]){
+                    cammand.push('-y','-r', 25, '-i', item.path.replace(reg, function($0,$1){
+                        return '%0'+$1.length+'d.'+item.format;
+                    }));
 
-            //1.single video to single video
-            cammand = ['-i', item.path, '-b:v', bitv+'k', '-b:a', bita+'k', '-y', vue.output + '\\' + item.toname + '.' + item.toformat];
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                    cammand.push('-s',w+'x'+h);
+
+                    if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
+                    cammand.push(output);
+                }else{
+                    utils.dialog('错误：',
+                    `<p>序列图不满足条件！</p>
+                    <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
+                    <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
+                    <p>然后只需要选择第一张图片即可</p>`);
+                }
+            }else{
+               //图片不能输出为音频
+                if(item.type === 'image' && Media.is(item.toformat, 'audio')){
+                    utils.dialog('错误：','<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>');
+                    return;
+                }
+                //音频不能输出为图片
+                if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
+                    utils.dialog('错误：','<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>');
+                    return;
+                }
+
+                if(item.startTime > 0) cammand.push('-ss', item.startTime);
+                if(item.path) cammand.push('-i', item.path);
+
+                //输出为单图时
+                if(Media.is(item.toformat, 'image') && item.toformat !== 'gif'){
+                    cammand.push('-vframes',1);
+                }
+                //输出为其他时
+                else{
+                    if(item.endTime < item.duration) cammand.push('-t', total);
+                    if(bitv) cammand.push('-b:v', bitv+'k');
+                    if(bita) cammand.push('-b:a', bita+'k');
+                }
+                
+                if(w && h){
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                    cammand.push('-s', w+'x'+h);
+                }
+
+                if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
+
+                cammand.push('-preset', vue.batchParams.speed, '-y', output); 
+            }
+            
+
+            //只允许输出为视频文件时可输出预览图
+            if(item.cover && !Media.is(item.toformat, 'image')){
+                w = item.coverWidth;
+                h = w * item.scale;
+                if(w%2 !== 0) w--;
+                if(h%2 !== 0) h--;
+                if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
+                cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
+            }
+
+            item.progress = 0;
             Media.convert({
                 cammand,
                 progress(t){
-                    console.log(t);
+                    if(total){
+                        console.log(t/total);
+                        item.progress = Math.round((t/total)*100);
+                    }else{
+                        console.log(50);
+                        item.progress = 50;
+                    }
                 },
                 complete(code, msg){
-                    console.log(code, msg);
+                    if(code === 0){
+                        item.progress = 100;
+                    }else{
+                        utils.dialog('失败：','<p>失败原因：'+msg+'</p>');
+                        item.progress = 0;
+                    }
                 }
             });
-            console.log( cammand,item);
         },
         batchParamsFn(e,name){
             let target = e.target,
@@ -797,7 +736,7 @@ const vue = new Vue({
                 }
             }
             function allComplete(){
-                utils.dialog('结束！','<p>输出目录：'+vue.output+', 可前往查看系列化重命名结果。</p>');
+                utils.dialog('结束！','<p>输出目录：'+vue.output+', 可前往查看序列化重命名结果。</p>');
             }
         },
         captureFn(e,code){
@@ -1055,7 +994,7 @@ module.exports = {
     ffmpeg: null,
     //第一个子数组为支持直接预览的格式，第二个需要转码
     formats: {
-        image: [['jpg','jpeg','png','gif','webp','svg','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
+        image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
         video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
         audio: [['mp3','wav','mpeg'],['wma','mid']]
     },
@@ -1254,7 +1193,6 @@ module.exports = {
         if(!o.cammand) return;
         if(!o.cammand.length) return;
         o.cammand.unshift('-hide_banner');
-
         ffmpeg = childprocess.spawn(config.ffmpegRoot+'\\ffmpeg.exe', o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             if(o.progress){

@@ -405,7 +405,7 @@ button:active{
     box-sizing: border-box;
     text-align: center;
 }
-.item-controls input[type=range]{
+.item-controls [type=range]{
     margin-right: auto;
     margin-left: auto;
     display: block;
@@ -414,7 +414,7 @@ button:active{
     box-sizing: border-box;
     background: transparent;
 }
-.item-controls input[type=range]::-webkit-slider-runnable-track{
+.item-controls [type=range]::-webkit-slider-runnable-track{
     background: transparent;
 }
 .item-preview-box{
@@ -527,6 +527,9 @@ button:active{
 }
 .item [type=number]{
     width: 3.5em;
+}
+.item [type=checkbox]{
+    margin: 0;
 }
 
 
