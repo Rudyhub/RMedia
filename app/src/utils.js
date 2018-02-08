@@ -62,9 +62,14 @@ module.exports = {
             parentNode = context || document.body,
             html;
         div.className = 'dialog';
-        html = `<div class="dialog-title">${title}<i class="icon icon-cross dialog-close"></i></div>
-            <div class="dialog-body">${msg}</div>
-            <div class="dialog-footer">`;
+        html =
+        `<div class="dialog-title">
+            <i class="icon icon-warning"></i>
+            ${title}
+            <i class="icon icon-cross dialog-close"></i>
+        </div>
+        <div class="dialog-body">${msg}</div>
+        <div class="dialog-footer">`;
             
         if(btns){
             for( let i=0; i<btns.length; i++){
@@ -96,28 +101,7 @@ module.exports = {
             }
         };
     },
-    draggable(node, dragnode){
-        let sx = 0,
-            sy = 0,
-            ol = node.offsetLeft,
-            ot = node.offsetTop;
-        dragnode.addEventListener('mousedown', function(e){
-            e.preventDefault();
-            sx = e.clientX;
-            sy = e.clientY;
-            ol = node.offsetLeft;
-            ot = node.offsetTop;
-            dragnode.addEventListener('mousemove', moveFn, false);
-            document.addEventListener('mouseup', endFn, false);
-        }, false);
-        function moveFn(e){
-            e.preventDefault();
-            node.style.left = (e.clientX - sx + ol) + 'px';
-            node.style.top = (e.clientY - sy + ot) + 'px';
-        }
-        function endFn() {
-            dragnode.removeEventListener('mousemove', moveFn, false);
-            document.removeEventListener('mouseup', endFn, false);
-        }
+    css(node, name){
+        return parseFloat(window.getComputedStyle(node)[name]);
     }
 };

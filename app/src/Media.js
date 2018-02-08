@@ -180,24 +180,6 @@ module.exports = {
             if(fn) fn(stderr.toString());
         });
     },
-    onExists(file, stderr, stdin){
-        let self = this;
-        self.exitCode = 0;
-        if(/File[\s\S]*?already[\s\S]*?exists[\s\S]*?Overwrite[\s\S]*?\[y\/N\]/i.test(stderr.toString())){
-            utils.dialog(
-                '提示：',
-                '<p>文件：'+file+'已存在，是否覆盖？<p>',
-                ['覆盖','退出'],
-                (code)=>{
-                    if(code === 0){
-                        stdin.write('y\n');
-                    }else{
-                        stdin.write('N\n');
-                    }
-                    self.exitCode = 1;
-                });
-        }
-    },
     convert(o){
         let self = this,
             ffmpeg,
@@ -221,44 +203,6 @@ module.exports = {
             if(o.complete) o.complete(2, '启动失败 '+err);
         });
     },
-    exitCode: 0,
-    compressImg(o){
-        let self = this,
-            w = 0,
-            h = 0;
-        self.metadata(o.input, (json)=>{
-            w = json.width;
-            h = json.height;
-            if(w > config.output.width){
-                h = Math.round(config.output.width*h/w);
-                w = config.output.width;
-            }
-
-            o.complete(0);
-
-            self.ffmpeg = childprocess.spawn(config.ffmpegRoot+'/ffmpeg.exe', ['-hide_banner','-i', o.input, '-s', w+'x'+h, '-compression_level', Math.round((1-o.quality)*100), o.output]);
-            self.ffmpeg.stderr.on('data', (stderr)=>{
-                self.onExists(o.output, stderr, self.ffmpeg.stdin);
-            });
-            self.ffmpeg.once('close',(a,b)=>{
-                self.ffmpeg.kill();
-                self.ffmpeg = null;
-                if(a === 0){
-                    o.complete(100);
-                }else{
-                    if(self.exitCode === 0) return;
-                    utils.dialog('失败：','<p>压缩失败！</p>');
-                }
-            });
-            self.ffmpeg.once('error',()=>{
-                self.ffmpeg.kill();
-                self.ffmpeg = null;
-                utils.dialog('失败：','<p>错误！</p>');
-            });
-        }, (msg)=>{
-            utils.dialog('失败：','<p>获取媒体元数据信息失败！</p>');
-        });
-    },
     rename(oldname, newname, callback){
         fs.access(newname, (err)=>{
             if(!err){
@@ -274,6 +218,15 @@ module.exports = {
                 callback('文件【'+newname+'】'+'已存在!');
             }else{
                 fs.copyFile(oldname, newname, callback);
+            }
+        });
+    },
+    canvasToFile(path, data){
+        fs.writeFile(path, Buffer.from( data.replace(/^data:image\/\w+;base64,/, ''), 'base64'), (err)=>{
+            if(err){
+                utils.dialog('失败！','<p>错误信息：'+err.message+'</p>'); 
+            }else{
+                utils.dialog('成功！','<p>文件输出位置：【'+path+'】</p>');
             }
         });
     }

@@ -5,7 +5,8 @@ const win = nw.Window.get();
     capture = require('./capture'),
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
-    outputEl = document.createElement('input');
+    outputEl = document.createElement('input'),
+    canvas = document.createElement('canvas');
 
 win.on('loaded',()=>{
     win.width = screen.availWidth;
@@ -52,7 +53,14 @@ const vue = new Vue({
             audioDevices: [],
             audioDevice: ''
         },
-        toformats: ['mp4','mp3','jpg','png','gif','jpeg','webp','ico','webm','ogg'],
+        sprite: {
+            preview: false,
+            items: [],
+            listCss: 'white-space: nowrap;',
+            itemCss: 'height: 50px;\nmargin: 4px;',
+            imgCss: 'height: 100%;'
+        },
+        toformats: ['mp4','webm','ogg','mp3','jpg','png','gif','jpeg','webp','ico','bmp'],
         framestep: 2
 	},
     created(){
@@ -60,7 +68,7 @@ const vue = new Vue({
         inputEl.multiple = true;
         outputEl.nwdirectory = true;
         inputEl.addEventListener('change', (e)=>{
-            vue.onDropMenuClose('chosefile');
+            vue.dropMenuClose('chosefile');
             let target = e.target,
                 files = target.files,
                 i = 0,
@@ -97,7 +105,7 @@ const vue = new Vue({
                         bitv: 0,
                         bita: 0,
 
-                        size: file.size,
+                        size: (parseInt(file.size) || 0),
                         quality: 0,
 
                         scale: 0,
@@ -112,6 +120,7 @@ const vue = new Vue({
                         fps: 0,
                         tofps: 0
                     };
+
 
                     vue.$set(vue.items, key = Object.keys(vue.items).length, item);
 
@@ -153,19 +162,19 @@ const vue = new Vue({
         });
 
         outputEl.addEventListener('change', (e)=>{
-            vue.onDropMenuClose('chosedir');
+            vue.dropMenuClose('chosedir');
             vue.output = e.target.files[0].path || '';
         });
         inputEl.addEventListener('cancel', ()=>{
-            vue.onDropMenuClose('chosefile');
+            vue.dropMenuClose('chosefile');
         });
         outputEl.addEventListener('cancel', ()=>{
-            vue.onDropMenuClose('chosedir');
+            vue.dropMenuClose('chosedir');
         });
     },
 	methods: {
         // common function
-        onDropMenuClose(name){
+        dropMenuClose(name){
             vue.toolbar.drop = '';
             try{
                 vue.$refs[name].classList.remove('zoom-in');
@@ -186,9 +195,10 @@ const vue = new Vue({
         },
         reItem(item){
             let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv;
-                tobita = item.bita <= config.output.bita ? item.bita : config.output.bita;
+                tobita = item.bita <= config.output.bita ? item.bita : config.output.bita,
+                quality = (tobitv+tobita)/(item.bitv+item.bita)*100;
 
-            item.quality = ((tobitv+tobita)/(item.bitv+item.bita)*100).toFixed(2);
+            item.quality = quality ? quality.toFixed(2) : 100;
             item.toname = item.name.slice(0, -item.format.length-1);
             item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[item.type];
             item.startTime = 0;
@@ -254,14 +264,7 @@ const vue = new Vue({
                 {
                     for(key in vue.items) vue.$delete(vue.items, key);
                 }
-                break;
-                case 'convert':
-                {
-                    for(key in vue.items){
-                        console.log(vue.items[key].name);
-                    }
-                }
-                break;    
+                break;   
                 default: {
                     vue.toolbar.toggle[name] = !vue.toolbar.toggle[name];
                     for(key in vue.items){
@@ -271,113 +274,151 @@ const vue = new Vue({
             }
         },
         convertFn(){
-            let item = vue.items[ Object.keys(vue.items)[0] ],
-                bita = item.bita < config.output.bita ? item.bita : config.output.bita,
-                bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita),
-                w = item.towidth,
-                h = item.toheight,
-                total = item.endTime - item.startTime,
-                output = vue.output + '\\' + item.toname + '.' + item.toformat,
-                cammand = [];
-            //如果是序列图
-            if(item.series){
-                if(item.type !== 'image'){
-                    utils.dialog('错误：','<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>');
-                    return;
-                }
-                if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
-                    utils.dialog('错误：','<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>');
-                    return;
-                }
-                let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
-                    match = reg.exec(item.path);
-                if(match && match[1]){
-                    cammand.push('-y','-r', 25, '-i', item.path.replace(reg, function($0,$1){
-                        return '%0'+$1.length+'d.'+item.format;
-                    }));
+            let item, bita, bitv, w, h, total, output, cammand,
+                keys = Object.keys(vue.items),
+                i = 0;
 
-                    if(w%2 !== 0) w--;
-                    if(h%2 !== 0) h--;
-                    cammand.push('-s',w+'x'+h);
-
-                    if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
-                    cammand.push(output);
-                }else{
-                    utils.dialog('错误：',
-                    `<p>序列图不满足条件！</p>
-                    <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
-                    <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                    <p>然后只需要选择第一张图片即可</p>`);
-                }
+            if(keys[i]){
+                recycle(vue.items[ keys[i] ]);
             }else{
-               //图片不能输出为音频
-                if(item.type === 'image' && Media.is(item.toformat, 'audio')){
-                    utils.dialog('错误：','<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>');
-                    return;
-                }
-                //音频不能输出为图片
-                if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
-                    utils.dialog('错误：','<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>');
-                    return;
-                }
+                utils.dialog('弹窗：','<p>没有输入任何文件！</p>');
+            }
 
-                if(item.startTime > 0) cammand.push('-ss', item.startTime);
-                if(item.path) cammand.push('-i', item.path);
+            function recycle(item){
+                bita = item.bita < config.output.bita ? item.bita : config.output.bita;
+                bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
+                w = item.towidth;
+                h = item.toheight;
+                total = item.endTime - item.startTime;
+                output = vue.output + '\\' + item.toname + '.' + item.toformat;
+                cammand = [];
+                //如果是序列图
+                if(item.series){
+                    if(item.type !== 'image'){
+                        utils.dialog('错误：','<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>');
+                        return;
+                    }
+                    if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
+                        utils.dialog('错误：','<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>');
+                        return;
+                    }
+                    let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
+                        match = reg.exec(item.path);
+                    if(match && match[1]){
+                        cammand.push('-y','-r', 25, '-i', item.path.replace(reg, function($0,$1){
+                            return '%0'+$1.length+'d.'+item.format;
+                        }));
 
-                //输出为单图时
-                if(Media.is(item.toformat, 'image') && item.toformat !== 'gif'){
-                    cammand.push('-vframes',1);
-                }
-                //输出为其他时
-                else{
-                    if(item.endTime < item.duration) cammand.push('-t', total);
-                    if(bitv) cammand.push('-b:v', bitv+'k');
-                    if(bita) cammand.push('-b:a', bita+'k');
+                        if(w%2 !== 0) w--;
+                        if(h%2 !== 0) h--;
+                        cammand.push('-s',w+'x'+h);
+
+                        if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
+                        cammand.push(output);
+                    }else{
+                        utils.dialog('错误：',
+                        `<p>序列图不满足条件！</p>
+                        <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
+                        <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
+                        <p>然后只需要选择第一张图片即可</p>`);
+                    }
+                }else{
+                   //图片不能输出为音频
+                    if(item.type === 'image' && Media.is(item.toformat, 'audio')){
+                        utils.dialog('错误：','<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>');
+                        return;
+                    }
+                    //音频不能输出为图片
+                    if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
+                        utils.dialog('错误：','<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>');
+                        return;
+                    }
+
+                    if(item.startTime > 0) cammand.push('-ss', item.startTime);
+                    if(item.path) cammand.push('-i', item.path);
+
+                    //输出为单图时
+                    if(Media.is(item.toformat, 'image') && item.toformat !== 'gif'){
+                        cammand.push('-vframes',1);
+                    }
+                    //输出为其他时
+                    else{
+                        if(item.endTime < item.duration) cammand.push('-t', total);
+                        if(bitv) cammand.push('-b:v', bitv+'k');
+                        if(bita) cammand.push('-b:a', bita+'k');
+                    }
+                    
+                    if(w && h){
+                        if(w%2 !== 0) w--;
+                        if(h%2 !== 0) h--;
+                        cammand.push('-s', w+'x'+h);
+                    }
+
+                    if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
+
+                    cammand.push('-preset', vue.batchParams.speed, '-y', output); 
                 }
                 
-                if(w && h){
+
+                //只允许输出为视频文件时可输出预览图
+                if(item.cover && !Media.is(item.toformat, 'image')){
+                    w = item.coverWidth;
+                    h = w * item.scale;
                     if(w%2 !== 0) w--;
                     if(h%2 !== 0) h--;
-                    cammand.push('-s', w+'x'+h);
+                    if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
+                    cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
                 }
 
-                if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
-
-                cammand.push('-preset', vue.batchParams.speed, '-y', output); 
-            }
-            
-
-            //只允许输出为视频文件时可输出预览图
-            if(item.cover && !Media.is(item.toformat, 'image')){
-                w = item.coverWidth;
-                h = w * item.scale;
-                if(w%2 !== 0) w--;
-                if(h%2 !== 0) h--;
-                if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
-                cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
-            }
-
-            item.progress = 0;
-            Media.convert({
-                cammand,
-                progress(t){
-                    if(total){
-                        console.log(t/total);
-                        item.progress = Math.round((t/total)*100);
-                    }else{
-                        console.log(50);
-                        item.progress = 50;
+                item.progress = 0;
+                Media.convert({
+                    cammand,
+                    progress(t){
+                        if(total){
+                            item.progress = Math.round((t/total)*100);
+                        }else{
+                            item.progress = 50;
+                        }
+                    },
+                    complete(code, msg){
+                        if(code === 0){
+                            item.progress = 100;
+                            i++;
+                            if(keys[i]) recycle(vue.items[ keys[i] ]);
+                        }else{
+                            utils.dialog('失败：','<p>失败原因：'+msg+'</p>');
+                            item.progress = 0;
+                        }
                     }
-                },
-                complete(code, msg){
-                    if(code === 0){
-                        item.progress = 100;
-                    }else{
-                        utils.dialog('失败：','<p>失败原因：'+msg+'</p>');
-                        item.progress = 0;
-                    }
-                }
-            });
+                });
+            }
+        },
+        spriteFn(code){
+            vue.dropMenuClose('sprite');
+            if(code === -1) return;
+            let spriteList = document.getElementById('sprite-list'),
+                items = spriteList.querySelectorAll('.sprite-item'),
+                imgs = spriteList.querySelectorAll('img'),
+                len = items.length,
+                i = 0,
+                x = 0, y = 0, w = 0, h = 0,
+                item, img, ctx;
+
+            canvas.width = spriteList.offsetWidth;
+            canvas.height = spriteList.offsetHeight;
+            ctx = canvas.getContext('2d');
+
+            for(; i < len;  i++){
+                item = items[i];
+                img = item.querySelector('img');
+                x = item.offsetLeft + img.offsetLeft + utils.css(img,'borderLeftWidth') + utils.css(img,'paddingLeft');
+                y = item.offsetTop + img.offsetTop + utils.css(img,'borderTopWidth') + utils.css(img,'paddingTop');
+                w = img.offsetWidth - utils.css(img,'borderLeftWidth') - utils.css(img,'borderRightWidth') - utils.css(img,'paddingLeft') - utils.css(img,'paddingRight');
+                h = img.offsetHeight - utils.css(img,'borderTopWidth') - utils.css(img,'borderBottomWidth') - utils.css(img,'paddingTop') - utils.css(img,'paddingBottom');
+                ctx.drawImage(img, x, y, w, h);
+            }
+
+            Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'));
         },
         batchParamsFn(e,name){
             let target = e.target,
@@ -423,17 +464,22 @@ const vue = new Vue({
                             item.toname = utils.namemat(vue.batchParams.nameAll, ++n);
                         }
                     }
+                    vue.dropMenuClose('batch');
                 }
                 break;
                 case 1:
                 {
                     for( key in vue.items) vue.reItem(vue.items[key]);
+                    vue.dropMenuClose('batch');
                 }
+                break;
+                default:
+                    vue.dropMenuClose('batch');
             }
-            vue.onDropMenuClose('batch');
+            
         },
         nameAllFn(code){
-            vue.onDropMenuClose('batch');
+            vue.dropMenuClose('batch');
             if(code === -1) return;
 
             let output, n;
@@ -445,7 +491,7 @@ const vue = new Vue({
             if(item){
                 recycle(item)
             }else{
-                utils.dialog('失败：','没有输入文件！');
+                utils.dialog('失败：','<p>没有输入任何文件！</p>');
             }
             function recycle(item){
                 k = Object.keys(vue.items)[++n];
@@ -548,14 +594,14 @@ const vue = new Vue({
                 break;
             }
             if(code === 0 || code === -1){
-                vue.onDropMenuClose('capture');
+                vue.dropMenuClose('capture');
             }
         },
         helpFn(e){
             let target = e.currentTarget,
                 name = target.name;
 
-            vue.onDropMenuClose('help');
+            vue.dropMenuClose('help');
 
             switch(name){
                 case 'firstAid':
@@ -704,6 +750,7 @@ const vue = new Vue({
             }
         }
     },
+
     filters: {
         timemat(t){
             return utils.timemat(t*1000);
@@ -722,5 +769,3 @@ const vue = new Vue({
         }
     }
 });
-
-console.log(vue);

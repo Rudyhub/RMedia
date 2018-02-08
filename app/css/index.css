@@ -76,11 +76,11 @@ body{
 ::-webkit-slider-thumb:hover{
     background: var(--blue1);
 }
-input,button{
+input,button,textarea{
     -webkit-appearance: none;
     box-sizing: border-box;
 }
-input,select{
+input,select,textarea{
     border: 1px solid var(--gray3);
     background: var(--black2);
     color: var(--gray1);
@@ -88,7 +88,8 @@ input,select{
     vertical-align: middle;
 }
 input:hover,select:hover,
-input:focus,select:focus{
+input:focus,select:focus,
+textarea:focus{
     transition: all var(--dur1);
     outline: none;
     box-shadow: var(--blue1) 0 0 .4em;
@@ -221,6 +222,10 @@ button:active{
 
 .color-1{
     color: var(--blue2);
+}
+.rotate-z-90{
+    transform: rotateZ(90deg);
+    display: inline-block;
 }
 /*start*/
 #app{
@@ -360,7 +365,8 @@ button:active{
     width: 4em;
 }
 .drop-panel-group input,
-.drop-panel-group select{
+.drop-panel-group select,
+.drop-panel-group textarea{
     color: var(--light1);
 }
 .drop-panel-group .tip{
@@ -370,6 +376,12 @@ button:active{
 
 .item-list{
     font-size: 0;
+    transform: scale(0);
+    transition: transform .8s;
+    transform-origin: top;
+}
+.item-list-show{
+    transform: scale(1);
 }
 .item{
     display: inline-block;
@@ -384,6 +396,7 @@ button:active{
     table-layout: fixed;
     margin: .4vw;
     transition: margin .5s;
+    background: var(--black1);
 }
 .item-preview-inner{
     height: 10.8vw;
@@ -421,14 +434,7 @@ button:active{
     height: 100%;
     background: #000;
 }
-.item-preview-box.alpha{
-    background-image: linear-gradient(45deg, #e2e2e2 25%, transparent 25%, transparent),
-                    linear-gradient(-45deg, #e2e2e2 25%, transparent 25%, transparent),
-                    linear-gradient(45deg, transparent 75%, #e2e2e2 75%),
-                    linear-gradient(-45deg, transparent 75%, #e2e2e2 75%);
-    background-size: 1vw 1vw;
-    background-color: #bdbdbd;
-}
+
 .item-play-btn{
     position: absolute;
     width: 2vw;
@@ -532,6 +538,32 @@ button:active{
     margin: 0;
 }
 
+.sprite-list{
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 0;
+    z-index: 9;
+    transform: scale(0);
+    transform-origin: top;
+    transition: transform .8s;
+}
+.sprite-list-show{
+    transform: scale(1);
+}
+.sprite-item{
+    display: inline-block;
+    position: relative;
+}
+.sprite-img{
+    display: block;
+}
+.sprite-list,
+.sprite-item,
+.sprite-img{
+    box-sizing: border-box;
+}
+
 
 .dialog{
     width: 30vw;
@@ -556,7 +588,7 @@ button:active{
     box-shadow: var(--light1) 0 0 3px, inset var(--light1) 0 0 3px;
     position: relative;
 }
-.dialog-title .icon{
+.dialog-close{
     cursor: pointer;
     position: absolute;
     right: .5em;
@@ -592,7 +624,14 @@ button:active{
     text-align: center;
 }
 
-
+.alpha{
+    background-image: linear-gradient(45deg, #e2e2e2 25%, transparent 25%, transparent),
+                    linear-gradient(-45deg, #e2e2e2 25%, transparent 25%, transparent),
+                    linear-gradient(45deg, transparent 75%, #e2e2e2 75%),
+                    linear-gradient(-45deg, transparent 75%, #e2e2e2 75%);
+    background-size: 1vw 1vw;
+    background-color: #bdbdbd;
+}
 .active-1{
     color: var(--light1) !important;
     border-color: var(--light1) !important;

@@ -42,10 +42,15 @@
                 <button class="toolbar-item" name="clear" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'clear'}">
                     <i class="icon icon-bin"></i> 清空
                 </button>
+                <button class="toolbar-item" v-on:click="convertFn">
+                    <i class="icon icon-stack"></i> 转码压缩
+                </button>
+                <button class="toolbar-item" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
+                    <i class="icon icon-table2"></i> Sprite
+                </button>
                 <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
                     <i class="icon icon-question"></i> 帮助
                 </button>
-                <button class="toolbar-item" v-on:click="convertFn">转换</button>
             </div>
             <!-- 二级菜单 -->
 
@@ -102,6 +107,7 @@
                     <button v-on:click="batchParamsFn($event,-1)">取消</button>
                 </div>
             </div>
+            <!-- capture -->
             <div class="drop-panel" ref="capture">
                 <div class="drop-panel-group">
                     <h3>【参数设置】：</h3>
@@ -141,6 +147,28 @@
                     <button v-on:click="captureFn($event,-1)">取消</button>
                 </div>
             </div>
+            <!-- sprite -->
+            <div class="drop-panel" ref="sprite">
+                <div class="drop-panel-group">
+                    <p>布局css样式编辑：<input type="checkbox" v-model="sprite.preview">预览</p>
+                    <b>画板：</b>
+                    <textarea v-model="sprite.listCss" rows="3" cols="50"></textarea><br>
+                    <b>图框：</b>
+                    <textarea v-model="sprite.itemCss" rows="5" cols="50"></textarea><br>
+                    <b>图片：</b>
+                    <textarea v-model="sprite.imgCss" rows="8" cols="50"></textarea>
+                    <p class="tip">
+                        <b>写法如(英文半角)：</b><br>
+                        <span class="text-indent">width: 50%;</span><br>
+                        <span class="text-indent">height: 50%;</span><br>
+                        <span class="text-indent">padding: 5px;</span>
+                    </p>
+                </div>
+                <div class="drop-panel-group text-center">
+                    <button v-on:click="spriteFn(0)">确定</button>
+                    <button v-on:click="spriteFn(-1)">取消</button>
+                </div>
+            </div>
             <!-- help -->
             <ul class="submenu" ref="help">
                 <li class="submenu-item">
@@ -153,7 +181,7 @@
         </section>
     </header>
     <main class="body">
-        <section class="item-list">
+        <section class="item-list" :class="{'item-list-show': !sprite.preview}">
             <dl class="item" v-for="(item,index) of items">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
@@ -164,6 +192,7 @@
                         <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                     </div>
                     <div class="item-tools" :style="{backgroundImage: 'linear-gradient(90deg, #1c4611 '+item.progress+'%, transparent '+item.progress+'%)'}">
+                        <b class="float-left">{{item.progress}}%</b>
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
@@ -181,7 +210,12 @@
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old"><b>输入：</b> <span class="float-r"><input type="checkbox" v-model="item.series"> 序列图</span></div>
+                    <div class="item-old">
+                        <b>输入：</b>
+                        <span class="float-r">
+                            <input type="checkbox" v-model="item.series" :disabled="item.type !== 'image'"> 序列图
+                        </span>
+                    </div>
                     <div class="item-new"><b>输出：</b>
                         <i class="item-tool icon icon-undo2 float-r" v-on:click="itemFn($event,index,'reset')" title="重置"></i>
                     </div>
@@ -229,6 +263,12 @@
                 </dd>
             </dl>
         </section>
+        <section id="sprite-list" class="sprite-list alpha" :class="{'sprite-list-show': sprite.preview}" :style="sprite.listCss">
+            <span class="sprite-item" v-for="(item,index) of items" :style="sprite.itemCss">
+                <img class="sprite-img" :src="item.path" :style="sprite.imgCss">
+            </span>
+        </section>
+        <canvas id="cv"></canvas>
     </main>
     <footer class="footer draggable">
         version: {{appInfo.version}} - author: {{appInfo.author}} - {{appInfo.homepage}}
