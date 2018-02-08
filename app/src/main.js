@@ -3,6 +3,8 @@ const win = nw.Window.get();
     Media = require('./Media'),
     utils = require('./utils'),
     capture = require('./capture'),
+    Vue = require('./vue.min'),
+
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),

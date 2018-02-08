@@ -236,13 +236,14 @@ button:active{
 [v-cloak]{display: none;}
 .titlebar{
     position: relative;
-    background: var(--gray4);
+    background: var(--gray4) url('icon.png') no-repeat .5em center;
+    background-size: auto 100%;
 }
 .title{
     width: calc(100% - 9em);
     font-size: 18px;
     font-weight: normal;
-    padding: .5em 1em;
+    padding: .5em 1em .5em 3em;
     margin: 0;
     box-sizing: border-box;
 }

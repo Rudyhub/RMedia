@@ -1,6 +1,8 @@
 {
   "main": "html/index.html",
-  "name": "FupConvert",
+  "name": "FMedia",
+  "version": "1.0",
+  "description": "The program can batch process media such as video, audio, image.",
   "nodejs": true,
   "single-instance": false,
   "chromium-args": "--enable-webgl --ignore-gpu-blacklist",
@@ -8,7 +10,7 @@
     "show": true,
     "width": 320,
     "height": 180,
-    "title": "FupConvert",
+    "title": "媒体处理器",
     "icon": "css/icon.png",
     "toolbar": false,
     "resizable": true,

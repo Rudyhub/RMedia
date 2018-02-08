@@ -7,7 +7,7 @@ module.exports = {
 		homepage: 'https://github.com/mystermangit/fupconvert',
 	},
 	appRoot: appRoot,
-	ffmpegRoot: appRoot + 'plugins\\ffmpeg',
+	ffmpegRoot: appRoot + 'ffmpeg',
 	audioThumb: appRoot + 'css\\audio.jpg',
 	loadingGif: appRoot + 'css\\loading.gif',
 	icon: appRoot + 'css\\icon.png',

@@ -1,4 +1,4 @@
-// const BabiliPlugin = require("babili-webpack-plugin");
+const BabiliPlugin = require("babili-webpack-plugin");
 
 module.exports = {
     entry:  __dirname + "/app/src/main.js",
@@ -7,10 +7,7 @@ module.exports = {
         filename: "index.js"
     },
     target: 'node-webkit',
-    // plugins: [
-    //     new BabiliPlugin()
-    // ],
-    // externals: {
-    // 	'fluent-ffmpeg': 'commonjs fluent-ffmpeg'
-    // }
+    plugins: [
+        new BabiliPlugin()
+    ]
 };

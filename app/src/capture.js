@@ -167,7 +167,7 @@ const capture = {
 			log = fs.createWriteStream(config.logPath, {  
 				flags: 'a',  
 				encoding: 'utf-8',  
-				mode: 0666
+				mode: '0666'
 			});
 			capture.shortcut();
 			capture.go();
