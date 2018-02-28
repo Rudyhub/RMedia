@@ -42,7 +42,6 @@ const capture = {
 	setArea(initWidth, initHeight, fn){
 		if(typeof fn !== 'function') return false;
 		nw.Window.open('html/capture.html',{
-		    id: 'cutscreen',
 		    position: 'center',
 		    transparent: true,
 		    new_instance: false,

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>PDF转图片</title>
+	<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="titlebar">
+    <h1 class="title draggable">媒体处理器</h1>
+    <div class="titlebar-tool">
+        <button onclick="titlebarFn('min')">&minus;</button>
+        <button onclick="titlebarFn('toggle',this)" class="full"><i></i></button>
+        <button onclick="titlebarFn('close')">&times;</button>
+    </div>
+</div>
+<div class="toolbar">
+	<button onclick="toolbarFn('chosefile')">打开PDF</button>
+	<button onclick="toolbarFn('saveas')">保存图片</button>
+	<button onclick="toolbarFn('start')">开始</button>
+	<button onclick="toolbarFn('params')">输出参数</button>
+</div>
+<form class="set-params" data-by="params">
+	<p>渲染比例： <input name="scale" class="form-control" type="number" placeholder="默认为: 2"></p>
+	<p>输出质量： <input name="quality" class="form-control" type="number" placeholder="取 0 到 1"></p>
+	<p>输出方式：
+		<select class="form-control" name="merge">
+			<option value="1">竖向合并</option>
+			<option value="2">横向合并</option>
+			<option value="3">单页输出</option>
+		</select>
+	</p>
+	<p>
+		<button type="button" onclick="setParamsFn(1)">确定</button>
+		<button type="button" onclick="setParamsFn(0)">取消</button>
+	</p>
+</form>
+<div id="list" class="list">
+	<!-- <canvas id="the-canvas"></canvas> -->
+</div>
+<div class="dialog">
+	<div class="dialog-body">
+		<div class="dialog-tools">
+			<progress class="dialog-progress" value="0" max="100"></progress>
+			<button class="dialog-close" onclick="dialogCloseFn()">&times;</button>
+		</div>
+		<div class="dialog-content"></div>
+	</div>
+</div>
+<script src="pdf.worker.min.js"></script>
+<script src="pdf.min.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -172,6 +172,9 @@
             <!-- help -->
             <ul class="submenu" ref="help">
                 <li class="submenu-item">
+                    <button class="submenu-btn" name="pdf2pic" v-on:click="helpFn"><i class="icon icon-library"></i> PDF转图片</button>
+                </li>
+                <li class="submenu-item">
                     <button class="submenu-btn" name="firstAid" v-on:click="helpFn"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
                 </li>
                 <li class="submenu-item">
@@ -192,7 +195,6 @@
                         <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                     </div>
                     <div class="item-tools" :style="{backgroundImage: 'linear-gradient(90deg, #1c4611 '+item.progress+'%, transparent '+item.progress+'%)'}">
-                        <b class="float-left">{{item.progress}}%</b>
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
@@ -268,7 +270,6 @@
                 <img class="sprite-img" :src="item.path" :style="sprite.imgCss">
             </span>
         </section>
-        <canvas id="cv"></canvas>
     </main>
     <footer class="footer draggable">
         version: {{appInfo.version}} - author: {{appInfo.author}} - {{appInfo.homepage}}
