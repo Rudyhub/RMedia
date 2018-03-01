@@ -165,7 +165,10 @@ button[disabled]{
 button:active{
     background: var(--black1);
 }
-
+summary{
+    outline: none;
+    cursor: pointer;
+}
 .draggable{
     -webkit-app-region: drag;
     position: relative;
@@ -548,12 +551,14 @@ button:active{
     transform: scale(0);
     transform-origin: top;
     transition: transform .8s;
+    white-space: nowrap;
 }
 .sprite-list-show{
     transform: scale(1);
 }
 .sprite-item{
     display: inline-block;
+    vertical-align: top;
     position: relative;
 }
 .sprite-img{

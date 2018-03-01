@@ -16,23 +16,20 @@
 </div>
 <div class="toolbar">
 	<button onclick="toolbarFn('chosefile')">打开PDF</button>
-	<button onclick="toolbarFn('saveas')">保存图片</button>
 	<button onclick="toolbarFn('start')">开始</button>
 	<button onclick="toolbarFn('params')">输出参数</button>
 </div>
 <form class="set-params" data-by="params">
-	<p>渲染比例： <input name="scale" class="form-control" type="number" placeholder="默认为: 2"></p>
-	<p>输出质量： <input name="quality" class="form-control" type="number" placeholder="取 0 到 1"></p>
-	<p>输出方式：
-		<select class="form-control" name="merge">
-			<option value="1">竖向合并</option>
-			<option value="2">横向合并</option>
-			<option value="3">单页输出</option>
-		</select>
+	<p>渲染比例： <input name="scale" class="form-control" type="number" placeholder="默认为: 2">
+		<span class="cur-val">当前： <b id="cur-scale"></b></span>
+	</p>
+	<p>输出质量： <input name="quality" class="form-control" type="number" placeholder="取 0 到 1">
+		<span class="cur-val">当前： <b id="cur-quality"></b></span>
 	</p>
 	<p>
 		<button type="button" onclick="setParamsFn(1)">确定</button>
 		<button type="button" onclick="setParamsFn(0)">取消</button>
+		<button type="button" onclick="setParamsFn(2)">重置</button>
 	</p>
 </form>
 <div id="list" class="list">
@@ -41,9 +38,12 @@
 <div class="dialog">
 	<div class="dialog-body">
 		<div class="dialog-tools">
-			<progress class="dialog-progress" value="0" max="100"></progress>
 			<button class="dialog-close" onclick="dialogCloseFn()">&times;</button>
 		</div>
+		<div class="dialog-progress-txt">0/0</div>
+		<div class="dialog-progress"><i class="dialog-progress-value"></i></div>
+		<div class="dialog-progress-txt">0/0</div>
+		<div class="dialog-progress"><i class="dialog-progress-value"></i></div>
 		<div class="dialog-content"></div>
 	</div>
 </div>

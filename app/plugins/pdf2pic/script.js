@@ -38,30 +38,49 @@ const outputEl = document.createElement('input');
 
 inputEl.type = outputEl.type = 'file';
 inputEl.multiple = true;
+inputEl.accept = 'application/pdf';
 outputEl.nwdirectory = true;
 
 let paramsPanel = document.querySelector('[data-by=params]'),
     listEl = document.getElementById('list'),
     scaleEl = document.querySelector('[name=scale]'),
+    curScale = document.getElementById('cur-scale'),
+    scale = 2,
     qualityEl = document.querySelector('[name=quality]'),
-    mergeEl = document.querySelector('[name=merge]'),
+    curQuality = document.getElementById('cur-quality'),
+    quality = 1,
     dialog = document.querySelector('.dialog'),
     dContent = dialog.querySelector('.dialog-content'),
-    progressEl = dialog.querySelector('.dialog-progress');
+    progressTxt = dialog.querySelectorAll('.dialog-progress-txt'),
+    progressVal = dialog.querySelectorAll('.dialog-progress-value'),
+    outputPath = '';
+
+setCurVal();
+function setCurVal(){
+    curScale.innerText = scale;
+    curQuality.innerText = quality;
+}
 
 function toolbarFn(name){
     switch(name){
         case 'chosefile': inputEl.click(); break;
-        case 'saveas': outputEl.click(); break;
-        case 'start': output(); break;
+        case 'start': outputEl.click(); break;
         case 'params':
             paramsPanel.classList.add('set-params-show');
+            setCurVal();
     }
 };
 function setParamsFn(code){
     paramsPanel.classList.remove('set-params-show');
-    if(code){
-        console.log(code);
+    if(code === 1){
+        scale = parseFloat(scaleEl.value) || 2;
+        quality = parseFloat(qualityEl.value) || 1;
+        setCurVal();
+    }else if(code === 2){
+        paramsPanel.reset();
+        scale = 2;
+        quality = 1;
+        setCurVal();
     }
 }
 
@@ -77,9 +96,11 @@ inputEl.addEventListener('change', ()=>{
     if(inputEl.files && (len = inputEl.files.length)){
         for(; i < len; i++){
             file = inputEl.files[i];
+            if(file.type != 'application/pdf') continue;
             itemEl = document.createElement('div');
             itemEl.className = 'list-item';
             itemEl.dataset.path = file.path;
+            itemEl.dataset.filename = file.name.slice(0,-4);
             itemEl.innerHTML = `
                 <div class="list-item-tools">
                     <button class="list-item-close" onclick="deleteItemFn(this)">&times;</button>
@@ -90,31 +111,47 @@ inputEl.addEventListener('change', ()=>{
         }
     }
 });
+outputEl.addEventListener('change', startFn);
+outputEl.addEventListener('cancel', startFn);
+function startFn(){
+    let dir;
+    if( outputEl.files && outputEl.files[0] && (dir = outputEl.files[0].path)){
+        output(dir);
+    }else{
+        if(confirm('您未输出目录，重新选择？')){
+            outputEl.click();
+        }
+    }
+}
 
-
-function output(){
+function output(dir){
     let items = document.querySelectorAll('.list-item'),
         len = items.length,
         i = 0,
-        scale = parseFloat(scaleEl.value) || 2,
-        quality = parseFloat(qualityEl.value) || 1,
-        merge = parseInt(mergeEl.value) || 1,
         viewport,
         canvas = document.createElement('canvas'),
         context,
         renderContext,
         pageNum = 0;
-
-    progressEl.value = 0;
-    recycle();
+    if(len > 0){
+        recycle();
+    }else{
+        if(confirm('没有任何PDF文件，去添加PDF?')){
+            inputEl.click();
+        }
+    }
     function recycle(){
         pageNum = 0;
+        dialog.classList.add('dialog-show');
+        progressTxt[0].innerText = '文件：'+ (i+1) + '/' + len;
+        progressVal[0].style.width = i/len*100 + '%';
         PDFJS.getDocument(items[i].dataset.path).then( (pdf)=>{
             inrecycle();
             function inrecycle(){
-                dialog.classList.add('dialog-show');
-                progressEl.value = (i+1)/len*100;
-                dContent.innerHTML = '开始处理第'+(i+1)+'/'+len+'个文件，<br />第'+(pageNum+1)+'/'+pdf.numPages+'页';
+                progressTxt[1].innerText = '页：'+ (pageNum+1) + '/' + pdf.numPages;
+                progressVal[1].style.width = pageNum/pdf.numPages*100 + '%';
+                dContent.innerHTML = '正在处理...';
+                dContent.classList.add('dialog-rotating');
                 pdf.getPage( ++pageNum ).then( (page) => {
                     viewport = page.getViewport(scale);
                     context = canvas.getContext('2d');
@@ -126,7 +163,8 @@ function output(){
                     };
 
                     page.render(renderContext).then(()=>{
-                        canvasToFile('c:\\users\\administrator\\desktop\\a_'+i+'_'+pageNum+'.jpg', canvas.toDataURL('image/jpeg', quality), ()=>{
+                        canvasToFile(dir+'\\'+items[i].dataset.filename+'_'+i+'_'+pageNum+'.jpg', canvas.toDataURL('image/jpeg', quality), ()=>{
+                            progressVal[1].style.width = pageNum/pdf.numPages*100 + '%';
                             if(pageNum < pdf.numPages){
                                 inrecycle();
                             }else{
@@ -134,11 +172,14 @@ function output(){
                                 if(i < len){
                                     recycle();
                                 }else{
+                                    progressVal[0].style.width = i/len*100 + '%';
                                     dContent.innerHTML = '完成！';
+                                    dContent.classList.remove('dialog-rotating');
                                 }
                             }
                         }, (errmsg)=>{
                             dContent.innerHTML = '处理失败：'+errmsg;
+                            dContent.classList.remove('dialog-rotating');
                         });
                     });
                 });

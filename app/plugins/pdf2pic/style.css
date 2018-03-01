@@ -306,8 +306,8 @@ button:active{
 
 .set-params{
     background: var(--gray4);
-    width: 15em;
-    height: 14em;
+    width: 18em;
+    height: 9em;
     padding: .5em 1em;
     border-radius: .5em;
     position: absolute;
@@ -317,6 +317,10 @@ button:active{
     transition: all .5s;
     opacity: 0;
     z-index: 100;
+}
+.cur-val{
+    font-size: 12px;
+    color: var(--light1);
 }
 .set-params-show{
     transform: scale(1) rotate(0);
@@ -385,7 +389,6 @@ embed{
 }
 .dialog-tools{
     text-align: right;
-    background: var(--gray2);
     width: 100%;
     min-width: 100px;
     position: relative;
@@ -393,12 +396,28 @@ embed{
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
     font-size: 0;
+    background: var(--gray1);
+}
+.dialog-progress-txt{
+    width: 90%;
+    margin: 1em auto 0;
+    font-size: 12px;
 }
 .dialog-progress{
-    height: 25px;
-    display: inline-block;
-    width: calc(100% - 25px);
+    height: 8px;
+    border-radius: 4px;
+    display: block;
+    width: 90%;
+    margin: 0 auto;
     vertical-align: top;
+    background: var(--gray2);
+    overflow: hidden;
+}
+.dialog-progress-value{
+    display: block;
+    height: 100%;
+    width: 1px;
+    background: var(--light1);
 }
 .dialog-close{
     display: inline-block;
@@ -413,13 +432,31 @@ embed{
     color: var(--light1);
     max-width: 60%;
     max-height: 60%;
+    min-width: 20em;
     position: relative;
+    border-radius: 4px;
+    background: var(--black2);
+    border: 1px solid;
 }
 .dialog-content{
-    border: 1px solid;
+    font-size: 12px;
     padding: 1em 1.5em;
-    background: var(--black2);
-    border-bottom-left-radius: 4px;
-    border-bottom-right-radius: 4px;
     overflow: auto;
+}
+.dialog-rotating:after{
+    content: '';
+    display: inline-block;
+    vertical-align: middle;
+    border: 1px solid var(--light1);
+    height: 12px;
+    margin: 0 6px;
+    animation: rotating infinite 1s linear;
+}
+@keyframes rotating{
+    0%{
+        transform: rotate(0deg);
+    }
+    100%{
+        transform: rotate(359deg);
+    }
 }

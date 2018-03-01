@@ -57,10 +57,11 @@ const vue = new Vue({
         },
         sprite: {
             preview: false,
+            align: 1,
             items: [],
-            listCss: 'white-space: nowrap;',
-            itemCss: 'height: 50px;\nmargin: 4px;',
-            imgCss: 'height: 100%;'
+            listCss: '',
+            itemCss: '',
+            imgCss: ''
         },
         toformats: ['mp4','webm','ogg','mp3','jpg','png','gif','jpeg','webp','ico','bmp'],
         framestep: 2
@@ -396,31 +397,68 @@ const vue = new Vue({
             }
         },
         spriteFn(code){
-            vue.dropMenuClose('sprite');
-            if(code === -1) return;
-            let spriteList = document.getElementById('sprite-list'),
-                items = spriteList.querySelectorAll('.sprite-item'),
-                imgs = spriteList.querySelectorAll('img'),
-                len = items.length,
-                i = 0,
-                x = 0, y = 0, w = 0, h = 0,
-                item, img, ctx;
+            
+            if(typeof code !== 'string'){
+                vue.dropMenuClose('sprite');
+                if(code === -1) return;
+                let spriteList = document.getElementById('sprite-list'),
+                    items = spriteList.querySelectorAll('.sprite-item'),
+                    imgs = spriteList.querySelectorAll('img'),
+                    len = items.length,
+                    i = 0,
+                    x = 0, y = 0, w = 0, h = 0,
+                    item, img, ctx;
 
-            canvas.width = spriteList.offsetWidth;
-            canvas.height = spriteList.offsetHeight;
-            ctx = canvas.getContext('2d');
+                canvas.width = spriteList.offsetWidth;
+                canvas.height = spriteList.offsetHeight;
+                ctx = canvas.getContext('2d');
 
-            for(; i < len;  i++){
-                item = items[i];
-                img = item.querySelector('img');
-                x = item.offsetLeft + img.offsetLeft + utils.css(img,'borderLeftWidth') + utils.css(img,'paddingLeft');
-                y = item.offsetTop + img.offsetTop + utils.css(img,'borderTopWidth') + utils.css(img,'paddingTop');
-                w = img.offsetWidth - utils.css(img,'borderLeftWidth') - utils.css(img,'borderRightWidth') - utils.css(img,'paddingLeft') - utils.css(img,'paddingRight');
-                h = img.offsetHeight - utils.css(img,'borderTopWidth') - utils.css(img,'borderBottomWidth') - utils.css(img,'paddingTop') - utils.css(img,'paddingBottom');
-                ctx.drawImage(img, x, y, w, h);
+                for(; i < len;  i++){
+                    item = items[i];
+                    img = item.querySelector('img');
+                    x = item.offsetLeft + img.offsetLeft + utils.css(img,'borderLeftWidth') + utils.css(img,'paddingLeft');
+                    y = item.offsetTop + img.offsetTop + utils.css(img,'borderTopWidth') + utils.css(img,'paddingTop');
+                    w = img.offsetWidth - utils.css(img,'borderLeftWidth') - utils.css(img,'borderRightWidth') - utils.css(img,'paddingLeft') - utils.css(img,'paddingRight');
+                    h = img.offsetHeight - utils.css(img,'borderTopWidth') - utils.css(img,'borderBottomWidth') - utils.css(img,'paddingTop') - utils.css(img,'paddingBottom');
+                    ctx.drawImage(img, x, y, w, h);
+                }
+
+                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'));
+            }else if(code === 'align'){
+                alignFn( parseInt(arguments[1].target.value) );
+                
+            }else if(code == 'matrix'){
+                vue.sprite.align = parseInt(arguments[1].target.value);
+                console.log(vue.sprite.align);
+                alignFn( parseInt(vue.$refs.spriteAlign.value) );
             }
-
-            Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'));
+            function alignFn(val){
+                if(vue.sprite.align == 1){
+                    vue.sprite.listCss = '';
+                    switch(val){
+                        case 2: vue.sprite.itemCss = 'vertical-align: middle;'; break;
+                        case 3: vue.sprite.itemCss = 'vertical-align: bottom;'; break;
+                        default: vue.sprite.itemCss = 'vertical-align: top;';
+                    }
+                }else if(vue.sprite.align == 2){
+                    vue.sprite.itemCss = '';
+                    switch(val){
+                        case 2:
+                            vue.sprite.listCss = 'white-space: normal;text-align: center;';
+                        break;
+                        case 3:
+                            vue.sprite.listCss = 'white-space: normal;text-align: right;';
+                        break;
+                        case 4:
+                            vue.sprite.listCss = 'white-space: normal;';
+                            vue.sprite.itemCss = 'width: 100%;';
+                            vue.sprite.imgCss = 'width: 100%;';
+                        break;
+                        default:
+                            vue.sprite.listCss = 'white-space: normal;text-align: left;';
+                    }
+                }
+            }
         },
         batchParamsFn(e,name){
             let target = e.target,
