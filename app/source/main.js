@@ -64,7 +64,14 @@ const vue = new Vue({
             imgCss: ''
         },
         toformats: ['mp4','webm','ogg','mp3','jpg','png','gif','jpeg','webp','ico','bmp'],
-        framestep: 2
+        framestep: 2,
+        dialog: {
+            show: false,
+            title: '',
+            body: '',
+            btns: [],
+            callback: null
+        }
 	},
     created(){
         inputEl.type = outputEl.type = 'file';
@@ -124,7 +131,6 @@ const vue = new Vue({
                         tofps: 0
                     };
 
-
                     vue.$set(vue.items, key = Object.keys(vue.items).length, item);
 
                     Media.info({
@@ -150,16 +156,20 @@ const vue = new Vue({
                             if(files[i]) recycle(files[i]);
                         },
                         fail: (err)=>{
-                            utils.dialog('提示：',
-                            '<p>文件：“'+file.name+'”可能不支持！错误信息：'+err+'。是否保留以尝试转码？</p>',
-                            ['是','否'],
-                            (code)=>{
+                            vue.dialog.show = true;
+                            vue.dialog.body = `<p>文件：“${file.name}”可能不支持！是否保留以尝试转码？</p>
+                            <details class="dialog-details">
+                                <summary>详细错误</summary>
+                                <p>${err}</p>
+                            </details>`;
+                            vue.dialog.btns.push('是','否');
+                            vue.dialog.callback = function(code){
                                 if(code === 1) vue.$delete(vue.items, key);
                                 i++;
                                 if(files[i]) recycle(files[i]);
-                            });
+                            };
                         }
-                    });
+                    }, vue.dialog);
                 }
             }
         });
@@ -192,7 +202,9 @@ const vue = new Vue({
                     item.thumb = src;
                 },
                 fail(){
-                    utils.dialog('错误：', '<p>预览生成失败</p><p>'+arguments+'</p>');
+                    vue.dialog.show = true;
+                    vue.dialog.title = '错误！';
+                    vue.dialog.body = '<p>微调发生错误！</p>';
                 }
             });
         },
@@ -263,20 +275,16 @@ const vue = new Vue({
             switch(name){
                 case 'chosefile': inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
-                case 'clear':
-                {
-                    for(key in vue.items) vue.$delete(vue.items, key);
-                }
-                break;   
-                default: {
-                    vue.toolbar.toggle[name] = !vue.toolbar.toggle[name];
-                    for(key in vue.items){
-                        vue.items[key][name] = vue.toolbar.toggle[name];
-                    }
-                }
             }
         },
         convertFn(){
+            if(Media.ffmpeg !== null){
+                vue.dialog.show = true;
+                vue.dialog.title = '警告！';
+                vue.dialog.body = '<p>文件正在处理，请勿重复点击。</p>';
+                return false;
+            }
+
             let item, bita, bitv, w, h, total, output, cammand,
                 keys = Object.keys(vue.items),
                 i = 0;
@@ -284,7 +292,9 @@ const vue = new Vue({
             if(keys[i]){
                 recycle(vue.items[ keys[i] ]);
             }else{
-                utils.dialog('弹窗：','<p>没有输入任何文件！</p>');
+                vue.dialog.show = true;
+                vue.dialog.title = '警告！';
+                vue.dialog.body = '<p>没有输入任何文件！</p>';
             }
 
             function recycle(item){
@@ -298,11 +308,15 @@ const vue = new Vue({
                 //如果是序列图
                 if(item.series){
                     if(item.type !== 'image'){
-                        utils.dialog('错误：','<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.title = '警告！';
+                        vue.dialog.body = '<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>';
                         return;
                     }
                     if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
-                        utils.dialog('错误：','<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.title = '警告！';
+                        vue.dialog.body = '<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>';
                         return;
                     }
                     let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
@@ -319,21 +333,26 @@ const vue = new Vue({
                         if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
                         cammand.push(output);
                     }else{
-                        utils.dialog('错误：',
-                        `<p>序列图不满足条件！</p>
+                        vue.dialog.show = true;
+                        vue.dialog.title = '错误！';
+                        vue.dialog.body = `<p>序列图不满足条件！</p>
                         <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
                         <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                        <p>然后只需要选择第一张图片即可</p>`);
+                        <p>然后只需要选择第一张图片即可</p>`;
                     }
                 }else{
                    //图片不能输出为音频
                     if(item.type === 'image' && Media.is(item.toformat, 'audio')){
-                        utils.dialog('错误：','<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.title = '错误！';
+                        vue.dialog.body = '<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>';
                         return;
                     }
                     //音频不能输出为图片
                     if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
-                        utils.dialog('错误：','<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.title = '错误！';
+                        vue.dialog.body = '<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>';
                         return;
                     }
 
@@ -389,7 +408,9 @@ const vue = new Vue({
                             i++;
                             if(keys[i]) recycle(vue.items[ keys[i] ]);
                         }else{
-                            utils.dialog('失败：','<p>失败原因：'+msg+'</p>');
+                            vue.dialog.show = true;
+                            vue.dialog.title = '失败！';
+                            vue.dialog.body = '<p>失败原因：'+msg+'</p>';
                             item.progress = 0;
                         }
                     }
@@ -423,7 +444,7 @@ const vue = new Vue({
                     ctx.drawImage(img, x, y, w, h);
                 }
 
-                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'));
+                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), vue.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
                 
@@ -531,7 +552,8 @@ const vue = new Vue({
             if(item){
                 recycle(item)
             }else{
-                utils.dialog('失败：','<p>没有输入任何文件！</p>');
+                vue.dialog.show = true;
+                vue.dialog.body = '<p>没有输入任何文件！</p>';
             }
             function recycle(item){
                 k = Object.keys(vue.items)[++n];
@@ -548,7 +570,15 @@ const vue = new Vue({
             function oneComplete(err){
                 item = vue.items[k];
                 if(err){
-                    utils.dialog('警告：','<p>有文件重命名失败，详细错误：'+err.toString()+'</p>',['继续','退出'], (c)=>{
+                    vue.dialog.show = true;
+                    vue.dialog.title = '错误！';
+                    vue.dialog.body = `<p>有文件重命名失败！</p>
+                    <details class="dialog-details">
+                        <summary>详细错误</summary>
+                        <p>${err.toString()}</p>
+                    </details>`;
+                    vue.dialog.btns.push('继续','退出');
+                    vue.dialog.callback = function(c){
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -556,7 +586,7 @@ const vue = new Vue({
                                 allComplete();
                             }
                         }
-                    });
+                    }
                 }else{
                     if(item){
                         recycle(item);
@@ -566,7 +596,9 @@ const vue = new Vue({
                 }
             }
             function allComplete(){
-                utils.dialog('结束！','<p>输出目录：'+vue.output+', 可前往查看序列化重命名结果。</p>');
+                vue.dialog.show = true;
+                vue.dialog.title = '结束！';
+                vue.dialog.body = '<p>输出目录：'+vue.output+', 可前往查看序列化重命名结果。</p>';
             }
         },
         captureFn(e,code){
@@ -582,7 +614,9 @@ const vue = new Vue({
                 {
                     capture.audioDevices((err, list)=>{
                         if(err){
-                            utils.dialog('失败：','<p>'+err+'</p>');
+                            vue.dialog.show = true;
+                            vue.dialog.title = '失败！';
+                            vue.dialog.body = '<p>'+err+'</p>';
                         }else{
                             let i = 0, len, devices = params.audioDevices;
                             len = list.length;
@@ -610,11 +644,13 @@ const vue = new Vue({
                 case 0:
                 {
                     if(params.mode !== 4 && params.fps > 60){
-                        utils.dialog('提示：','<p>帧速率不能超过 60</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.body = '<p>帧速率不能超过 60</p>';
                         return;
                     }
                     if(params.mode !== 2 && params.mode !== 3 && !params.audioDevice){
-                        utils.dialog('提示：','<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>');
+                        vue.dialog.show = true;
+                        vue.dialog.body = '<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>';
                         return;
                     }
                     output = vue.output + '\\'+vue.batchParams.nameAll;
@@ -623,13 +659,24 @@ const vue = new Vue({
                     }else{
                         output += '.mp4';
                     }
-                    capture.progress = (time)=>{
-                        // console.log(time);
-                    }
+
+                    // capture.progress = (time)=>{}
+
                     capture.complete = (err)=>{
-                        if(err) utils.dialog('失败：','<p>错误码：'+err.code+'</p>'+err.message);
+                        vue.dialog.show = true;
+                        if(err){
+                            vue.dialog.title = '失败！';
+                            vue.dialog.body = `<p>错误码：${err.code}</p>
+                            <details class="dialog-details">
+                                <summary>详细错误</summary>
+                                <p>${err.message}</p>
+                            </details>`;
+                        }else{
+                            vue.dialog.title = '完成！';
+                            vue.dialog.body = '<p>输出位置：'+output+'</p>';
+                        }
                     }
-                    capture.start(output, vue.capParams);
+                    capture.start(output, vue.capParams, vue.dialog);
                 }
                 break;
             }
@@ -655,15 +702,20 @@ const vue = new Vue({
                     });
                 break;
                 case 'firstAid':
-                    utils.dialog('警告：','<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！</p>',['启用','关闭'],(code)=>{
+                    vue.dialog.show = true;
+                    vue.dialog.title = '严重提示！';
+                    vue.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
+                    vue.dialog.btns.push('启用','关闭');
+                    vue.dialog.callback = function(code){
                         if(code === 0){
                             Media.killAll();
                         }
                         target.classList.remove('active-1');
-                    });
+                    }
                 break;
                 case 'helpBook':
-                    nw.Shell.openExternal('https://github.com/mystermangit/fupconvert');
+                    nw.Shell.openExternal(config.appInfo.helpUrl);
+                break;
             }
         },
         videoFn(e, index, type){
@@ -696,26 +748,31 @@ const vue = new Vue({
                 tmptime;
 
             switch(str){
-                case 'del':
+                case 'del': vue.$delete(vue.items, index); break;
+                case 'delAll':
                 {
-                    vue.$delete(vue.items, index);
+                    for(let key in vue.items) vue.$delete(vue.items, key);
                 }
                 break;
-                case 'lock':
+                case 'lock': item.lock = !item.lock; break;
+                case 'lockAll': 
                 {
-                    item.lock = !item.lock;
+                    vue.toolbar.toggle.lock = !vue.toolbar.toggle.lock;
+                    for(let key in vue.items){
+                        vue.items[key].lock = vue.toolbar.toggle.lock;
+                    }
                 }
                 break;
-                case 'alpha':
+                case 'alpha': item.alpha = !item.alpha; break;
+                case 'alphaAll':
                 {
-                    item.alpha = !item.alpha;
+                    vue.toolbar.toggle.alpha = !vue.toolbar.toggle.alpha;
+                    for(let key in vue.items){
+                        vue.items[key].alpha = vue.toolbar.toggle.alpha;
+                    }
                 }
                 break;
-                case 'reset':
-                {
-                    vue.reItem(item);
-                }
-                break;
+                case 'reset': vue.reItem(item); break;
                 case 'currentTime':
                 {
                     vue.$refs['id'+index][0].pause();
@@ -733,7 +790,7 @@ const vue = new Vue({
                 break;
                 case 'prevFrame':
                 {
-                    step = (1/item.fps)*vue.tunstep;
+                    step = (1/item.fps)*vue.framestep;
                     if(item.currentTime > step){
                         item.currentTime -= step;
                     }else{
@@ -750,7 +807,7 @@ const vue = new Vue({
                 break;
                 case 'nextFrame':
                 {
-                    step = (1/item.fps)*vue.tunstep;
+                    step = (1/item.fps)*vue.framestep;
                     if(item.currentTime < item.duration - step){
                         item.currentTime += step;
                     }else{
@@ -798,9 +855,17 @@ const vue = new Vue({
                     item.towidth = Math.round(item.toheight / item.scale);
                 }
             }
+        },
+        dialogFn(e, code){
+            vue.dialog.show = false;
+            vue.dialog.title = '';
+            vue.dialog.body = '';
+            vue.dialog.btns.length = 0;
+            if(typeof vue.dialog.callback === 'function'){
+                vue.dialog.callback.call(e.currentTarget,code);
+            }
         }
     },
-
     filters: {
         timemat(t){
             return utils.timemat(t*1000);
@@ -819,3 +884,4 @@ const vue = new Vue({
         }
     }
 });
+Media.dialog = vue.dialog;

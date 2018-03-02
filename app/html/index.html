@@ -33,20 +33,11 @@
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
                     <i class="icon icon-camera"></i> 屏幕录制
                 </button>
-                <button class="toolbar-item" name="lock" v-on:click="toolbarFn" :class="{'active-1': toolbar.toggle.lock}">
-                    <i class="icon icon-pushpin"></i> 锁定
-                </button>
-                <button  class="toolbar-item" name="alpha" v-on:click="toolbarFn" :class="{'active-1': toolbar.toggle.alpha}">
-                    <i class="icon icon-contrast"></i> 显示透明
-                </button>
-                <button class="toolbar-item" name="clear" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'clear'}">
-                    <i class="icon icon-bin"></i> 清空
-                </button>
                 <button class="toolbar-item" v-on:click="convertFn">
                     <i class="icon icon-stack"></i> 转码压缩
                 </button>
                 <button class="toolbar-item" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
-                    <i class="icon icon-table2"></i> Sprite
+                    <i class="icon icon-table2"></i> 图片拼接
                 </button>
                 <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
                     <i class="icon icon-question"></i> 帮助
@@ -218,9 +209,9 @@
                         <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                     </div>
                     <div class="item-tools" :style="{backgroundImage: 'linear-gradient(90deg, #1c4611 '+item.progress+'%, transparent '+item.progress+'%)'}">
-                        <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" title="锁定/解锁" :class="{active: item.lock}"></i>
-                        <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')"></i>
-                        <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')" title="删除"></i>
+                        <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" v-on:contextmenu.prevent="itemFn($event,index,'lockAll')" title="锁定/解锁（右击锁定/解锁全部文件）" :class="{active: item.lock}"></i>
+                        <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')" v-on:contextmenu.prevent="itemFn($event,index,'alphaAll')" title="显示/隐藏alpha通道（右击显示/隐藏全部文件）" :class="{active: item.alpha}"></i>
+                        <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')"  v-on:contextmenu.prevent="itemFn($event,index,'delAll')" title="删除（右击删除全部文件）"></i>
                     </div>
                 </dt>
                 <dd class="item-row">
@@ -294,6 +285,17 @@
             </span>
         </section>
     </main>
+    <div class="dialog-outer" :class="{'dialog-show': dialog.show}">
+        <div class="dialog-inner">
+            <div class="dialog-header">
+                <i class="icon icon-warning"></i>{{dialog.title}}<i class="icon icon-cross dialog-close" v-on:click="dialogFn($event, -1)"></i>
+            </div>
+            <div class="dialog-body" v-html="dialog.body"></div>
+            <div class="dialog-footer">
+                <button class="dialog-btn" v-for="(btn,code) in dialog.btns" v-on:click="dialogFn($event, code)">{{btn}}</button>
+            </div>
+        </div>
+    </div>
     <footer class="footer draggable">
         version: {{appInfo.version}} - author: {{appInfo.author}} - {{appInfo.homepage}}
     </footer>

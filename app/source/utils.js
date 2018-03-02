@@ -57,50 +57,6 @@ module.exports = {
         }
         return str + (100 + n).toString().slice(1);
     },
-    dialog(title, msg, btns, fn, context){
-        let div = document.createElement('div'),
-            parentNode = context || document.body,
-            html;
-        div.className = 'dialog';
-        html =
-        `<div class="dialog-title">
-            <i class="icon icon-warning"></i>
-            ${title}
-            <i class="icon icon-cross dialog-close"></i>
-        </div>
-        <div class="dialog-body">${msg}</div>
-        <div class="dialog-footer">`;
-            
-        if(btns){
-            for( let i=0; i<btns.length; i++){
-                html += '<button class="dialog-btn" name="'+i+'">'+btns[i]+'</button>';
-            }
-        }
-        
-        html += '</div>';
-        div.innerHTML = html;
-        function eventFn(e){
-            if(/dialog-close/.test(e.target.className)){
-                div.removeEventListener('click', eventFn);
-                if(fn) fn.call(e.target,-1);
-                parentNode.removeChild(div);
-                return;
-            }else if(/dialog-btn/.test(e.target.className)){
-                div.removeEventListener('click', eventFn);
-                if(fn) fn.call(e.target, parseInt(e.target.name));
-                parentNode.removeChild(div);
-            }
-        }
-        div.addEventListener('click', eventFn);
-        parentNode.appendChild(div);
-        return {
-            el: div,
-            remove(){
-                parentNode.removeChild(div);
-                div.removeEventListener('click', eventFn);
-            }
-        };
-    },
     css(node, name){
         return parseFloat(window.getComputedStyle(node)[name]);
     }

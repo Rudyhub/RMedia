@@ -140,10 +140,12 @@ module.exports = {
             }
         });
     },
-    info(o){
+    info(o, dialog){
         let self = this;
         if(!o.input) {
-            utils.dialog('地址错误：','<p>无效媒体文件地址!</p>');
+            dialog.show = true;
+            dialog.title = '地址错误：';
+            dialog.body = '<p>无效媒体文件地址!</p>';
             return;
         }
         if(!o.success) return;
@@ -197,11 +199,14 @@ module.exports = {
             }
         });
         ffmpeg.once('close', (a, b)=>{
+            self.ffmpeg = null;
             if(o.complete) o.complete(a, (a !== 0) ? '处理失败 ' + b : b);
         });
         ffmpeg.once('error', (err)=>{
+            self.ffmpeg = null;
             if(o.complete) o.complete(2, '启动失败 '+err);
         });
+        self.ffmpeg = ffmpeg;
     },
     rename(oldname, newname, callback){
         fs.access(newname, (err)=>{
@@ -221,13 +226,18 @@ module.exports = {
             }
         });
     },
-    canvasToFile(path, data){
+    canvasToFile(path, data, dialog){
         fs.writeFile(path, data.replace(/^data:image\/\w+;base64,/, ''), 'base64', (err)=>{
             if(err){
-                utils.dialog('失败！','<p>错误信息：'+err.message+'</p>'); 
+                dialog.show = true;
+                dialog.title = '失败！';
+                dialog.body = '<p>错误信息：'+err.message+'</p>';
             }else{
-                utils.dialog('成功！','<p>文件输出位置：【'+path+'】</p>');
+                dialog.show = true;
+                dialog.title = '成功！';
+                dialog.body = '<p>文件输出位置：'+path+'</p>';
             }
         });
-    }
+    },
+    writeFile: fs.writeFile
 };
