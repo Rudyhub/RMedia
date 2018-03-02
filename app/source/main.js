@@ -275,6 +275,16 @@ const vue = new Vue({
             switch(name){
                 case 'chosefile': inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
+                case 'pdf2pic':
+                    nw.Window.open('plugins/pdf2pic/pdf2pic.html',{
+                        position: 'center',
+                        new_instance: false,
+                        focus: true,
+                        frame: false,
+                        width: win.width,
+                        height: win.height
+                    });
+                break;
             }
         },
         convertFn(){
@@ -521,7 +531,11 @@ const vue = new Vue({
                                 item.toheight = wl * item.scale;
                             }
                             quality = (vue.batchParams.sizeLimit / item.size * 100).toFixed(2);
-                            if(quality < item.quality) item.quality = quality;
+                            if(vue.batchParams.sizeLimit < item.size){
+                                item.quality = quality;
+                            }else{
+                                item.quality = 100;
+                            }
                             item.toname = utils.namemat(vue.batchParams.nameAll, ++n);
                         }
                     }
@@ -691,16 +705,6 @@ const vue = new Vue({
             vue.dropMenuClose('help');
 
             switch(name){
-                case 'pdf2pic':
-                    nw.Window.open('plugins/pdf2pic/pdf2pic.html',{
-                        position: 'center',
-                        new_instance: false,
-                        focus: true,
-                        frame: false,
-                        width: win.width,
-                        height: win.height
-                    });
-                break;
                 case 'firstAid':
                     vue.dialog.show = true;
                     vue.dialog.title = '严重提示！';
@@ -884,4 +888,3 @@ const vue = new Vue({
         }
     }
 });
-Media.dialog = vue.dialog;

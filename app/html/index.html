@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html lang="zh-CN">
+<html>
 <head>
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -25,7 +25,7 @@
                     <i class="icon icon-folder-open"></i> 选择文件
                 </button>
                 <button class="toolbar-item" name="chosedir" v-on:click="toolbarFn" :title="'选择输出目录，当前：'+output" :class="{'active-1': toolbar.drop == 'chosedir'}">
-                    <i class="icon icon-floppy-disk"></i> 保存到
+                    <i class="icon icon-floppy-disk"></i> 保存目录
                 </button>
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
@@ -38,6 +38,9 @@
                 </button>
                 <button class="toolbar-item" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
                     <i class="icon icon-table2"></i> 图片拼接
+                </button>
+                <button class="toolbar-item" name="pdf2pic" v-on:click="toolbarFn">
+                    <i class="icon icon-library"></i> PDF转图片
                 </button>
                 <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
                     <i class="icon icon-question"></i> 帮助
@@ -185,9 +188,6 @@
             </div>
             <!-- help -->
             <ul class="submenu" ref="help">
-                <li class="submenu-item">
-                    <button class="submenu-btn" name="pdf2pic" v-on:click="helpFn"><i class="icon icon-library"></i> PDF转图片</button>
-                </li>
                 <li class="submenu-item">
                     <button class="submenu-btn" name="firstAid" v-on:click="helpFn"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
                 </li>
