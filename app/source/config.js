@@ -1,12 +1,6 @@
 const cwd = process.cwd();
 const appRoot = cwd + '\\';
 module.exports = {
-	appInfo: {
-		version: '1.0.0',
-		author: 'mystermangit',
-		homepage: '',
-		helpUrl: 'https://mystermangit.github.io/fmwwp.html'
-	},
 	appRoot: appRoot,
 	ffmpegRoot: appRoot + 'ffmpeg',
 	audioThumb: appRoot + 'css\\audio.jpg',

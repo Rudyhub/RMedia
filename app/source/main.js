@@ -17,13 +17,33 @@ win.on('loaded',()=>{
     win.show();
 });
 
+//capture shortcut
+let shortcutOption = {  
+    key: 'F2',
+    active : function(){
+        if(!capture.ffmpeg) return;
+        capture.back();
+        capture.end();
+        capture.ffmpeg = null;
+        nw.Window.get().focus();
+    },  
+    failed : function(err){
+        if(!/Unable\s+to\s+unregister\s+the\s+hotkey/i.test(err.message)){
+            alert('用于录制屏幕的快捷'+this.key+'冲突！可通过获取焦点后按F2达到同样的目的'); 
+        }
+    }  
+},
+shortcut = new nw.Shortcut(shortcutOption);
+nw.App.registerGlobalHotKey(shortcut); 
+
 
 const vue = new Vue({
 	el: '#app',
 	data: {
-        appInfo: config.appInfo,
+        app: Object.freeze(nw.App.manifest),
 		output: config.output.folder,
-        items: {}, 
+        items: {},
+        isStarted: false,
 		winToggle: true,
         batchParams: {
             speed: 'slow',
@@ -281,8 +301,8 @@ const vue = new Vue({
                         new_instance: false,
                         focus: true,
                         frame: false,
-                        width: win.width,
-                        height: win.height
+                        width: win.width*.8,
+                        height: win.height*.8
                     });
                 break;
             }
@@ -290,8 +310,16 @@ const vue = new Vue({
         convertFn(){
             if(Media.ffmpeg !== null){
                 vue.dialog.show = true;
-                vue.dialog.title = '警告！';
-                vue.dialog.body = '<p>文件正在处理，请勿重复点击。</p>';
+                vue.dialog.title = '<i class="icon icon-question"></i>';
+                vue.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
+                vue.dialog.btns.push('中止','取消');
+                vue.dialog.callback = function(code){
+                    if(code === 0){
+                        Media.ffmpeg.stdin.write('q\n');
+                        Media.ffmpeg = null;
+                        vue.isStarted = false;
+                    }
+                }
                 return false;
             }
 
@@ -403,6 +431,7 @@ const vue = new Vue({
                 }
 
                 item.progress = 0;
+                vue.isStarted = true;
                 Media.convert({
                     cammand,
                     progress(t){
@@ -416,19 +445,25 @@ const vue = new Vue({
                         if(code === 0){
                             item.progress = 100;
                             i++;
-                            if(keys[i]) recycle(vue.items[ keys[i] ]);
+                            if(keys[i]){
+                                recycle(vue.items[ keys[i] ]);
+                            }else{
+                                vue.dialog.show = true;
+                                vue.dialog.title = '完成！';
+                                vue.dialog.body = '<p>顺利完成！<i class="icon icon-grin2" style="color:#f5b018;"></i></p>';
+                            }
                         }else{
                             vue.dialog.show = true;
                             vue.dialog.title = '失败！';
                             vue.dialog.body = '<p>失败原因：'+msg+'</p>';
                             item.progress = 0;
                         }
+                        vue.isStarted = false;
                     }
                 });
             }
         },
         spriteFn(code){
-            
             if(typeof code !== 'string'){
                 vue.dropMenuClose('sprite');
                 if(code === -1) return;
@@ -718,7 +753,7 @@ const vue = new Vue({
                     }
                 break;
                 case 'helpBook':
-                    nw.Shell.openExternal(config.appInfo.helpUrl);
+                    nw.Shell.openExternal(vue.app.documentation);
                 break;
             }
         },
@@ -888,3 +923,5 @@ const vue = new Vue({
         }
     }
 });
+
+document.title = vue.app.window.title;

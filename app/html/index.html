@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-	<title>媒体处理器</title>
+	<title>loading...</title>
     <link rel="stylesheet" type="text/css" href="../css/icon.css">
 	<link rel="stylesheet" type="text/css" href="../css/index.css">
 </head>
@@ -11,7 +11,7 @@
 <div id="app" v-cloak>
     <header>
         <div class="titlebar">
-            <h1 class="title draggable">媒体处理器</h1>
+            <h1 class="title draggable">{{app.window.title}}-{{app.version}}</h1>
             <div class="titlebar-tool">
                 <button v-on:click="titlebarFn('min')">&minus;</button>
                 <button v-on:click="titlebarFn('toggle')" :class="{full: winToggle}"><i></i></button>
@@ -30,11 +30,11 @@
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
                 </button>
+                <button class="toolbar-item" v-on:click="convertFn">
+                    <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
+                </button>
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
                     <i class="icon icon-camera"></i> 屏幕录制
-                </button>
-                <button class="toolbar-item" v-on:click="convertFn">
-                    <i class="icon icon-stack"></i> 转码压缩
                 </button>
                 <button class="toolbar-item" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
                     <i class="icon icon-table2"></i> 图片拼接
@@ -208,7 +208,7 @@
                         </div>
                         <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                     </div>
-                    <div class="item-tools" :style="{backgroundImage: 'linear-gradient(90deg, #1c4611 '+item.progress+'%, transparent '+item.progress+'%)'}">
+                    <div class="item-tools">
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" v-on:contextmenu.prevent="itemFn($event,index,'lockAll')" title="锁定/解锁（右击锁定/解锁全部文件）" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')" v-on:contextmenu.prevent="itemFn($event,index,'alphaAll')" title="显示/隐藏alpha通道（右击显示/隐藏全部文件）" :class="{active: item.alpha}"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')"  v-on:contextmenu.prevent="itemFn($event,index,'delAll')" title="删除（右击删除全部文件）"></i>
@@ -277,6 +277,10 @@
                         px
                     </div>
                 </dd>
+                <dd class="item-mask" v-if="item.progress">
+                    <div class="item-progress-loaded" :style="{width: item.progress+'%'}"></div>
+                    <div class="item-progress-txt">{{item.progress}} %</div>
+                </dd>
             </dl>
         </section>
         <section id="sprite-list" class="sprite-list alpha" :class="{'sprite-list-show': sprite.preview}" :style="sprite.listCss">
@@ -288,7 +292,7 @@
     <div class="dialog-outer" :class="{'dialog-show': dialog.show}">
         <div class="dialog-inner">
             <div class="dialog-header">
-                <i class="icon icon-warning"></i>{{dialog.title}}<i class="icon icon-cross dialog-close" v-on:click="dialogFn($event, -1)"></i>
+                <span v-html="dialog.title"></span> <i class="icon icon-cross dialog-close" v-on:click="dialogFn($event, -1)"></i>
             </div>
             <div class="dialog-body" v-html="dialog.body"></div>
             <div class="dialog-footer">
@@ -297,7 +301,7 @@
         </div>
     </div>
     <footer class="footer draggable">
-        version: {{appInfo.version}} - author: {{appInfo.author}} - {{appInfo.homepage}}
+        {{app.window.title}} ({{app.name}} - {{app.version}}) {{app.copyright}}
     </footer>
 </div>
 <script type="text/javascript" src="../src/index.js"></script>

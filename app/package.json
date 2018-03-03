@@ -1,9 +1,12 @@
 {
   "main": "html/index.html",
   "name": "FMedia",
-  "version": "1.0",
+  "version": "1.0.0",
   "description": "The program can batch process media such as video, audio, image.",
   "nodejs": true,
+  "author": "mystermangit",
+  "documentation": "https://mystermangit.github.io/fmwwp.html",
+  "copyright": "@2018",
   "single-instance": false,
   "chromium-args": "--enable-webgl --ignore-gpu-blacklist",
   "window": {
