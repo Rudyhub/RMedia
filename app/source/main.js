@@ -4,6 +4,7 @@ const win = nw.Window.get();
     utils = require('./utils'),
     capture = require('./capture'),
     Vue = require('./vue.min'),
+    shortcut = require('./shortcut'),
 
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
@@ -17,25 +18,107 @@ win.on('loaded',()=>{
     win.show();
 });
 
-//capture shortcut
-let shortcutOption = {  
-    key: 'F2',
-    active : function(){
-        if(!capture.ffmpeg) return;
-        capture.back();
-        capture.end();
-        capture.ffmpeg = null;
-        nw.Window.get().focus();
-    },  
-    failed : function(err){
-        if(!/Unable\s+to\s+unregister\s+the\s+hotkey/i.test(err.message)){
-            alert('用于录制屏幕的快捷'+this.key+'冲突！可通过获取焦点后按F2达到同样的目的'); 
+function listItems(files){
+    let i = 0,
+        item,
+        key,
+        tobitv,
+        tobita;
+    if(files.length){
+        for(key in vue.items){
+            window.URL.revokeObjectURL(vue.items[key].thumb);
+            vue.$delete(vue.items, key);
         }
-    }  
-},
-shortcut = new nw.Shortcut(shortcutOption);
-nw.App.registerGlobalHotKey(shortcut); 
+        recycle(files[0]);
+        function recycle(file){
+            item = {
+                path: file.path,
+                thumb: config.loadingGif,
+                canplay: !!videoEl.canPlayType(file.type),
+                playing: 0,
+                progress: 0,
+                lock: vue.toolbar.toggle.lock,
+                alpha: vue.toolbar.toggle.alpha,
+                type: '',
+                series: false,
 
+                duration: 0,
+                startTime: 0,
+                endTime: 0,
+                currentTime: 0,
+                coverTime: 0,
+                cover: false,
+                coverWidth: 480,
+
+                name: file.name,
+                toname: file.name.slice(0, file.name.lastIndexOf('.')),
+
+                bitv: 0,
+                bita: 0,
+
+                size: (parseInt(file.size) || 0),
+                quality: 0,
+
+                scale: 0,
+                width: 0,
+                towidth: 0,
+                height: 0,
+                toheight: 0,
+
+                format: '',
+                toformat: '',
+
+                fps: 0,
+                tofps: 0
+            };
+
+            vue.$set(vue.items, key = Object.keys(vue.items).length, item);
+
+            Media.info({
+                input: file.path,
+                success: (json)=>{
+                    item.thumb = json.thumb;
+                    item.type = json.type;
+
+                    item.duration = json.duration;
+
+                    item.bitv = json.bitv || json.bit;
+                    item.bita = json.bita;
+
+                    item.scale = json.height / json.width;
+                    item.width = json.width;
+                    item.height = json.height;
+
+                    item.format = json.ext;
+                    item.fps = json.fps;
+
+                    vue.reItem(item);
+                    i++;
+                    if(files[i]) recycle(files[i]);
+                },
+                fail: (err)=>{
+                    vue.dialog.show = true;
+                    vue.dialog.body = `<p>文件：“${file.name}”可能不支持！是否保留以尝试转码？</p>
+                    <details class="dialog-details">
+                        <summary>详细错误</summary>
+                        <p>${err}</p>
+                    </details>`;
+                    vue.dialog.setBtn('是','否');
+                    vue.dialog.callback = function(code){
+                        if(code === 1){
+                            window.URL.revokeObjectURL(vue.items[key].thumb);
+                            vue.$delete(vue.items, key);
+                        }
+                        i++;
+                        if(files[i]) recycle(files[i]);
+                    };
+                }
+            }, vue.dialog);
+        }
+    }
+}
+
+shortcut({inputEl, outputEl, win, capture, listItems});
 
 const vue = new Vue({
 	el: '#app',
@@ -103,110 +186,12 @@ const vue = new Vue({
         outputEl.nwdirectory = true;
         inputEl.addEventListener('change', (e)=>{
             vue.dropMenuClose('chosefile');
-            let target = e.target,
-                files = target.files,
-                i = 0,
-                item,
-                key,
-                tobitv,
-                tobita;
-            if(files.length){
-                for(key in vue.items){
-                    window.URL.revokeObjectURL(vue.items[key].thumb);
-                    vue.$delete(vue.items, key);
-                }
-                recycle(files[0]);
-                function recycle(file){
-                    item = {
-                        path: file.path,
-                        thumb: config.loadingGif,
-                        canplay: !!videoEl.canPlayType(file.type),
-                        playing: 0,
-                        progress: 0,
-                        lock: vue.toolbar.toggle.lock,
-                        alpha: vue.toolbar.toggle.alpha,
-                        type: '',
-                        series: false,
-
-                        duration: 0,
-                        startTime: 0,
-                        endTime: 0,
-                        currentTime: 0,
-                        coverTime: 0,
-                        cover: false,
-                        coverWidth: 480,
-
-                        name: file.name,
-                        toname: file.name.slice(0, file.name.lastIndexOf('.')),
-
-                        bitv: 0,
-                        bita: 0,
-
-                        size: (parseInt(file.size) || 0),
-                        quality: 0,
-
-                        scale: 0,
-                        width: 0,
-                        towidth: 0,
-                        height: 0,
-                        toheight: 0,
-
-                        format: '',
-                        toformat: '',
-
-                        fps: 0,
-                        tofps: 0
-                    };
-
-                    vue.$set(vue.items, key = Object.keys(vue.items).length, item);
-
-                    Media.info({
-                        input: file.path,
-                        success: (json)=>{
-                            item.thumb = json.thumb;
-                            item.type = json.type;
-
-                            item.duration = json.duration;
-
-                            item.bitv = json.bitv || json.bit;
-                            item.bita = json.bita;
-
-                            item.scale = json.height / json.width;
-                            item.width = json.width;
-                            item.height = json.height;
-
-                            item.format = json.ext;
-                            item.fps = json.fps;
-
-                            vue.reItem(item);
-                            i++;
-                            if(files[i]) recycle(files[i]);
-                        },
-                        fail: (err)=>{
-                            vue.dialog.show = true;
-                            vue.dialog.body = `<p>文件：“${file.name}”可能不支持！是否保留以尝试转码？</p>
-                            <details class="dialog-details">
-                                <summary>详细错误</summary>
-                                <p>${err}</p>
-                            </details>`;
-                            vue.dialog.setBtn('是','否');
-                            vue.dialog.callback = function(code){
-                                if(code === 1){
-                                    window.URL.revokeObjectURL(vue.items[key].thumb);
-                                    vue.$delete(vue.items, key);
-                                }
-                                i++;
-                                if(files[i]) recycle(files[i]);
-                            };
-                        }
-                    }, vue.dialog);
-                }
-            }
+            listItems(inputEl.files);
         });
 
-        outputEl.addEventListener('change', (e)=>{
+        outputEl.addEventListener('change', ()=>{
             vue.dropMenuClose('chosedir');
-            vue.output = e.target.files[0].path || '';
+            vue.output = outputEl.files[0].path || '';
         });
         inputEl.addEventListener('cancel', ()=>{
             vue.dropMenuClose('chosefile');

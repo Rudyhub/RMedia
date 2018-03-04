@@ -199,7 +199,7 @@
     </header>
     <main class="body">
         <section class="item-list" v-if="!sprite.preview">
-            <dl class="item" v-for="(item,index) of items">
+            <dl class="item" v-for="(item,key,index) of items" :data-index="index" :data-k="key">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
                         <div class="item-preview-box" :class="{alpha: item.alpha}" v-on:click="videoFn($event,index)">
