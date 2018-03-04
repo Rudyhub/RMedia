@@ -1,6 +1,6 @@
 {
   "main": "html/index.html",
-  "name": "FMedia",
+  "name": "FUPConvert",
   "version": "1.0.0",
   "description": "The program can batch process media such as video, audio, image.",
   "nodejs": true,
