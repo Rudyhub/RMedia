@@ -198,7 +198,7 @@
         </section>
     </header>
     <main class="body">
-        <section class="item-list" :class="{'item-list-show': !sprite.preview}">
+        <section class="item-list" v-if="!sprite.preview">
             <dl class="item" v-for="(item,index) of items">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
@@ -283,10 +283,13 @@
                 </dd>
             </dl>
         </section>
-        <section id="sprite-list" class="sprite-list alpha" :class="{'sprite-list-show': sprite.preview}" :style="sprite.listCss">
-            <span class="sprite-item" v-for="(item,index) of items" :style="sprite.itemCss">
-                <img class="sprite-img" :src="item.path" :style="sprite.imgCss">
-            </span>
+        <section id="sprite-list" class="sprite-list alpha" v-if="sprite.preview" :style="sprite.listCss">
+            <template v-for="(item,index) of items">
+                <span class="sprite-item" :style="sprite.itemCss">
+                    <img class="sprite-img" :src="item.path" :style="sprite.imgCss">
+                </span>
+                <br v-if="sprite.align == 2">
+            </template>
         </section>
     </main>
     <div class="dialog-outer" :class="{'dialog-show': dialog.show}">

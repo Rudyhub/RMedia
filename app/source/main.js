@@ -90,6 +90,10 @@ const vue = new Vue({
             title: '',
             body: '',
             btns: [],
+            setBtn(){
+                this.btns.splice(0, this.btns.length);
+                this.btns.push(...arguments);
+            },
             callback: null
         }
 	},
@@ -107,7 +111,10 @@ const vue = new Vue({
                 tobitv,
                 tobita;
             if(files.length){
-                for(key in vue.items) vue.$delete(vue.items, key);
+                for(key in vue.items){
+                    window.URL.revokeObjectURL(vue.items[key].thumb);
+                    vue.$delete(vue.items, key);
+                }
                 recycle(files[0]);
                 function recycle(file){
                     item = {
@@ -182,9 +189,12 @@ const vue = new Vue({
                                 <summary>详细错误</summary>
                                 <p>${err}</p>
                             </details>`;
-                            vue.dialog.btns.push('是','否');
+                            vue.dialog.setBtn('是','否');
                             vue.dialog.callback = function(code){
-                                if(code === 1) vue.$delete(vue.items, key);
+                                if(code === 1){
+                                    window.URL.revokeObjectURL(vue.items[key].thumb);
+                                    vue.$delete(vue.items, key);
+                                }
                                 i++;
                                 if(files[i]) recycle(files[i]);
                             };
@@ -312,7 +322,7 @@ const vue = new Vue({
                 vue.dialog.show = true;
                 vue.dialog.title = '<i class="icon icon-question"></i>';
                 vue.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
-                vue.dialog.btns.push('中止','取消');
+                vue.dialog.setBtn('中止','取消');
                 vue.dialog.callback = function(code){
                     if(code === 0){
                         Media.ffmpeg.stdin.write('q\n');
@@ -325,6 +335,7 @@ const vue = new Vue({
 
             let item, bita, bitv, w, h, total, output, cammand,
                 keys = Object.keys(vue.items),
+                len = keys.length,
                 i = 0;
 
             if(keys[i]){
@@ -440,25 +451,42 @@ const vue = new Vue({
                         }else{
                             item.progress = 50;
                         }
+                        win.setProgressBar((i/len) + (1/len) * (item.progress/100));
                     },
                     complete(code, msg){
+                        vue.isStarted = false;
+                        //防止在处理过程中进行删除操作的情况
+                        keys = Object.keys(vue.items);
+                        len = keys.length;
                         if(code === 0){
                             item.progress = 100;
                             i++;
                             if(keys[i]){
                                 recycle(vue.items[ keys[i] ]);
                             }else{
+                                win.setProgressBar(-1);
                                 vue.dialog.show = true;
-                                vue.dialog.title = '完成！';
-                                vue.dialog.body = '<p>顺利完成！<i class="icon icon-grin2" style="color:#f5b018;"></i></p>';
+                                vue.dialog.title = '<i class="icon icon-grin2" style="color:#f5b018;"></i> 完成！';
+                                vue.dialog.body = '<p>顺利完成！请选择接下来的操作：<br>【移除】：移除已完成的文件;<br>【保留】：保留并且可再次处理。</p>';
+                                vue.dialog.setBtn('移除','保留');
+                                vue.dialog.callback = function(code){
+                                    for(let key in vue.items){
+                                        if(code === 0){
+                                            window.URL.revokeObjectURL(vue.items[key].thumb);
+                                            vue.$delete(vue.items, key);
+                                        }else{
+                                            vue.items[key].progress = 0;
+                                        }
+                                    }
+                                }
                             }
                         }else{
+                            win.setProgressBar(-1);
                             vue.dialog.show = true;
                             vue.dialog.title = '失败！';
                             vue.dialog.body = '<p>失败原因：'+msg+'</p>';
                             item.progress = 0;
                         }
-                        vue.isStarted = false;
                     }
                 });
             }
@@ -492,10 +520,8 @@ const vue = new Vue({
                 Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), vue.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
-                
             }else if(code == 'matrix'){
                 vue.sprite.align = parseInt(arguments[1].target.value);
-                console.log(vue.sprite.align);
                 alignFn( parseInt(vue.$refs.spriteAlign.value) );
             }
             function alignFn(val){
@@ -626,7 +652,7 @@ const vue = new Vue({
                         <summary>详细错误</summary>
                         <p>${err.toString()}</p>
                     </details>`;
-                    vue.dialog.btns.push('继续','退出');
+                    vue.dialog.setBtn('继续','退出');
                     vue.dialog.callback = function(c){
                         if(c === 0){
                             if(item){
@@ -744,7 +770,7 @@ const vue = new Vue({
                     vue.dialog.show = true;
                     vue.dialog.title = '严重提示！';
                     vue.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
-                    vue.dialog.btns.push('启用','关闭');
+                    vue.dialog.setBtn('启用','关闭');
                     vue.dialog.callback = function(code){
                         if(code === 0){
                             Media.killAll();
@@ -787,10 +813,18 @@ const vue = new Vue({
                 tmptime;
 
             switch(str){
-                case 'del': vue.$delete(vue.items, index); break;
+                case 'del':
+                {
+                    window.URL.revokeObjectURL(vue.items[index].thumb);
+                    vue.$delete(vue.items, index);
+                }
+                break;
                 case 'delAll':
                 {
-                    for(let key in vue.items) vue.$delete(vue.items, key);
+                    for(let key in vue.items){
+                        window.URL.revokeObjectURL(vue.items[key].thumb);
+                        vue.$delete(vue.items, key);
+                    }
                 }
                 break;
                 case 'lock': item.lock = !item.lock; break;
@@ -899,7 +933,7 @@ const vue = new Vue({
             vue.dialog.show = false;
             vue.dialog.title = '';
             vue.dialog.body = '';
-            vue.dialog.btns.length = 0;
+            vue.dialog.btns.splice(0, vue.dialog.btns.length);
             if(typeof vue.dialog.callback === 'function'){
                 vue.dialog.callback.call(e.currentTarget,code);
             }

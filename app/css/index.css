@@ -380,12 +380,6 @@ summary{
 
 .item-list{
     font-size: 0;
-    transform: scale(0);
-    transition: transform .8s;
-    transform-origin: top;
-}
-.item-list-show{
-    transform: scale(1);
 }
 .item{
     display: inline-block;
@@ -440,7 +434,6 @@ summary{
     height: 100%;
     background: #000;
 }
-
 .item-play-btn{
     position: absolute;
     width: 2vw;
@@ -485,6 +478,7 @@ summary{
     text-align: right;
     background: var(--black1);
     border-bottom: 2px solid var(--black3);
+    user-select: none;
 }
 .item-tool{
     display: inline-block;
@@ -584,13 +578,7 @@ summary{
     left: 0;
     font-size: 0;
     z-index: 9;
-    transform: scale(0);
-    transform-origin: top;
-    transition: transform .8s;
     white-space: nowrap;
-}
-.sprite-list-show{
-    transform: scale(1);
 }
 .sprite-item{
     display: inline-block;
@@ -607,7 +595,7 @@ summary{
 }
 
 .dialog-outer{
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     width: 100%;
@@ -617,22 +605,26 @@ summary{
     top: 0;
     left: 0;
     font-size: var(--fs16);
-    transition: all .5s;
     color: var(--light1);
-    transform: scale(0);
     z-index: 100;
 }
 .dialog-show{
-    transform: scale(1);
+    display: flex;
 }
 .dialog-inner{
     border-radius: 4px;
     overflow: hidden;
     background: var(--black2);
     border: 1px solid var(--gray3);
+    transform: scale(0);
+}
+.dialog-show .dialog-inner{
+    animation: zoomIn .5s cubic-bezier(.4,1.13,.76,1.21);
+    animation-fill-mode: forwards;
 }
 .dialog-header{
     padding: .5em;
+    min-height: 1em;
     background: var(--gray4);
     position: relative;
 }
@@ -687,4 +679,13 @@ summary{
 }
 .zoom-in{
     transform: scale(1) !important;
+}
+
+@keyframes zoomIn{
+    0%{
+        transform: scale(0);
+    }
+    100%{
+        transform: scale(1);
+    }
 }

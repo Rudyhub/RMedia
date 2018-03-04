@@ -3,9 +3,8 @@ const appRoot = cwd + '\\';
 module.exports = {
 	appRoot: appRoot,
 	ffmpegRoot: appRoot + 'ffmpeg',
-	audioThumb: appRoot + 'css\\audio.jpg',
-	loadingGif: appRoot + 'css\\loading.gif',
-	icon: appRoot + 'css\\icon.png',
+	audioThumb: '..\\css\\audio.jpg',
+	loadingGif: '..\\css\\loading.gif',
 	logPath: appRoot + 'cache\\log.txt',
 	output: {
 		folder: process.env.USERPROFILE+'\\desktop',
