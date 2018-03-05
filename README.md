@@ -6,4 +6,12 @@ FUPConvert 是基于[nw.js](https://nwjs.io/)和[vue.js](https://vuejs.org/)开�
 
 程序的使用方法参见[使用文d档](https://mystermangit.github.io/fmwwp.html);
 
-### ga
+注：FUPConvert只在Window x64使用，其他平台未做兼容处理。
+### 开发
+通过 git clone 下载本源码之后。
+在命令行中
+- 安装依赖
+>npm install
+- 启动
+>npm run app
+稍等一会即可看到软件已经打开。
