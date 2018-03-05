@@ -1,4 +1,5 @@
-const win = nw.Window.get();
+const win = nw.Window.get(),
+    version = require('./version'),
     config = require('./config'),
     Media = require('./Media'),
     utils = require('./utils'),
@@ -292,6 +293,7 @@ const vue = new Vue({
                 case 'chosedir': outputEl.click(); break;
                 case 'pdf2pic':
                     nw.Window.open('plugins/pdf2pic/pdf2pic.html',{
+                        id: 'pdf2pic',
                         position: 'center',
                         new_instance: false,
                         focus: true,
@@ -302,27 +304,30 @@ const vue = new Vue({
                 break;
             }
         },
-        convertFn(){
+        convertFn(e){
+            let item, bita, bitv, w, h, total, output, cammand, keys, len, i, target;
+
+            target = e.currentTarget;
+            target.dataset.stopAll = 0;
             if(Media.ffmpeg !== null){
                 vue.dialog.show = true;
                 vue.dialog.title = '<i class="icon icon-question"></i>';
                 vue.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
-                vue.dialog.setBtn('中止','取消');
+                vue.dialog.setBtn('中止当前','中止全部','取消');
                 vue.dialog.callback = function(code){
-                    if(code === 0){
+                    if(code === 0 || code === 1){
                         Media.ffmpeg.stdin.write('q\n');
                         Media.ffmpeg = null;
                         vue.isStarted = false;
+                        target.dataset.stopAll = code;
                     }
                 }
                 return false;
             }
 
-            let item, bita, bitv, w, h, total, output, cammand,
-                keys = Object.keys(vue.items),
-                len = keys.length,
-                i = 0;
-
+            keys = Object.keys(vue.items);
+            len = keys.length;
+            i = 0;
             if(keys[i]){
                 recycle(vue.items[ keys[i] ]);
             }else{
@@ -446,17 +451,17 @@ const vue = new Vue({
                         if(code === 0){
                             item.progress = 100;
                             i++;
-                            if(keys[i]){
+                            if(keys[i] && target.dataset.stopAll != 1){
                                 recycle(vue.items[ keys[i] ]);
                             }else{
                                 win.setProgressBar(-1);
                                 vue.dialog.show = true;
                                 vue.dialog.title = '<i class="icon icon-grin2" style="color:#f5b018;"></i> 完成！';
-                                vue.dialog.body = '<p>顺利完成！请选择接下来的操作：<br>【移除】：移除已完成的文件;<br>【保留】：保留并且可再次处理。</p>';
+                                vue.dialog.body = `<dl><dt>顺利完成！请选择接下来的操作：</dt><dd>【移除】：移除已完成的文件;</dd><dd>【保留】：保留并且可再次处理。</dd></dl>`;
                                 vue.dialog.setBtn('移除','保留');
                                 vue.dialog.callback = function(code){
                                     for(let key in vue.items){
-                                        if(code === 0){
+                                        if(code === 0 && vue.items[key].progress){
                                             window.URL.revokeObjectURL(vue.items[key].thumb);
                                             vue.$delete(vue.items, key);
                                         }else{
@@ -944,3 +949,5 @@ const vue = new Vue({
 });
 
 document.title = vue.app.window.title;
+//check update
+version(vue.app.documentation, vue.app.version, vue.dialog);

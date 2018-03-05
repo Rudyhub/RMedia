@@ -11,7 +11,7 @@
 <div id="app" v-cloak>
     <header>
         <div class="titlebar">
-            <h1 class="title draggable">{{app.window.title}}-{{app.version}}</h1>
+            <h1 class="title draggable">{{app.window.title}}</h1>
             <div class="titlebar-tool">
                 <button v-on:click="titlebarFn('min')">&minus;</button>
                 <button v-on:click="titlebarFn('toggle')" :class="{full: winToggle}"><i></i></button>
@@ -30,7 +30,7 @@
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
                 </button>
-                <button class="toolbar-item" v-on:click="convertFn">
+                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
                     <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
                 </button>
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
@@ -199,7 +199,7 @@
     </header>
     <main class="body">
         <section class="item-list" v-if="!sprite.preview">
-            <dl class="item" v-for="(item,key,index) of items" :data-index="index" :data-k="key">
+            <dl class="item" v-for="(item,index) of items">
                 <dt class="item-preview">
                     <div class="item-preview-inner">
                         <div class="item-preview-box" :class="{alpha: item.alpha}" v-on:click="videoFn($event,index)">
@@ -304,7 +304,7 @@
         </div>
     </div>
     <footer class="footer draggable">
-        {{app.window.title}} ({{app.name}} - {{app.version}}) {{app.copyright}}
+        {{app.window.title}} ({{app.name}}-v{{app.version}}) {{app.copyright}}
     </footer>
 </div>
 <script type="text/javascript" src="../src/index.js"></script>

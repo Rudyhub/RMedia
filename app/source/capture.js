@@ -38,9 +38,11 @@ const capture = {
 			this.ffmpeg = ffmpeg;
 		}
 	},
+	areaWin: null,
 	setArea(initWidth, initHeight, fn){
-		if(typeof fn !== 'function') return false;
+		if(typeof fn !== 'function' || capture.areaWin !== null) return false;
 		nw.Window.open('html/capture.html',{
+			id: 'capture',
 		    position: 'center',
 		    transparent: true,
 		    new_instance: false,
@@ -50,6 +52,7 @@ const capture = {
 		    height: initHeight,
 		    always_on_top: true
 		}, (childWin)=>{
+			capture.areaWin = childWin;
 			let childDoc = childWin.window.document;
 			let onEnter = (e)=>{
 				//on Enter
@@ -57,11 +60,13 @@ const capture = {
 					childDoc.removeEventListener('keyup',onEnter);
 					fn(childWin.x, childWin.y, childWin.width, childWin.height);
 					childWin.close();
+					capture.areaWin = null;
 				}
 				//on Esc
 				else if(e.keyCode === 27){
 					childDoc.removeEventListener('keyup',onEnter);
 					childWin.close();
+					capture.areaWin = null;
 				}
 			}
 			childDoc.addEventListener('keyup', onEnter);
@@ -69,26 +74,29 @@ const capture = {
 	},
 	progress: null,
 	complete: null,
+	shortcut: new nw.Shortcut({  
+	    key: 'F2',
+	    active : function(){
+	        if(!capture.ffmpeg) return;
+	        capture.back();
+	        capture.end();
+	        capture.ffmpeg = null;
+	        win.focus();
+	    },  
+	    failed : function(err){
+	        if(!/Unable\s+to\s+unregister\s+the\s+hotkey/i.test(err.message)){
+	            alert('用于录制屏幕的快捷'+this.key+'冲突！可通过获取焦点后按F2达到同样的目的'); 
+	        }
+	    }  
+	}),
 	go(){
 		win.moveTo(-screen.width-50, 0);
+		nw.App.registerGlobalHotKey(this.shortcut);
 	},
 	back(){
+		win.focus();
 		win.maximize();
-	},
-	shortcut(key,fail){
-		let self = this;
-		try{
-			document.removeEventListener('keyup', keyupFn);
-		}catch(err){}
-
-		document.addEventListener('keyup', keyupFn);
-		function keyupFn(e){
-			if(e.keyCode === 113 || e.keyCode === 27){
-				document.removeEventListener('keyup',keyupFn);
-				self.back();
-				self.end();
-			}
-		}
+		nw.App.unregisterGlobalHotKey(this.shortcut);
 	},
 	end(){
 		if(this.ffmpeg){
@@ -166,7 +174,7 @@ const capture = {
 				encoding: 'utf-8',  
 				mode: '0666'
 			});
-			capture.shortcut();
+
 			capture.go();
 			ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
 			ffmpeg.stderr.on('data', (stderr)=>{
