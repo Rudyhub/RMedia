@@ -1,5 +1,5 @@
 {
-  "name": "FUPConvert",
+  "name": "RMedia",
   "version": "1.0.0",
   "description": "a software for editting media files",
   "main": "index.js",
@@ -11,17 +11,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/mystermangit/fupconvert.git"
+    "url": "git+https://github.com/rudyhub/rmedia.git"
   },
-  "author": "mysterman",
+  "author": "Rudy",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/mystermangit/fupconvert/issues"
+    "url": "https://github.com/rudyhub/rmedia/issues"
   },
-  "homepage": "https://github.com/mystermangit/fupconvert#readme",
+  "homepage": "https://github.com/rudyhub/rmedia#readme",
   "devDependencies": {
     "babili-webpack-plugin": "^0.1.2",
-    "fluent-ffmpeg": "^2.1.2",
     "webpack": "^3.8.1"
   }
 }
