@@ -1,11 +1,19 @@
-const path = require('path');
-const cp = require('child_process');
+const path = require('path'),
+	cp = require('child_process'),
+	utils = require('./utils');
+
 let appRoot = path.dirname(process.execPath),
 	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe'),
 	checkPath = cp.spawnSync(ffmpegPath,['-version']);
 if(checkPath.error){
 	appRoot = process.cwd();
 	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe');
+	checkPath = cp.spawnSync(ffmpegPath, ['-version']);
+	if(checkPath.error){
+		utils.dialog.show = true;
+		utils.dialog.title = '丢失';
+		utils.dialog.body = '<p>ffmpeg文件丢失，请确保安装目录下的文件夹ffmpeg/有ffmpeg.exe和ffprobe.exe文件。</p>';
+	}
 }
 
 module.exports = {

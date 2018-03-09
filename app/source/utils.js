@@ -1,3 +1,4 @@
+const Vue = require('./vue.min');
 module.exports = {
     timemat(time){
         let t,
@@ -59,5 +60,29 @@ module.exports = {
     },
     css(node, name){
         return parseFloat(window.getComputedStyle(node)[name]);
-    }
+    },
+    dialog: new Vue({
+        el: '#dialog',
+        data: {
+            show: false,
+            title: '',
+            body: '',
+            btns: []
+        },
+        methods: {
+            setBtn(){
+                this.btns.splice(0, this.btns.length);
+                this.btns.push(...arguments);
+            },
+            dialogFn(e, code){
+                this.show = false;
+                this.title = '';
+                this.body = '';
+                this.btns.splice(0, this.btns.length);
+                if(typeof this.callback === 'function'){
+                    this.callback.call(e.currentTarget, code);
+                }
+            }
+        }
+    })
 };

@@ -292,20 +292,20 @@
             </template>
         </section>
     </main>
-    <div class="dialog-outer" :class="{'dialog-show': dialog.show}">
-        <div class="dialog-inner">
-            <div class="dialog-header">
-                <span v-html="dialog.title"></span> <i class="icon icon-cross dialog-close" v-on:click="dialogFn($event, -1)"></i>
-            </div>
-            <div class="dialog-body" v-html="dialog.body"></div>
-            <div class="dialog-footer">
-                <button class="dialog-btn" v-for="(btn,code) in dialog.btns" v-on:click="dialogFn($event, code)">{{btn}}</button>
-            </div>
-        </div>
-    </div>
     <footer class="footer draggable">
         {{app.window.title}} ({{app.name}}-v{{app.version}}) {{app.copyright}}
     </footer>
+</div>
+<div id="dialog" class="dialog-outer" :class="{'dialog-show': show}">
+    <div class="dialog-inner">
+        <div class="dialog-header">
+            <span v-html="title"></span> <i class="icon icon-cross dialog-close" v-on:click="dialogFn($event, -1)"></i>
+        </div>
+        <div class="dialog-body" v-html="body"></div>
+        <div class="dialog-footer">
+            <button class="dialog-btn" v-for="(btn,code) in btns" v-on:click="dialogFn($event, code)">{{btn}}</button>
+        </div>
+    </div>
 </div>
 <script type="text/javascript" src="../src/index.js"></script>
 </body>

@@ -1,7 +1,8 @@
 const win = nw.Window.get(),
 config = require('./config'),
 {spawn} = require('child_process'),
-fs = require('fs');
+fs = require('fs'),
+utils = require('./utils');
 
 const capture = {
 	ffmpeg: null,
@@ -103,7 +104,7 @@ const capture = {
 			this.ffmpeg.stdin.end('q\n');
 		}
 	},
-	start(output, o, dialog){
+	start(output, o){
 		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
 		//删除日志文件
 		try{
@@ -153,10 +154,10 @@ const capture = {
 		function checkOutput(){
 			fs.access(output, (err)=>{
 				if(!err){
-					dialog.show = true;
-					dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
-					dialog.setBtn('覆盖','重试','取消');
-					dialog.callback = function(code){
+					utils.dialog.show = true;
+					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
+					utils.dialog.setBtn('覆盖','重试','取消');
+					utils.dialog.callback = function(code){
 						if(code === 0){
 							begin();
 						}else if(code === 1){

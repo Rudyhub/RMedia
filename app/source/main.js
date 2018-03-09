@@ -98,14 +98,14 @@ function listItems(files){
                     if(files[i]) recycle(files[i]);
                 },
                 fail: (err)=>{
-                    vue.dialog.show = true;
-                    vue.dialog.body = `<p>文件：“${file.name}”可能不支持！是否保留以尝试转码？</p>
+                    utils.dialog.show = true;
+                    utils.dialog.body = `<p>文件：“${file.name}”可能不支持！是否保留以尝试转码？</p>
                     <details class="dialog-details">
                         <summary>详细错误</summary>
                         <p>${err}</p>
                     </details>`;
-                    vue.dialog.setBtn('是','否');
-                    vue.dialog.callback = function(code){
+                    utils.dialog.setBtn('是','否');
+                    utils.dialog.callback = function(code){
                         if(code === 1){
                             window.URL.revokeObjectURL(vue.items[key].thumb);
                             vue.$delete(vue.items, key);
@@ -114,7 +114,7 @@ function listItems(files){
                         if(files[i]) recycle(files[i]);
                     };
                 }
-            }, vue.dialog);
+            }, utils.dialog);
         }
     }
 }
@@ -168,18 +168,7 @@ const vue = new Vue({
             imgCss: ''
         },
         toformats: ['mp4','webm','ogg','mp3','jpg','png','gif','jpeg','webp','ico','bmp'],
-        framestep: 2,
-        dialog: {
-            show: false,
-            title: '',
-            body: '',
-            btns: [],
-            setBtn(){
-                this.btns.splice(0, this.btns.length);
-                this.btns.push(...arguments);
-            },
-            callback: null
-        }
+        framestep: 2
 	},
     created(){
         inputEl.type = outputEl.type = 'file';
@@ -218,9 +207,9 @@ const vue = new Vue({
                     item.thumb = src;
                 },
                 fail(){
-                    vue.dialog.show = true;
-                    vue.dialog.title = '错误！';
-                    vue.dialog.body = '<p>微调发生错误！</p>';
+                    utils.dialog.show = true;
+                    utils.dialog.title = '错误！';
+                    utils.dialog.body = '<p>微调发生错误！</p>';
                 }
             });
         },
@@ -310,11 +299,11 @@ const vue = new Vue({
             target = e.currentTarget;
             target.dataset.stopAll = 0;
             if(Media.ffmpeg !== null){
-                vue.dialog.show = true;
-                vue.dialog.title = '<i class="icon icon-question"></i>';
-                vue.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
-                vue.dialog.setBtn('中止当前','中止全部','取消');
-                vue.dialog.callback = function(code){
+                utils.dialog.show = true;
+                utils.dialog.title = '<i class="icon icon-question"></i>';
+                utils.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
+                utils.dialog.setBtn('中止当前','中止全部','取消');
+                utils.dialog.callback = function(code){
                     if(code === 0 || code === 1){
                         Media.ffmpeg.stdin.write('q\n');
                         Media.ffmpeg = null;
@@ -331,9 +320,9 @@ const vue = new Vue({
             if(keys[i]){
                 recycle(vue.items[ keys[i] ]);
             }else{
-                vue.dialog.show = true;
-                vue.dialog.title = '警告！';
-                vue.dialog.body = '<p>没有输入任何文件！</p>';
+                utils.dialog.show = true;
+                utils.dialog.title = '警告！';
+                utils.dialog.body = '<p>没有输入任何文件！</p>';
             }
 
             function recycle(item){
@@ -347,15 +336,15 @@ const vue = new Vue({
                 //如果是序列图
                 if(item.series){
                     if(item.type !== 'image'){
-                        vue.dialog.show = true;
-                        vue.dialog.title = '警告！';
-                        vue.dialog.body = '<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.title = '警告！';
+                        utils.dialog.body = '<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>';
                         return;
                     }
                     if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
-                        vue.dialog.show = true;
-                        vue.dialog.title = '警告！';
-                        vue.dialog.body = '<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.title = '警告！';
+                        utils.dialog.body = '<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>';
                         return;
                     }
                     let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
@@ -372,9 +361,9 @@ const vue = new Vue({
                         if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
                         cammand.push(output);
                     }else{
-                        vue.dialog.show = true;
-                        vue.dialog.title = '错误！';
-                        vue.dialog.body = `<p>序列图不满足条件！</p>
+                        utils.dialog.show = true;
+                        utils.dialog.title = '错误！';
+                        utils.dialog.body = `<p>序列图不满足条件！</p>
                         <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
                         <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
                         <p>然后只需要选择第一张图片即可</p>`;
@@ -382,16 +371,16 @@ const vue = new Vue({
                 }else{
                    //图片不能输出为音频
                     if(item.type === 'image' && Media.is(item.toformat, 'audio')){
-                        vue.dialog.show = true;
-                        vue.dialog.title = '错误！';
-                        vue.dialog.body = '<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.title = '错误！';
+                        utils.dialog.body = '<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>';
                         return;
                     }
                     //音频不能输出为图片
                     if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
-                        vue.dialog.show = true;
-                        vue.dialog.title = '错误！';
-                        vue.dialog.body = '<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.title = '错误！';
+                        utils.dialog.body = '<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>';
                         return;
                     }
 
@@ -455,11 +444,11 @@ const vue = new Vue({
                                 recycle(vue.items[ keys[i] ]);
                             }else{
                                 win.setProgressBar(-1);
-                                vue.dialog.show = true;
-                                vue.dialog.title = '<i class="icon icon-grin2" style="color:#f5b018;"></i> 完成！';
-                                vue.dialog.body = `<dl><dt>顺利完成！请选择接下来的操作：</dt><dd>【移除】：移除已完成的文件;</dd><dd>【保留】：保留并且可再次处理。</dd></dl>`;
-                                vue.dialog.setBtn('移除','保留');
-                                vue.dialog.callback = function(code){
+                                utils.dialog.show = true;
+                                utils.dialog.title = '<i class="icon icon-grin2" style="color:#f5b018;"></i> 完成！';
+                                utils.dialog.body = `<dl><dt>顺利完成！请选择接下来的操作：</dt><dd>【移除】：移除已完成的文件;</dd><dd>【保留】：保留并且可再次处理。</dd></dl>`;
+                                utils.dialog.setBtn('移除','保留');
+                                utils.dialog.callback = function(code){
                                     for(let key in vue.items){
                                         if(code === 0 && vue.items[key].progress){
                                             window.URL.revokeObjectURL(vue.items[key].thumb);
@@ -472,9 +461,9 @@ const vue = new Vue({
                             }
                         }else{
                             win.setProgressBar(-1);
-                            vue.dialog.show = true;
-                            vue.dialog.title = '失败！';
-                            vue.dialog.body = '<p>失败原因：'+msg+'</p>';
+                            utils.dialog.show = true;
+                            utils.dialog.title = '失败！';
+                            utils.dialog.body = '<p>失败原因：'+msg+'</p>';
                             item.progress = 0;
                         }
                     }
@@ -507,7 +496,7 @@ const vue = new Vue({
                     ctx.drawImage(img, x, y, w, h);
                 }
 
-                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), vue.dialog);
+                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
             }else if(code == 'matrix'){
@@ -617,8 +606,8 @@ const vue = new Vue({
             if(item){
                 recycle(item)
             }else{
-                vue.dialog.show = true;
-                vue.dialog.body = '<p>没有输入任何文件！</p>';
+                utils.dialog.show = true;
+                utils.dialog.body = '<p>没有输入任何文件！</p>';
             }
             function recycle(item){
                 k = Object.keys(vue.items)[++n];
@@ -635,15 +624,15 @@ const vue = new Vue({
             function oneComplete(err){
                 item = vue.items[k];
                 if(err){
-                    vue.dialog.show = true;
-                    vue.dialog.title = '错误！';
-                    vue.dialog.body = `<p>有文件重命名失败！</p>
+                    utils.dialog.show = true;
+                    utils.dialog.title = '错误！';
+                    utils.dialog.body = `<p>有文件重命名失败！</p>
                     <details class="dialog-details">
                         <summary>详细错误</summary>
                         <p>${err.toString()}</p>
                     </details>`;
-                    vue.dialog.setBtn('继续','退出');
-                    vue.dialog.callback = function(c){
+                    utils.dialog.setBtn('继续','退出');
+                    utils.dialog.callback = function(c){
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -661,9 +650,9 @@ const vue = new Vue({
                 }
             }
             function allComplete(){
-                vue.dialog.show = true;
-                vue.dialog.title = '结束！';
-                vue.dialog.body = '<p>输出目录：'+vue.output+', 可前往查看序列化重命名结果。</p>';
+                utils.dialog.show = true;
+                utils.dialog.title = '结束！';
+                utils.dialog.body = '<p>输出目录：'+vue.output+', 可前往查看序列化重命名结果。</p>';
             }
         },
         captureFn(e,code){
@@ -679,9 +668,9 @@ const vue = new Vue({
                 {
                     capture.audioDevices((err, list)=>{
                         if(err){
-                            vue.dialog.show = true;
-                            vue.dialog.title = '失败！';
-                            vue.dialog.body = '<p>'+err+'</p>';
+                            utils.dialog.show = true;
+                            utils.dialog.title = '失败！';
+                            utils.dialog.body = '<p>'+err+'</p>';
                         }else{
                             let i = 0, len, devices = params.audioDevices;
                             len = list.length;
@@ -709,13 +698,13 @@ const vue = new Vue({
                 case 0:
                 {
                     if(params.mode !== 4 && params.fps > 60){
-                        vue.dialog.show = true;
-                        vue.dialog.body = '<p>帧速率不能超过 60</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.body = '<p>帧速率不能超过 60</p>';
                         return;
                     }
                     if(params.mode !== 2 && params.mode !== 3 && !params.audioDevice){
-                        vue.dialog.show = true;
-                        vue.dialog.body = '<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>';
+                        utils.dialog.show = true;
+                        utils.dialog.body = '<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>';
                         return;
                     }
                     output = vue.output + '\\'+vue.batchParams.nameAll;
@@ -728,20 +717,20 @@ const vue = new Vue({
                     // capture.progress = (time)=>{}
 
                     capture.complete = (err)=>{
-                        vue.dialog.show = true;
+                        utils.dialog.show = true;
                         if(err){
-                            vue.dialog.title = '失败！';
-                            vue.dialog.body = `<p>错误码：${err.code}</p>
+                            utils.dialog.title = '失败！';
+                            utils.dialog.body = `<p>错误码：${err.code}</p>
                             <details class="dialog-details">
                                 <summary>详细错误</summary>
                                 <p>${err.message}</p>
                             </details>`;
                         }else{
-                            vue.dialog.title = '完成！';
-                            vue.dialog.body = '<p>输出位置：'+output+'</p>';
+                            utils.dialog.title = '完成！';
+                            utils.dialog.body = '<p>输出位置：'+output+'</p>';
                         }
                     }
-                    capture.start(output, vue.capParams, vue.dialog);
+                    capture.start(output, vue.capParams);
                 }
                 break;
             }
@@ -757,11 +746,11 @@ const vue = new Vue({
 
             switch(name){
                 case 'firstAid':
-                    vue.dialog.show = true;
-                    vue.dialog.title = '严重提示！';
-                    vue.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
-                    vue.dialog.setBtn('启用','关闭');
-                    vue.dialog.callback = function(code){
+                    utils.dialog.show = true;
+                    utils.dialog.title = '严重提示！';
+                    utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
+                    utils.dialog.setBtn('启用','关闭');
+                    utils.dialog.callback = function(code){
                         if(code === 0){
                             Media.killAll();
                         }
@@ -918,15 +907,6 @@ const vue = new Vue({
                     item.towidth = Math.round(item.toheight / item.scale);
                 }
             }
-        },
-        dialogFn(e, code){
-            vue.dialog.show = false;
-            vue.dialog.title = '';
-            vue.dialog.body = '';
-            vue.dialog.btns.splice(0, vue.dialog.btns.length);
-            if(typeof vue.dialog.callback === 'function'){
-                vue.dialog.callback.call(e.currentTarget,code);
-            }
         }
     },
     filters: {
@@ -950,4 +930,4 @@ const vue = new Vue({
 
 document.title = vue.app.window.title;
 //check update
-version(vue.app.documentation, vue.app.version, vue.dialog);
+version(vue.app.documentation, vue.app.version, utils.dialog);
