@@ -70,11 +70,16 @@ function listItems(files){
                 toformat: '',
 
                 fps: 0,
-                tofps: 0
+                tofps: 0,
+
+                split: false,
+                achannel: '',
+                aclayout: 0,
+                vchannel: ''
             };
 
             vue.$set(vue.items, key = Object.keys(vue.items).length, item);
-
+            // Media.meta(file.path);
             Media.info({
                 input: file.path,
                 success: (json)=>{
@@ -92,6 +97,10 @@ function listItems(files){
 
                     item.format = json.ext;
                     item.fps = json.fps;
+
+                    item.achannel = json.achannel;
+                    item.aclayout = json.aclayout;
+                    item.vchannel = json.vchannel;
 
                     vue.reItem(item);
                     i++;
@@ -228,6 +237,7 @@ const vue = new Vue({
             item.towidth = item.width;
             item.toheight = item.height;
             item.tofps = item.fps;
+            item.split = false;
         },
         //event function
         titlebarFn(name){
@@ -692,47 +702,47 @@ const vue = new Vue({
                         params.y = y;
                         params.width = w;
                         params.height = h;
+                        start();
                     });
                 }
                 break;
-                case 0:
-                {
-                    if(params.mode !== 4 && params.fps > 60){
-                        utils.dialog.show = true;
-                        utils.dialog.body = '<p>帧速率不能超过 60</p>';
-                        return;
-                    }
-                    if(params.mode !== 2 && params.mode !== 3 && !params.audioDevice){
-                        utils.dialog.show = true;
-                        utils.dialog.body = '<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>';
-                        return;
-                    }
-                    output = vue.output + '\\'+vue.batchParams.nameAll;
-                    if(params.mode === 4){
-                        output += '.mp3';
-                    }else{
-                        output += '.mp4';
-                    }
-
-                    // capture.progress = (time)=>{}
-
-                    capture.complete = (err)=>{
-                        utils.dialog.show = true;
-                        if(err){
-                            utils.dialog.title = '失败！';
-                            utils.dialog.body = `<p>错误码：${err.code}</p>
-                            <details class="dialog-details">
-                                <summary>详细错误</summary>
-                                <p>${err.message}</p>
-                            </details>`;
-                        }else{
-                            utils.dialog.title = '完成！';
-                            utils.dialog.body = '<p>输出位置：'+output+'</p>';
-                        }
-                    }
-                    capture.start(output, vue.capParams);
+                case 0: start(); break;
+            }
+            function start(){
+                if(params.mode !== 4 && params.fps > 60){
+                    utils.dialog.show = true;
+                    utils.dialog.body = '<p>帧速率不能超过 60</p>';
+                    return;
                 }
-                break;
+                if(params.mode !== 2 && params.mode !== 3 && !params.audioDevice){
+                    utils.dialog.show = true;
+                    utils.dialog.body = '<p>无可用于录制音频的设备，请检测设备或查看帮助文档。</p>';
+                    return;
+                }
+                output = vue.output + '\\'+vue.batchParams.nameAll;
+                if(params.mode === 4){
+                    output += '.mp3';
+                }else{
+                    output += '.mp4';
+                }
+
+                // capture.progress = (time)=>{}
+
+                capture.complete = (err)=>{
+                    utils.dialog.show = true;
+                    if(err){
+                        utils.dialog.title = '失败！';
+                        utils.dialog.body = `<p>错误码：${err.code}</p>
+                        <details class="dialog-details">
+                            <summary>详细错误</summary>
+                            <p>${err.message}</p>
+                        </details>`;
+                    }else{
+                        utils.dialog.title = '完成！';
+                        utils.dialog.body = '<p>输出位置：'+output+'</p>';
+                    }
+                }
+                capture.start(output, vue.capParams);
             }
             if(code === 0 || code === -1){
                 vue.dropMenuClose('capture');

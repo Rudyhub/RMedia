@@ -68,9 +68,11 @@ const capture = {
 					childDoc.removeEventListener('keyup',onEnter);
 					childWin.close();
 					capture.areaWin = null;
+					win.show();
 				}
 			}
 			childDoc.addEventListener('keyup', onEnter);
+			win.hide();
 		});
 	},
 	progress: null,
@@ -154,6 +156,7 @@ const capture = {
 		function checkOutput(){
 			fs.access(output, (err)=>{
 				if(!err){
+					win.show();
 					utils.dialog.show = true;
 					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
 					utils.dialog.setBtn('覆盖','重试','取消');

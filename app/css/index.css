@@ -190,7 +190,7 @@ summary{
 }
 .text-indent{
     text-indent: 2em;
-    display: inline-block;
+    display: block;
 }
 .text-limit-c10{
     display: inline-block;

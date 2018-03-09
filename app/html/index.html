@@ -130,9 +130,7 @@
                     <p>输出后匹配宽度： <input type="number" v-model.lazy="capParams.widthLimit" :disabled="capParams.mode==4">px</p>
                     <p>当前录制区域：
                         <button v-on:click="captureFn($event,3)" :disabled="capParams.mode!=1 && capParams.mode!=3">调整录制区域</button>
-                        <br>
                         <span class="text-indent tip">顶部: {{capParams.y}} px &nbsp;&nbsp; 左边: {{capParams.x}} px </span>
-                        <br>
                         <span class="text-indent tip">宽度: {{capParams.width}} px &nbsp;&nbsp; 高度: {{capParams.height}} px </span>
                     </p>
                 </div>
@@ -174,8 +172,8 @@
                         <textarea v-model="sprite.imgCss" rows="8" cols="50"></textarea>
                         <p class="tip">
                             <b>写法如(英文半角)：</b><br>
-                            <span class="text-indent">width: 50%;</span><br>
-                            <span class="text-indent">height: 50%;</span><br>
+                            <span class="text-indent">width: 50%;</span>
+                            <span class="text-indent">height: 50%;</span>
                             <span class="text-indent">padding: 5px;</span>
                         </p>
                     </details>
@@ -275,6 +273,15 @@
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
+                    </div>
+                </dd>
+                <dd class="item-row">
+                    <div class="item-old">分离数据：</div>
+                    <div class="item-new">
+                        <div v-if="item.aclayout">
+                            <input type="checkbox" v-model="item.split"> {{item.split ? '分离':'保持'}}
+                        </div>
+                        <div v-else>不可分离</div>
                     </div>
                 </dd>
                 <dd class="item-mask" v-if="item.progress">

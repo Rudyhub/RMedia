@@ -28,13 +28,15 @@ module.exports = {
                 height: 0,
                 fps: 0,
                 ext: ext,
-                type: null
+                type: null,
+                vchannel: '',
+                achannel: '',
+                aclayout: 0
             },
             status = true,
 
             ffmpeg = childprocess.exec(config.ffmpegPath+' -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
-
             for(; i < len; i++){
                 line = lines[i].trim();
                 if(/(^stream\s*mapping)|(^output)/i.test(line)) break;
@@ -43,21 +45,28 @@ module.exports = {
                     json.duration = parseInt(times[0])*3600 + parseInt(times[1])*60 + parseFloat(times[2]);
                     json.bit = parseFloat(match[2]);
                 }
-                else if(match = /^stream[\s\S]*?video\s*:\s*([\s\S]*?)$/i.exec( line )){
+                else if(match = /^stream\s+#(\d+:\d+)[\s\S]*?video\s*:\s*([\s\S]*?)$/i.exec( line )){
                     let size, fps, bitv;
-                    if( size = /,\s*(\d+)x(\d+)/i.exec(match[1]) ){
+                    json.vchannel = match[1];
+                    if( size = /,\s*(\d+)x(\d+)/i.exec(match[2]) ){
                         json.width = parseFloat(size[1]);
                         json.height = parseFloat(size[2]);
                     }
-                    if( fps = /,\s*([\d\.]+)\s*fps\s*,/i.exec(match[1]) ){
+                    if( fps = /,\s*([\d\.]+)\s*fps\s*,/i.exec(match[2]) ){
                         json.fps = parseFloat(fps[1]);
                     }
-                    if( bitv = /,\s*([\d\.]+)\s*kb\/s/i.exec(match[1]) ){
+                    if( bitv = /,\s*([\d\.]+)\s*kb\/s/i.exec(match[2]) ){
                         json.bitv = parseFloat(bitv[1]);
                     }
                 }
-                else if(match = /^stream[\s\S]*?audio\s*:[\s\S]*?([\d\.]+)\s*kb\/s/i.exec( line ) ){
-                    json.bita = parseFloat(match[1]);
+                else if(match = /^stream\s+#(\d+:\d+)[\s\S]*?audio\s*:[\s\S]*?hz,\s*(\w+),[\s\S]*?([\d\.]+)\s*kb\/s/i.exec( line ) ){
+                    json.achannel = match[1];
+                    if(match[2] == 'stereo'){
+                        json.aclayout = 2;
+                    }else if(match[2] == 'mono'){
+                        json.aclayout = 1;
+                    }
+                    json.bita = parseFloat(match[3]);
                 }
             }
 
@@ -75,7 +84,6 @@ module.exports = {
             if(json.bit <= 0){
                 json.bit = json.bita + json.bitv;
             }
-
         }).once('close',(a,b)=>{
             if(a === 0){
                 if(success) success(json);
