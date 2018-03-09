@@ -16,23 +16,22 @@ RMedia 是基于[nw.js](https://nwjs.io/)和[vue.js](https://vuejs.org/)开发�
 - 将下载的`ffmpeg-3.4.2-win64-static.zip`包解压后，把bin文件夹下的ffmpeg.exe和ffprobe.exe文件复制到项目的ffmpeg文件夹下。
 - [下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开始时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开始的东西。
 - 将nwjs-sdk-v0.26.6-win-x64.zip压缩到当前目录RMedia/下，命名文件夹为nwjs，最终的文件树枝关系如：
-`* RMedia
-	* app/
-		* cache/
-		* css/
-		* ffmpeg/
-			* ffmpeg.exe
-			* ffprobe.exe
-			* ...
-	* nwjs/
-		* ...
-		* nw.exe
-		* ...
-	* .gitignore
-	* package.json
-	* README.md
-	* webpack.config.js
-`
+* `RMedia`
+	* `app/`
+		* `cache/`
+		* `css/`
+		* `ffmpeg/`
+			* `ffmpeg.exe`
+			* `ffprobe.exe`
+			* `...`
+	* `nwjs/`
+		* `...`
+		* `nw.exe`
+		* `...`
+	* `.gitignore`
+	* `package.json`
+	* `README.md`
+	* `webpack.config.js`
 - 启动：`npm run app`
 稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
 然后右击软件，在右键菜单中选`重新加载应用`，即刷新（其他刷新方式：F12调出调试工具，在工具中再按F5即刷新）。
