@@ -7,7 +7,7 @@ module.exports = {
         filename: "index.js"
     },
     target: 'node-webkit',
-    plugins: [
-        new BabiliPlugin()
-    ]
+    // plugins: [
+    //     new BabiliPlugin()
+    // ]
 };
