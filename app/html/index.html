@@ -264,9 +264,12 @@
                 <dd class="item-row">
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
                     <div class="item-new">
-                        <input type="checkbox" v-model="item.cover">
-                        <button v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
-                        <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover || item.type=='image'">px
+                        <div v-if="item.type === 'video'">
+                            <input type="checkbox" v-model="item.cover">
+                            <button v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
+                            <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover || item.type=='image'">px
+                        </div>
+                        <div v-else>不支持</div>
                     </div>
                 </dd>
                 <dd class="item-row">
@@ -276,6 +279,15 @@
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
+                    </div>
+                </dd>
+                <dd class="item-row">
+                    <div class="item-old">分离提取:</div>
+                    <div class="item-new">
+                        <div v-if="item.vchannel && item.achannel">
+                            <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
+                        </div>
+                        <div v-else>不支持</div>
                     </div>
                 </dd>
                 <dd class="item-mask" v-if="item.progress">

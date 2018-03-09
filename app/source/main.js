@@ -72,6 +72,7 @@ function listItems(files){
                 fps: 0,
                 tofps: 0,
 
+                split: false,
                 achannel: '',
                 aclayout: 0,
                 vchannel: ''
@@ -175,7 +176,7 @@ const vue = new Vue({
             itemCss: '',
             imgCss: ''
         },
-        toformats: ['mp4','webm','ogg','mp3','jpg','png','gif','jpeg','webp','ico','bmp'],
+        toformats: ['mp4','webm','ogg','mp3','wav','jpg','png','gif','jpeg','webp','ico','bmp'],
         framestep: 2
 	},
     created(){
@@ -326,7 +327,13 @@ const vue = new Vue({
             len = keys.length;
             i = 0;
             isplit = target.name === 'split';
-            if(len) recycle(vue.items[ keys[i] ]);
+            if(len){
+                recycle(vue.items[ keys[i] ]);
+            }else{
+                utils.dialog.show = true;
+                utils.dialog.title = '哦嚯！';
+                utils.dialog.body = '<p>哦嚯！没有输入任何文件。</p>';
+            }
 
             function recycle(item){
                 bita = item.bita < config.output.bita ? item.bita : config.output.bita;
@@ -345,16 +352,11 @@ const vue = new Vue({
                         cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p', output);
 
                         achannel = item.achannel.replace(':','.');
-                        switch(item.aclayout){
-                            case 1:
-                                cammand.push('-map_channel', achannel+'.0', vue.output + '\\' + item.toname + '.mp3');
-                            break;
-                            case 2:
-                                cammand.push('-map_channel', achannel+'.0', vue.output + '\\' + item.toname + '_1.mp3',
-                                    '-map_channel', achannel+'.1', vue.output + '\\' + item.toname + '_2.mp3');
-                            break;
-                            default:
-                                cammand.push('-map', item.achannel, vue.output + '\\' + item.toname + '.mp3');
+                        if(item.aclayout === 2){
+                            cammand.push('-map_channel', achannel+'.0', vue.output + '\\' + item.toname + '_1.mp3',
+                                '-map_channel', achannel+'.1', vue.output + '\\' + item.toname + '_2.mp3');
+                        }else{
+                            cammand.push('-map', item.achannel, vue.output + '\\' + item.toname + '.mp3');
                         }
                     }else{
                         utils.dialog.show = true;
@@ -433,9 +435,8 @@ const vue = new Vue({
                     cammand.push('-preset', vue.batchParams.speed, '-y', output);
                 }
                 
-
                 //只允许输出为视频文件时可输出预览图
-                if(item.cover && !Media.is(item.toformat, 'image')){
+                if(item.cover && Media.is(item.toformat, 'video')){
                     w = item.coverWidth;
                     h = w * item.scale;
                     if(w%2 !== 0) w--;
