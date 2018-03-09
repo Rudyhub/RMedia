@@ -1,4 +1,3 @@
 node_modules/
 test/
-ffmpeg.exe
-ffprobe.exe
+ffmpeg/
