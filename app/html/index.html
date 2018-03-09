@@ -21,6 +21,9 @@
         <section>
             <!-- 一级工菜单 -->
             <div class="toolbar">
+                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
+                    <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
+                </button>
                 <button class="toolbar-item" name="chosefile" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'chosefile'}">
                     <i class="icon icon-folder-open"></i> 选择文件
                 </button>
@@ -30,8 +33,8 @@
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
                 </button>
-                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
-                    <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
+                <button class="toolbar-item" name="split" v-on:click="convertFn" :class="{'active-1': isSpliting}">
+                    分离提取
                 </button>
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
                     <i class="icon icon-camera"></i> 屏幕录制
@@ -273,15 +276,6 @@
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
-                    </div>
-                </dd>
-                <dd class="item-row">
-                    <div class="item-old">分离数据：</div>
-                    <div class="item-new">
-                        <div v-if="item.aclayout">
-                            <input type="checkbox" v-model="item.split"> {{item.split ? '分离':'保持'}}
-                        </div>
-                        <div v-else>不可分离</div>
                     </div>
                 </dd>
                 <dd class="item-mask" v-if="item.progress">
