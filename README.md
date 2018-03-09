@@ -15,6 +15,9 @@
 ### 适用平台
 Window7 x64和Window10 x64可以使用，其他平台没有测试过。
 
+### 使用方法
+参考文档说明[文档](https://rudyhub.github.io/rmedia.html)。
+
 ### 开发环境
 1. node + npm
 2. webpack3
