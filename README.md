@@ -46,20 +46,20 @@ npm install
 > 将nwjs-sdk-v0.26.6-win-x64.zip压缩到当前目录RMedia/下，命名文件夹为nwjs，最终的文件树枝关系如：
 ```
 > RMedia/
-	- app/
-		- cache/
-		- css/
-		- ffmpeg/
-			- ffmpeg.exe
-			- ...
-	- nwjs/
-		- ...
-		- nw.exe
-		- ...
-	- .gitignore
-	- package.json
-	- README.md
-	- webpack.config.js
+|	- app/
+|	|	- cache/
+|	|	- css/
+|	|	- ffmpeg/
+|	|	|	- ffmpeg.exe
+|	|	|	- ...
+|	- nwjs/
+|	|	- ...
+|	|	- nw.exe
+|	|	- ...
+|	- .gitignore
+|	- package.json
+|	- README.md
+|	- webpack.config.js
  ```
 7. 启动：
 ```
