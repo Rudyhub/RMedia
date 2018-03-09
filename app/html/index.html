@@ -33,8 +33,8 @@
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
                 </button>
-                <button class="toolbar-item" name="split" v-on:click="convertFn" :class="{'active-1': isSpliting}">
-                    分离提取
+                <button class="toolbar-item" name="split" v-on:click="convertFn">
+                    <i class="icon icon-calculator"></i> 分离提取
                 </button>
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
                     <i class="icon icon-camera"></i> 屏幕录制
@@ -193,7 +193,7 @@
                     <button class="submenu-btn" name="firstAid" v-on:click="helpFn"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
                 </li>
                 <li class="submenu-item">
-                    <button class="submenu-btn" name="helpBook" v-on:click="helpFn"><i class="icon icon-point-right"></i> 帮助文档</button>
+                    <button class="submenu-btn" name="helpBook" v-on:click="helpFn"><i class="icon icon-book"></i> 帮助文档</button>
                 </li>
             </ul>
         </section>

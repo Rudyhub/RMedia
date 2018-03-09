@@ -380,7 +380,6 @@ const vue = new Vue({
 		output: config.output.folder,
         items: {},
         isStarted: false,
-        isSpliting: false,
 		winToggle: true,
         batchParams: {
             speed: 'slow',
@@ -587,7 +586,7 @@ const vue = new Vue({
                         cammand.push('-y');
                         if(item.startTime > 0) cammand.push('-ss', item.startTime);
                         if(total > 0) cammand.push('-t', total);
-                        cammand.push('-i', item.path, '-map', item.vchannel, vue.output + '\\' + item.toname + '.'+ item.toformat);
+                        cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p', output);
 
                         achannel = item.achannel.replace(':','.');
                         switch(item.aclayout){
@@ -626,13 +625,6 @@ const vue = new Vue({
                             cammand.push('-y','-r', 25, '-i', item.path.replace(reg, function($0,$1){
                                 return '%0'+$1.length+'d.'+item.format;
                             }));
-
-                            if(w%2 !== 0) w--;
-                            if(h%2 !== 0) h--;
-                            cammand.push('-s',w+'x'+h);
-
-                            if(item.toformat !== 'gif') cammand.push('-pix_fmt','yuv420p');
-                            cammand.push(output);
                         }else{
                             utils.dialog.show = true;
                             utils.dialog.title = '错误！';
@@ -670,29 +662,32 @@ const vue = new Vue({
                             if(bitv) cammand.push('-b:v', bitv+'k');
                             if(bita) cammand.push('-b:a', bita+'k');
                         }
-                        
-                        if(w && h){
-                            if(w%2 !== 0) w--;
-                            if(h%2 !== 0) h--;
-                            cammand.push('-s', w+'x'+h);
-                        }
-
-                        if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
-
-                        cammand.push('-preset', vue.batchParams.speed, '-y', output); 
-                    }
-                    
-
-                    //只允许输出为视频文件时可输出预览图
-                    if(item.cover && !Media.is(item.toformat, 'image')){
-                        w = item.coverWidth;
-                        h = w * item.scale;
-                        if(w%2 !== 0) w--;
-                        if(h%2 !== 0) h--;
-                        if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
-                        cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
                     }
                 }
+
+                //比例
+                if(w && h){
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                    cammand.push('-s', w+'x'+h);
+                }
+
+                if(!isplit){
+                    if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
+                    cammand.push('-preset', vue.batchParams.speed, '-y', output);
+                }
+                
+
+                //只允许输出为视频文件时可输出预览图
+                if(item.cover && !Media.is(item.toformat, 'image')){
+                    w = item.coverWidth;
+                    h = w * item.scale;
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                    if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
+                    cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
+                }
+
                 item.progress = 0;
                 vue.isStarted = true;
                 Media.convert({
@@ -1165,7 +1160,22 @@ const vue = new Vue({
                 break;
                 case 'setcover':
                 {
-                    item.coverTime = item.currentTime;
+                    if(item.currentTime < item.startTime || item.currentTime > item.endTime ){
+                        utils.dialog.show = true;
+                        utils.dialog.title = '注意';
+                        utils.dialog.body = '<p>取预览图的位置必须是在截取时间'+utils.timemat(item.startTime*1000)+'到'+utils.timemat(item.endTime*1000)+'</p>';
+                        utils.dialog.callback = ()=>{
+                            item.coverTime = item.currentTime > item.startTime ? item.endTime : item.startTime;
+                            item.currentTime = item.coverTime;
+                            if(item.canplay){
+                                vue.$refs['id'+index][0].currentTime = item.currentTime;
+                            }else if(item.type === 'video'){
+                                vue.getThumb(item);
+                            }
+                        }
+                    }else{
+                        item.coverTime = item.currentTime;
+                    }
                 }
                 break;
                 case 'towidth':
