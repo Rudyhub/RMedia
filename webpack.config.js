@@ -6,7 +6,8 @@ module.exports = {
         path: __dirname + "/app/src",
         filename: "index.js"
     },
-    target: 'node-webkit',
+    target: 'node-webkit'
+    // ,
     // plugins: [
     //     new BabiliPlugin()
     // ]
