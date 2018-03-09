@@ -1,11 +1,21 @@
-const cwd = process.cwd();
-const appRoot = cwd + '\\';
+const path = require('path');
+const cp = require('child_process');
+let appRoot = path.dirname(process.execPath),
+	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe'),
+	checkPath = cp.spawnSync(ffmpegPath,['-version']);
+if(checkPath.error){
+	appRoot = process.cwd();
+	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe');
+}
+
 module.exports = {
 	appRoot: appRoot,
-	ffmpegRoot: appRoot + 'ffmpeg',
-	audioThumb: '..\\css\\audio.jpg',
-	loadingGif: '..\\css\\loading.gif',
-	logPath: appRoot + 'cache\\log.txt',
+	ffmpegPath: ffmpegPath,
+	ffprobePath: path.normalize(appRoot+'\\ffmpeg\\ffprobe.exe'),
+	audioThumb: path.normalize('..\\css\\audio.jpg'),
+	loadingGif: path.normalize('..\\css\\loading.gif'),
+	logPath: path.normalize(appRoot + '\\cache\\log.txt'),
+	cacheThumb: path.normalize(appRoot + '\\cache\\thumb'),
 	output: {
 		folder: process.env.USERPROFILE+'\\desktop',
 		width: 1280,

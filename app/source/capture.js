@@ -11,7 +11,7 @@ const capture = {
 
 			list = [];
 
-			ffmpeg = spawn(config.ffmpegRoot+'\\ffmpeg.exe', ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
+			ffmpeg = spawn(config.ffmpegPath, ['-hide_banner','-list_devices','true','-f','dshow','-i','dummy']);
 			ffmpeg.stderr.on('data', (stderr)=>{
 				lines += stderr.toString();
 			});
@@ -176,7 +176,7 @@ const capture = {
 			});
 
 			capture.go();
-			ffmpeg = spawn(config.ffmpegRoot + '\\ffmpeg.exe', cammand);
+			ffmpeg = spawn(config.ffmpegPath, cammand);
 			ffmpeg.stderr.on('data', (stderr)=>{
 				line = stderr.toString();
 				if(typeof capture.progress === 'function' && (line = /time=\s*([\d\:\.]*?)\s+/i.exec(line)) ){

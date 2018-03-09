@@ -32,7 +32,7 @@ module.exports = {
             },
             status = true,
 
-            ffmpeg = childprocess.exec(config.ffmpegRoot+'\\ffmpeg.exe -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
+            ffmpeg = childprocess.exec(config.ffmpegPath+' -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
 
             for(; i < len; i++){
@@ -109,9 +109,9 @@ module.exports = {
         }
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
-        ffmpeg = childprocess.exec(config.ffmpegRoot+'\\ffmpeg.exe -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.appRoot+'cache/thumb"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.cacheThumb+'"',(err,stdout,stderr)=>{
             if(!err){
-                let tmp = fs.readFileSync(config.appRoot+'cache/thumb');
+                let tmp = fs.readFileSync(config.cacheThumb);
                 thumb = window.URL.createObjectURL(new Blob([tmp], {type:'image/'+o.format}));
                 tmp = null;
             }else{
@@ -189,7 +189,7 @@ module.exports = {
         if(!o.cammand) return;
         if(!o.cammand.length) return;
         o.cammand.unshift('-hide_banner');
-        ffmpeg = childprocess.spawn(config.ffmpegRoot+'\\ffmpeg.exe', o.cammand);
+        ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             if(o.progress){
                 line = stderr.toString();
