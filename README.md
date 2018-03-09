@@ -65,8 +65,8 @@ npm install
 ```
 npm run app
 ```
-稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
+>稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
 然后右击软件，在右键菜单中选`重新加载应用`，即刷新（其他刷新方式：F12调出调试工具，在工具中再按F5即刷新）。
 
 8. 打包:
-	请参照[【官网文档】](http://docs.nwjs.io/en/latest/For%20Users/Package%20and%20Distribute/#package-and-distribute)。
+>请参照[【官网文档】](http://docs.nwjs.io/en/latest/For%20Users/Package%20and%20Distribute/#package-and-distribute)。
