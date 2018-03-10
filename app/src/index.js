@@ -547,7 +547,7 @@ const vue = new Vue({
             }
         },
         convertFn(e){
-            let item, bita, bitv, w, h, total, output, cammand, keys, len, i, target, isplit;
+            let item, bita, bitv, w, h, total, output, cammand, keys, len, i, target;
 
             target = e.currentTarget;
             target.dataset.stopAll = 0;
@@ -570,7 +570,6 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-            isplit = target.name === 'split';
             if(len){
                 recycle(vue.items[ keys[i] ]);
             }else{
@@ -588,7 +587,7 @@ const vue = new Vue({
                 output = vue.output + '\\' + item.toname + '.' + item.toformat;
                 cammand = [];
                 //如果是分离音视频
-                if(isplit){
+                if(item.split){
                     if(item.vchannel && item.achannel){
                         cammand.push('-y');
                         if(item.startTime > 0) cammand.push('-ss', item.startTime);
@@ -674,7 +673,7 @@ const vue = new Vue({
                     cammand.push('-s', w+'x'+h);
                 }
 
-                if(!isplit){
+                if(!item.split){
                     if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
                     cammand.push('-preset', vue.batchParams.speed, '-y', output);
                 }
