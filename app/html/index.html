@@ -21,9 +21,6 @@
         <section>
             <!-- 一级工菜单 -->
             <div class="toolbar">
-                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
-                    <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
-                </button>
                 <button class="toolbar-item" name="chosefile" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'chosefile'}">
                     <i class="icon icon-folder-open"></i> 选择文件
                 </button>
@@ -32,9 +29,6 @@
                 </button>
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
-                </button>
-                <button class="toolbar-item" name="split" v-on:click="convertFn">
-                    <i class="icon icon-calculator"></i> 分离提取
                 </button>
                 <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
                     <i class="icon icon-camera"></i> 屏幕录制
@@ -47,6 +41,9 @@
                 </button>
                 <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
                     <i class="icon icon-question"></i> 帮助
+                </button>
+                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
+                    <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
                 </button>
             </div>
             <!-- 二级菜单 -->
@@ -155,7 +152,7 @@
                                 <option value="1">左边对齐</option>
                                 <option value="2">居中对齐</option>
                                 <option value="3">右边对齐</option>
-                                <option value="4">两端对齐</option>
+                                <option value="4">匹配宽度</option>
                             </optgroup>
                             <optgroup v-else>
                                 <option value="1">顶部对齐</option>
@@ -207,9 +204,10 @@
                             <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.canplay"></i>
                             <video :ref="'id'+index" class="item-preview-img" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
                         </div>
-                        <i class="item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
+                        <img class="item-logo" v-if="item.logo" :src="item.logo" :style="{top: (item.alphaH+item.logoY)+'px', left: (item.alphaW+item.logoX)+'px',width: item.logoW+'%'}">
                     </div>
                     <div class="item-tools">
+                        <i class="float-l item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
                         <i class="item-tool icon icon-pushpin" v-on:click="itemFn($event,index,'lock')" v-on:contextmenu.prevent="itemFn($event,index,'lockAll')" title="锁定/解锁（右击锁定/解锁全部文件）" :class="{active: item.lock}"></i>
                         <i class="item-tool icon icon-contrast" v-on:click="itemFn($event,index,'alpha')" v-on:contextmenu.prevent="itemFn($event,index,'alphaAll')" title="显示/隐藏alpha通道（右击显示/隐藏全部文件）" :class="{active: item.alpha}"></i>
                         <i class="item-tool icon icon-bin" v-on:click="itemFn($event,index,'del')"  v-on:contextmenu.prevent="itemFn($event,index,'delAll')" title="删除（右击删除全部文件）"></i>
@@ -279,6 +277,16 @@
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
+                    </div>
+                </dd>
+                <dd class="item-row">
+                    <div class="item-old">加水印：</div>
+                    <div class="item-new">
+                        <div v-if="item.type === 'audio'">不支持</div>
+                        <button :class="item.logo ? 'item-logo-btn' : ''" v-on:click="itemFn($event,index,'logo')">
+                            <img class="item-logo-img" v-if="item.logo" :src="item.logo">
+                            <i v-else class="icon icon-plus"> 添加</i>
+                        </button>
                     </div>
                 </dd>
                 <dd class="item-row">

@@ -81,14 +81,15 @@ const capture = {
 	    key: 'F2',
 	    active : function(){
 	        if(!capture.ffmpeg) return;
-	        capture.back();
 	        capture.end();
-	        capture.ffmpeg = null;
-	        win.focus();
+	        capture.back();
 	    },  
 	    failed : function(err){
 	        if(!/Unable\s+to\s+unregister\s+the\s+hotkey/i.test(err.message)){
-	            alert('用于录制屏幕的快捷'+this.key+'冲突！可通过获取焦点后按F2达到同样的目的'); 
+		        capture.end();
+		        capture.back();
+	        	utils.dialog.show = true;
+	        	utils.dialog.body = '<p>无法使用F2停止录制，因为快捷与其他软件冲突。</p>';
 	        }
 	    }  
 	}),
@@ -104,6 +105,7 @@ const capture = {
 	end(){
 		if(this.ffmpeg){
 			this.ffmpeg.stdin.end('q\n');
+			this.ffmpeg = null;
 		}
 	},
 	start(output, o){
@@ -161,6 +163,7 @@ const capture = {
 					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
 					utils.dialog.setBtn('覆盖','重试','取消');
 					utils.dialog.callback = function(code){
+						utils.dialog.callback = null;
 						if(code === 0){
 							begin();
 						}else if(code === 1){

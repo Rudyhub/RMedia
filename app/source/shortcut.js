@@ -3,8 +3,10 @@ module.exports = (o)=>{
 	docListener('keyup',function(e){
 		if(e.ctrlKey){
 			if(e.key == 'o'){
+				o.inputEl.value = '';
 				o.inputEl.click();
 			}else if(e.key == 's'){
+				o.inputEl.value = '';
 				o.outputEl.click();
 			}
 		}

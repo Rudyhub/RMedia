@@ -10,7 +10,9 @@ const win = nw.Window.get(),
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
-    canvas = document.createElement('canvas');
+    canvas = document.createElement('canvas'),
+    vWidth = document.body.offsetWidth * .19 - 2,
+    vScale = .57;
 
 win.on('loaded',()=>{
     win.width = screen.availWidth;
@@ -42,6 +44,12 @@ function listItems(files){
                 alpha: vue.toolbar.toggle.alpha,
                 type: '',
                 series: false,
+                logo: '',
+                logoX: 5,
+                logoY: 5,
+                logoW: 10,
+                alphaW: 0, //预览窗口left透明区域的width
+                alphaH: 0, //预览窗口top透明区域的height
 
                 duration: 0,
                 startTime: 0,
@@ -103,6 +111,14 @@ function listItems(files){
                     item.vchannel = json.vchannel;
 
                     vue.reItem(item);
+                    if(item.scale < vScale){
+                        item.alphaW = 0;
+                        item.alphaH = (vWidth*vScale - vWidth * item.scale) * .5;
+                    }else{
+                        item.alphaH = 0;
+                        item.alphaW = (vWidth - (vWidth*vScale)/item.scale) * .5;
+                    }
+                    console.log(item.alphaW, item.alphaH);
                     i++;
                     if(files[i]) recycle(files[i]);
                 },
@@ -115,6 +131,7 @@ function listItems(files){
                     </details>`;
                     utils.dialog.setBtn('是','否');
                     utils.dialog.callback = function(code){
+                        utils.dialog.callback = null;
                         if(code === 1){
                             window.URL.revokeObjectURL(vue.items[key].thumb);
                             vue.$delete(vue.items, key);
@@ -123,7 +140,7 @@ function listItems(files){
                         if(files[i]) recycle(files[i]);
                     };
                 }
-            }, utils.dialog);
+            });
         }
     }
 }
@@ -140,7 +157,7 @@ const vue = new Vue({
 		winToggle: true,
         batchParams: {
             speed: 'slow',
-            nameAll: 'fup00',
+            nameAll: nw.App.manifest.name,
             widthLimit: config.output.width,
             heightLimit: config.output.height,
             sizeLimit: 0
@@ -149,7 +166,7 @@ const vue = new Vue({
             drop: 0,
             toggle: {
                 lock: 1,
-                alpha: 0
+                alpha: 1
             }
         },
         active: {
@@ -287,7 +304,7 @@ const vue = new Vue({
                 if(!dropMenu.classList.contains('zoom-in')) vue.toolbar.drop = '';
             }
             switch(name){
-                case 'chosefile': inputEl.click(); break;
+                case 'chosefile': inputEl.value = ''; inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
                 case 'pdf2pic':
                     nw.Window.open('plugins/pdf2pic/pdf2pic.html',{
@@ -313,9 +330,10 @@ const vue = new Vue({
                 utils.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
                 utils.dialog.setBtn('中止当前','中止全部','取消');
                 utils.dialog.callback = function(code){
+                    utils.dialog.callback = null;
                     if(code === 0 || code === 1){
                         Media.ffmpeg.stdin.write('q\n');
-                        Media.ffmpeg = null;
+                        Media.ffmpeg.signalCode = '主动中止，' + this.innerText;
                         vue.isStarted = false;
                         target.dataset.stopAll = code;
                     }
@@ -345,10 +363,18 @@ const vue = new Vue({
                 //如果是分离音视频
                 if(item.split){
                     if(item.vchannel && item.achannel){
-                        cammand.push('-y');
                         if(item.startTime > 0) cammand.push('-ss', item.startTime);
                         if(total > 0) cammand.push('-t', total);
-                        cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p', output);
+
+                        cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p');
+
+                        if(w && h){
+                            if(w%2 !== 0) w--;
+                            if(h%2 !== 0) h--;
+                            cammand.push('-s', w+'x'+h);
+                        }
+
+                        cammand.push(output);
 
                         achannel = item.achannel.replace(':','.');
                         if(item.aclayout === 2){
@@ -379,7 +405,7 @@ const vue = new Vue({
                         let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
                             match = reg.exec(item.path);
                         if(match && match[1]){
-                            cammand.push('-y','-r', 25, '-i', item.path.replace(reg, function($0,$1){
+                            cammand.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
                                 return '%0'+$1.length+'d.'+item.format;
                             }));
                         }else{
@@ -420,18 +446,15 @@ const vue = new Vue({
                             if(bita) cammand.push('-b:a', bita+'k');
                         }
                     }
-                }
+                    //比例
+                    if(w && h){
+                        if(w%2 !== 0) w--;
+                        if(h%2 !== 0) h--;
+                        cammand.push('-s', w+'x'+h);
+                    }
 
-                //比例
-                if(w && h){
-                    if(w%2 !== 0) w--;
-                    if(h%2 !== 0) h--;
-                    cammand.push('-s', w+'x'+h);
-                }
-
-                if(!item.split){
                     if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
-                    cammand.push('-preset', vue.batchParams.speed, '-y', output);
+                    cammand.push('-preset', vue.batchParams.speed, output);
                 }
                 
                 //只允许输出为视频文件时可输出预览图
@@ -446,6 +469,7 @@ const vue = new Vue({
 
                 item.progress = 0;
                 vue.isStarted = true;
+
                 Media.convert({
                     cammand,
                     progress(t){
@@ -467,12 +491,14 @@ const vue = new Vue({
                             if(keys[i] && target.dataset.stopAll != 1){
                                 recycle(vue.items[ keys[i] ]);
                             }else{
+                                msg = msg || '全部完成';
                                 win.setProgressBar(-1);
                                 utils.dialog.show = true;
                                 utils.dialog.title = '<i class="icon icon-grin2" style="color:#f5b018;"></i> 完成！';
-                                utils.dialog.body = `<dl><dt>顺利完成！请选择接下来的操作：</dt><dd>【移除】：移除已完成的文件;</dd><dd>【保留】：保留并且可再次处理。</dd></dl>`;
+                                utils.dialog.body = `<p>${msg}！接下来选择如何处理已完成？</p>`;
                                 utils.dialog.setBtn('移除','保留');
                                 utils.dialog.callback = function(code){
+                                    utils.dialog.callback = null;
                                     for(let key in vue.items){
                                         if(code === 0 && vue.items[key].progress){
                                             window.URL.revokeObjectURL(vue.items[key].thumb);
@@ -497,7 +523,7 @@ const vue = new Vue({
         spriteFn(code){
             if(typeof code !== 'string'){
                 vue.dropMenuClose('sprite');
-                if(code === -1) return;
+                if(code === -1 || !Object.keys(vue.items).length) return;
                 let spriteList = document.getElementById('sprite-list'),
                     items = spriteList.querySelectorAll('.sprite-item'),
                     imgs = spriteList.querySelectorAll('img'),
@@ -657,6 +683,7 @@ const vue = new Vue({
                     </details>`;
                     utils.dialog.setBtn('继续','退出');
                     utils.dialog.callback = function(c){
+                        utils.dialog.callback = null;
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -775,6 +802,7 @@ const vue = new Vue({
                     utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
                     utils.dialog.setBtn('启用','关闭');
                     utils.dialog.callback = function(code){
+                        utils.dialog.callback = null;
                         if(code === 0){
                             Media.killAll();
                         }
@@ -921,6 +949,7 @@ const vue = new Vue({
                         utils.dialog.title = '注意';
                         utils.dialog.body = '<p>取预览图的位置必须是在截取时间'+utils.timemat(item.startTime*1000)+'到'+utils.timemat(item.endTime*1000)+'</p>';
                         utils.dialog.callback = ()=>{
+                            utils.dialog.callback = null;
                             item.coverTime = item.currentTime > item.startTime ? item.endTime : item.startTime;
                             item.currentTime = item.coverTime;
                             if(item.canplay){
@@ -944,6 +973,44 @@ const vue = new Vue({
                 {
                     item.toheight = parseInt(target.value) || 0;
                     item.towidth = Math.round(item.toheight / item.scale);
+                }
+                break;
+                case 'logo':
+                {
+                    if(item.logo){
+                        utils.dialog.show = true;
+                        utils.dialog.title = '水印(logo)';
+                        utils.dialog.body = '<p>What are 要弄啥嘞？</p>';
+                        utils.dialog.setBtn('更新','删除','取消');
+                        utils.dialog.callback = (code)=>{
+                            if(code === 0){
+                                logoFn();
+                            }else if(code === 1){
+                                item.logo = '';
+                            }
+                        }
+                    }else{
+                        logoFn();
+                    }
+                    
+                    function logoFn(){
+                        let tmpEl = inputEl.cloneNode();
+                        tmpEl.value = '';
+                        tmpEl.addEventListener('change', changeFn);
+                        function changeFn(){
+                            if(tmpEl.files.length){
+                                if(/^image\/[\w-]+$/i.test(tmpEl.files[0].type)){
+                                    item.logo = tmpEl.files[0].path;
+                                }
+                            }
+                        }
+                        tmpEl.addEventListener('cancel',function cancelFn(){
+                            tmpEl = null;
+                            tmpEl.removeEventListener('change', changeFn);
+                            tmpEl.removeEventListener('cancel', cancelFn);
+                        });
+                        tmpEl.click();
+                    }
                 }
             }
         }

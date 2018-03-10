@@ -402,14 +402,11 @@ summary{
     height: 10.8vw;
     position: relative;
 }
-.item-media-type{
-    font-size: var(--fs20);
-    padding: .2vw;
+.item-logo{
     position: absolute;
-    top: 0;
-    width: 100%;
-    box-sizing: border-box;
-    color: var(--blue1);
+    top: 5px;
+    left: 5px;
+    display: block;
 }
 .item-controls{
     width: 100%;
@@ -480,6 +477,10 @@ summary{
     border-bottom: 2px solid var(--black3);
     user-select: none;
 }
+.item-media-type{
+    font-size: var(--fs20);
+    color: var(--blue1);
+}
 .item-tool{
     display: inline-block;
     text-align: center;
@@ -536,6 +537,16 @@ summary{
 }
 .item [type=checkbox]{
     margin: 0;
+}
+.item-logo-btn{
+    padding: 0;
+    border: none;
+    overflow: hidden;
+}
+.item-logo-img{
+    height: 2em;
+    display: block;
+    margin: .2em .3em;
 }
 .item-mask{
     content: '';

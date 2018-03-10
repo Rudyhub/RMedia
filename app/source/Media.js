@@ -147,12 +147,12 @@ module.exports = {
             }
         });
     },
-    info(o, dialog){
+    info(o){
         let self = this;
         if(!o.input) {
-            dialog.show = true;
-            dialog.title = '地址错误：';
-            dialog.body = '<p>无效媒体文件地址!</p>';
+            utils.dialog.show = true;
+            utils.dialog.title = '地址错误：';
+            utils.dialog.body = '<p>无效媒体文件地址!</p>';
             return;
         }
         if(!o.success) return;
@@ -185,6 +185,7 @@ module.exports = {
         }, o.fail);
     },
     killAll(fn){
+        if(this.ffmpeg) this.ffmpeg.signalCode = '强制退出';
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
             if(fn) fn(stderr.toString());
         });
@@ -198,16 +199,34 @@ module.exports = {
         if(!o.cammand.length) return;
         o.cammand.unshift('-hide_banner');
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
+
         ffmpeg.stderr.on('data', (stderr)=>{
+            line = stderr.toString();
+            console.log(line);
+            //检查文件是否存在
+            if(/Overwrite[\s\S]*?\[y\/N\]/i.exec(line)){
+                utils.dialog.show = true;
+                utils.dialog.title = '文件已存在';
+                utils.dialog.body = '<p>文件已存在，是否覆盖？</p>';
+                utils.dialog.setBtn('覆盖','否');
+                utils.dialog.callback = (code)=>{
+                    utils.dialog.callback = null;
+                    if(code === 0){
+                        ffmpeg.stdin.write('y\n');
+                    }else{
+                        ffmpeg.stdin.write('n\n');
+                        ffmpeg.signalCode = '主动中止，不覆盖。';
+                    }
+                }
+            }
             if(o.progress){
-                line = stderr.toString();
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );
             }
         });
         ffmpeg.once('close', (a, b)=>{
             self.ffmpeg = null;
-            if(o.complete) o.complete(a, (a !== 0) ? '处理失败 ' + b : b);
+            if(o.complete) o.complete(a, b);
         });
         ffmpeg.once('error', (err)=>{
             self.ffmpeg = null;
