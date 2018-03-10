@@ -222,6 +222,13 @@ summary{
 .float-r{
     float: right;
 }
+.inline-b{
+    display: inline-block;
+    vertical-align: middle;
+}
+.half{
+    width: 50%;
+}
 
 .color-1{
     color: var(--blue2);

@@ -80,6 +80,19 @@
                     </p>
                 </div>
                 <div class="drop-panel-group">
+                    设置水印(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
+                    <div>
+                        <div class="inline-b half text-center">
+                            <button v-on:click="batchParamsFn($event, 'logo')"><i class="icon icon-plus"></i> 添加</button>
+                        </div>
+                        <div class="inline-b half">
+                            <p class="tip">宽度比例：<input type="number"> (%)</p>
+                            <p class="tip">距离左端：<input type="number"> (%)</p>
+                            <p class="tip">距离顶端：<input type="number"> (%)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="drop-panel-group">
                     <p>
                         输出名称(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
                         <input type="text" v-model="batchParams.nameAll" title="名称末尾用0填充，如“00”表示01，02，03...">
