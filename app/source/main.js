@@ -142,7 +142,7 @@ const vue = new Vue({
         app: Object.freeze(nw.App.manifest),
 		output: config.output.folder,
         items: {},
-        viewWidth: win.width * .19,
+        viewWidth: screen.availWidth * .19,
         viewScale: .5625,
         isStarted: false,
 		winToggle: true,

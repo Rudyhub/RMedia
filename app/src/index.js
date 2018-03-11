@@ -206,7 +206,6 @@ module.exports = {
 	ffmpegPath: ffmpegPath,
 	ffprobePath: path.normalize(appRoot+'\\ffmpeg\\ffprobe.exe'),
 	audioThumb: path.normalize('..\\css\\audio.jpg'),
-	loadingGif: path.normalize('..\\css\\loading.gif'),
 	logPath: path.normalize(appRoot + '\\cache\\log.txt'),
 	cacheThumb: path.normalize(appRoot + '\\cache\\thumb'),
 	output: {
@@ -395,7 +394,7 @@ const vue = new Vue({
         app: Object.freeze(nw.App.manifest),
 		output: config.output.folder,
         items: {},
-        viewWidth: win.width * .19,
+        viewWidth: screen.availWidth * .19,
         viewScale: .5625,
         isStarted: false,
 		winToggle: true,
@@ -1444,6 +1443,7 @@ module.exports = {
         }
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
+
         ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.cacheThumb+'"',(err,stdout,stderr)=>{
             if(!err){
                 let tmp = fs.readFileSync(config.cacheThumb);
@@ -1473,6 +1473,9 @@ module.exports = {
                 o.fail(e);
             }
         });
+        ffmpeg.stdout.write = (data)=>{
+            console.log(data);
+        }
     },
     info(o){
         let self = this;

@@ -46,7 +46,7 @@ npm install
 > [下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开发的东西。
 
 6. 配置nwjs:
-> 将nwjs-sdk-v0.26.6-win-x64.zip压缩到当前目录RMedia/下，命名文件夹为nwjs，最终的文件树枝关系如：
+> 将nwjs-sdk-v0.26.6-win-x64.zip解压到目录RMedia/下，最终的文件树枝关系如：
 ```
 > RMedia/
 | - app/
@@ -55,7 +55,7 @@ npm install
 | | - ffmpeg/
 | | | - ffmpeg.exe
 | | | - ...
-| - nwjs/
+| - nwjs-v0.26.6-win-x64-sdk/
 | | - ...
 | | - nw.exe
 | | - ...
@@ -66,10 +66,14 @@ npm install
  ```
 7. 启动：
 ```
-npm run app
+npm run sdk
 ```
 >稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
 然后右击软件，在右键菜单中选`重新加载应用`，即刷新（其他刷新方式：F12调出调试工具，在工具中再按F5即刷新）。
+>当然，也可以把正式版nwjs-v0.26.6-win-x64.zip解压到RMedia/下，与sdk版并列。然后使用以下命令运行。注意：两个版本无法一起运行。
+```
+npm run nw
+```
 
 8. 打包:
 >请参照[【官网文档】](http://docs.nwjs.io/en/latest/For%20Users/Package%20and%20Distribute/#package-and-distribute)。

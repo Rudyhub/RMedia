@@ -1,4 +1,3 @@
 node_modules/
-nwjs/
-nwjs-pv/
+nwjs*/
 ffmpeg/

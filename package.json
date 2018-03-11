@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "app": "cd ./app && start ..\\nwjs\\nw.exe .",
-    "pv": "cd ./app && start ..\\nwjs-pv\\nw.exe ."
+    "sdk": "cd ./app && start ..\\nwjs-v0.26.6-win-x64-sdk\\nw.exe .",
+    "nw": "cd ./app && start ..\\nwjs-v0.26.6-win-x64\\nw.exe ."
   },
   "repository": {
     "type": "git",

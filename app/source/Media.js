@@ -117,6 +117,7 @@ module.exports = {
         }
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
+
         ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.cacheThumb+'"',(err,stdout,stderr)=>{
             if(!err){
                 let tmp = fs.readFileSync(config.cacheThumb);
@@ -146,6 +147,9 @@ module.exports = {
                 o.fail(e);
             }
         });
+        ffmpeg.stdout.write = (data)=>{
+            console.log(data);
+        }
     },
     info(o){
         let self = this;
