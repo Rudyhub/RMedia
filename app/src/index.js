@@ -347,7 +347,7 @@ function listItems(files){
                     item.bitv = json.bitv || json.bit;
                     item.bita = json.bita;
 
-                    item.scale = json.height / json.width;
+                    item.scale = (json.height / json.width) || vue.viewScale;
                     item.width = json.width;
                     item.height = json.height;
 
@@ -437,7 +437,6 @@ const vue = new Vue({
             itemCss: '',
             imgCss: ''
         },
-        toformats: Object.freeze(['mp4','webm','ogg','mp3','wav','jpg','png','gif','jpeg','webp','ico','bmp']),
         framestep: 2
 	},
     created(){
@@ -502,8 +501,8 @@ const vue = new Vue({
             item.endTime = item.duration;
             item.cover = false;
             item.coverTime = 0;
-            item.towidth = item.width;
-            item.toheight = item.height;
+            item.towidth = item.width > config.output.width ? config.output.width : item.width;
+            item.toheight = parseInt(item.towidth * item.scale);
             item.tofps = item.fps;
         },
         zoomItemFn(e){
@@ -1329,7 +1328,8 @@ childprocess = __webpack_require__(2),
 config = __webpack_require__(1),
 utils = __webpack_require__(0);
 
-let THUMB_TEMP_FILE = process.uptime()+'.temp';
+//用于暂存单帧base64数据的临时文件，即预览图数据来源。
+let THUMB_TEMP_FILE = 'rmedia.temp';
 fs.writeFileSync(THUMB_TEMP_FILE,'');
 
 nw.process.on('exit',()=>{
@@ -1370,6 +1370,7 @@ module.exports = {
 
             ffmpeg = childprocess.exec(config.ffmpegPath+' -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
+            console.log(lines);
             for(; i < len; i++){
                 line = lines[i].trim();
                 if(/(^stream\s*mapping)|(^output)/i.test(line)) break;

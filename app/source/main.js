@@ -95,7 +95,7 @@ function listItems(files){
                     item.bitv = json.bitv || json.bit;
                     item.bita = json.bita;
 
-                    item.scale = json.height / json.width;
+                    item.scale = (json.height / json.width) || vue.viewScale;
                     item.width = json.width;
                     item.height = json.height;
 
@@ -185,7 +185,6 @@ const vue = new Vue({
             itemCss: '',
             imgCss: ''
         },
-        toformats: Object.freeze(['mp4','webm','ogg','mp3','wav','jpg','png','gif','jpeg','webp','ico','bmp']),
         framestep: 2
 	},
     created(){
@@ -250,8 +249,8 @@ const vue = new Vue({
             item.endTime = item.duration;
             item.cover = false;
             item.coverTime = 0;
-            item.towidth = item.width;
-            item.toheight = item.height;
+            item.towidth = item.width > config.output.width ? config.output.width : item.width;
+            item.toheight = parseInt(item.towidth * item.scale);
             item.tofps = item.fps;
         },
         zoomItemFn(e){

@@ -4,7 +4,7 @@ config = require('./config'),
 utils = require('./utils');
 
 //用于暂存单帧base64数据的临时文件，即预览图数据来源。
-let THUMB_TEMP_FILE = process.uptime()+'.temp';
+let THUMB_TEMP_FILE = 'rmedia.temp';
 fs.writeFileSync(THUMB_TEMP_FILE,'');
 
 nw.process.on('exit',()=>{
@@ -45,6 +45,7 @@ module.exports = {
 
             ffmpeg = childprocess.exec(config.ffmpegPath+' -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
+            console.log(lines);
             for(; i < len; i++){
                 line = lines[i].trim();
                 if(/(^stream\s*mapping)|(^output)/i.test(line)) break;
@@ -66,7 +67,7 @@ module.exports = {
                     if( bitv = /,\s*([\d\.]+)\s*kb\/s/i.exec(match[2]) ){
                         json.bitv = parseFloat(bitv[1]);
                     }
-                }
+                }//TODO: 
                 else if(match = /^stream\s+#(\d+:\d+)[\s\S]*?audio\s*:[\s\S]*?hz,\s*(\w+),[\s\S]*?([\d\.]+)\s*kb\/s/i.exec( line ) ){
                     json.achannel = match[1];
                     if(match[2] == 'stereo'){
