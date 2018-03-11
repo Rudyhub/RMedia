@@ -111,7 +111,6 @@ module.exports = {
                 fail(err);
             }
         });
-        console.log(json);
     },
     thumb(o){
         let wmax = o.widthLimit || 480,
