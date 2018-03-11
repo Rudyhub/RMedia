@@ -1370,7 +1370,6 @@ module.exports = {
 
             ffmpeg = childprocess.exec(config.ffmpegPath+' -hide_banner -i "'+url+'" -vframes 1 -f null -', (err,stdout, stderr)=>{
             let lines = stderr.split(/\n/), i = 0, len = lines.length, line, match;
-            console.log(lines);
             for(; i < len; i++){
                 line = lines[i].trim();
                 if(/(^stream\s*mapping)|(^output)/i.test(line)) break;
@@ -1393,14 +1392,15 @@ module.exports = {
                         json.bitv = parseFloat(bitv[1]);
                     }
                 }
-                else if(match = /^stream\s+#(\d+:\d+)[\s\S]*?audio\s*:[\s\S]*?hz,\s*(\w+),[\s\S]*?([\d\.]+)\s*kb\/s/i.exec( line ) ){
+                else if(match = /^stream\s+#(\d+:\d+)[\s\S]*?audio\s*:\s*([\s\S]*?)$/i.exec( line ) ){
+                    let aclayout, bita;
                     json.achannel = match[1];
-                    if(match[2] == 'stereo'){
-                        json.aclayout = 2;
-                    }else if(match[2] == 'mono'){
-                        json.aclayout = 1;
+                    if(aclayout = /stereo|mono/i.exec(match[2]) ){
+                        json.aclayout = aclayout[0] == 'stereo' ? 2 : 1;
                     }
-                    json.bita = parseFloat(match[3]);
+                    if(bita = /,\s*([\d\.]+)\s*kb\/s/i.exec(match[2]) ){
+                        json.bita = parseFloat(bita[1]);
+                    }
                 }
             }
 
@@ -1436,6 +1436,7 @@ module.exports = {
                 fail(err);
             }
         });
+        console.log(json);
     },
     thumb(o){
         let wmax = o.widthLimit || 480,

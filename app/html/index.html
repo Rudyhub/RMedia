@@ -325,7 +325,7 @@
                     <div class="item-new" v-else>不支持</div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old">分离提取:{{item.vchannel}} {{item.achannel}}</div>
+                    <div class="item-old">分离提取: {{item.vchannel}} {{item.achannel}}</div>
                     <div class="item-new" v-if="item.vchannel && item.achannel">
                         <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
                     </div>
