@@ -84,5 +84,27 @@ module.exports = {
                 }
             }
         }
+    }),
+    menu: new Vue({
+        el: '#contextmenu',
+        data: {
+            show: false,
+            x: 0,
+            y: 0,
+            menu: []
+        },
+        methods: {
+            setItem(){
+                this.menu.splice(0, this.menu.length);
+                this.menu.push(...arguments);
+            },
+            contextmenuFn(e, key){
+                this.show = false;
+                this.menu.splice(0, this.menu.length);
+                if(typeof this.callback === 'function'){
+                    this.callback.call(e.currentTarget, key);
+                }
+            }
+        }
     })
 };

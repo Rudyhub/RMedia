@@ -19,7 +19,7 @@
             </div>
         </div>
         <section>
-            <!-- 一级工菜单 -->
+            <!-- 一级菜单 -->
             <div class="toolbar">
                 <button class="toolbar-item" name="chosefile" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'chosefile'}">
                     <i class="icon icon-folder-open"></i> 选择文件
@@ -45,6 +45,7 @@
                 <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
                     <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
                 </button>
+                <input class="toolbar-item" type="range" min=".19" max=".98" step="0.01" v-on:input="zoomItemFn">
             </div>
             <!-- 二级菜单 -->
 
@@ -96,8 +97,8 @@
                     <p>
                         输出名称(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
                         <input type="text" v-model="batchParams.nameAll" title="名称末尾用0填充，如“00”表示01，02，03...">
-                        <button v-on:click="nameAllFn(1)">移动</button>
-                        <button v-on:click="nameAllFn(2)">复制</button>
+                        <button class="btn-s" v-on:click="nameAllFn(1)">移动</button>
+                        <button class="btn-s" v-on:click="nameAllFn(2)">复制</button>
                     </p>
                     <b>名称以最末尾的数字串为序列号累加，如：</b>
                     <p class="tip">
@@ -109,9 +110,9 @@
                     <p class="tip">{{batchParams.nameAll | viewNamemat}}</p>
                 </div>
                 <div class="drop-panel-group text-center">
-                    <button v-on:click="batchParamsFn($event,0)">确定</button>
-                    <button v-on:click="batchParamsFn($event,1)">重置</button>
-                    <button v-on:click="batchParamsFn($event,-1)">取消</button>
+                    <button class="btn-s" v-on:click="batchParamsFn($event,0)">确定</button>
+                    <button class="btn-s" v-on:click="batchParamsFn($event,1)">重置</button>
+                    <button class="btn-s" v-on:click="batchParamsFn($event,-1)">取消</button>
                 </div>
             </div>
             <!-- capture -->
@@ -138,18 +139,18 @@
                         <select v-else :disabled="capParams.mode==2 || capParams.mode==3">
                             <option value="">无录音设备</option>
                         </select>
-                        <button v-on:click="captureFn($event,2)" :disabled="capParams.mode==2 || capParams.mode==3"><i class="icon icon-refrash"></i>扫描录音设备</button>
+                        <button class="btn-s" v-on:click="captureFn($event,2)" :disabled="capParams.mode==2 || capParams.mode==3"><i class="icon icon-refrash"></i>扫描录音设备</button>
                     </p>
                     <p>输出后匹配宽度： <input type="number" v-model.lazy="capParams.widthLimit" :disabled="capParams.mode==4">px</p>
                     <p>当前录制区域：
-                        <button v-on:click="captureFn($event,3)" :disabled="capParams.mode!=1 && capParams.mode!=3">调整录制区域</button>
+                        <button class="btn-s" v-on:click="captureFn($event,3)" :disabled="capParams.mode!=1 && capParams.mode!=3">调整录制区域</button>
                         <span class="text-indent tip">顶部: {{capParams.y}} px &nbsp;&nbsp; 左边: {{capParams.x}} px </span>
                         <span class="text-indent tip">宽度: {{capParams.width}} px &nbsp;&nbsp; 高度: {{capParams.height}} px </span>
                     </p>
                 </div>
                 <div class="drop-panel-group text-center">
-                    <button v-on:click="captureFn($event,0)">开始录制</button>
-                    <button v-on:click="captureFn($event,-1)">取消</button>
+                    <button class="btn-s" v-on:click="captureFn($event,0)">开始录制</button>
+                    <button class="btn-s" v-on:click="captureFn($event,-1)">取消</button>
                 </div>
             </div>
             <!-- sprite -->
@@ -193,8 +194,8 @@
                     <p class="text-right"><label>预览 <input type="checkbox" v-model="sprite.preview"></label></p>
                 </div>
                 <div class="drop-panel-group text-center">
-                    <button v-on:click="spriteFn(0)">确定</button>
-                    <button v-on:click="spriteFn(-1)">取消</button>
+                    <button class="btn-s" v-on:click="spriteFn(0)">确定</button>
+                    <button class="btn-s" v-on:click="spriteFn(-1)">取消</button>
                 </div>
             </div>
             <!-- help -->
@@ -210,14 +211,27 @@
     </header>
     <main class="body">
         <section class="item-list" v-if="!sprite.preview">
-            <dl class="item" v-for="(item,index) of items">
+            <dl class="item" v-for="(item,index) of items" :style="'width:'+viewWidth+'px'">
                 <dt class="item-preview">
-                    <div class="item-preview-inner">
-                        <div class="item-preview-box" :class="{alpha: item.alpha}" v-on:click="videoFn($event,index)">
-                            <i class="item-play-btn icon icon-play2" :class="{playing: item.playing}" v-if="item.canplay"></i>
-                            <video :ref="'id'+index" class="item-preview-img" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
+                    <div class="item-preview-inner" :class="{alpha: item.alpha}" 
+                    :style="{
+                        padding: item.scale<viewScale ? (viewWidth*(viewScale-item.scale)/2+'px 0') : ('0 '+viewWidth*(item.scale-viewScale)/2+'px'),
+                        height: (viewWidth * viewScale)+'px'
+                    }">
+                        <div class="item-preview-centent">
+                            <div class="play-btn" v-on:click="videoFn($event,index)" v-if="item.canplay">
+                                <i class="play-btn-icon icon icon-play2" :class="{playing: item.playing}"></i>
+                            </div>
+
+                            <video v-if="item.thumb" class="item-preview-img" :ref="'id'+index" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
+
+                            <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
+
+                            <div class="item-logo" v-on:click="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoW+'%'}">
+                                <img class="item-logo-icon" v-if="logo" :src="logo" v-on:contextmenu.prevent="itemFn($event,index,'logo')">
+                                <b class="item-logo-icon" v-else>LOGO</b>
+                            </div>
                         </div>
-                        <img class="item-logo" v-if="item.logo" :src="item.logo" :style="{top: (item.alphaH+item.logoY)+'px', left: (item.alphaW+item.logoX)+'px',width: item.logoW+'%'}">
                     </div>
                     <div class="item-tools">
                         <i class="float-l item-media-type icon" :class="{'icon-image':item.type=='image', 'icon-video-camera': item.type=='video', 'icon-headphones':item.type=='audio'}"></i>
@@ -231,9 +245,9 @@
                         <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
                         <br>
                         微调：{{item.currentTime | timemat}}
-                        <button :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')" :disabled="item.type=='image'"><i class="icon icon-previous2"></i></button>
+                        <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')" :disabled="item.type=='image'"><i class="icon icon-previous2"></i></button>
                         <input type="number" v-model="framestep" title="设置微调量" :disabled="item.type=='image'">
-                        <button :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')" :disabled="item.type=='image'"><i class="icon icon-next2"></i></button>
+                        <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')" :disabled="item.type=='image'"><i class="icon icon-next2"></i></button>
                         {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
                     </div>
                 </dd>
@@ -267,9 +281,9 @@
                 <dd class="item-row">
                     <div class="item-old">截取：{{item.duration | timemat}}</div>
                     <div class="item-new">
-                        <button v-on:click="itemFn($event,index,'setstart')" :disabled="item.type=='image'" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setstart')" :disabled="item.type=='image'" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
                         - 
-                        <button v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
                     </div>
                 </dd>
                 <dd class="item-row">
@@ -277,29 +291,19 @@
                     <div class="item-new">
                         <div v-if="item.type === 'video'">
                             <input type="checkbox" v-model="item.cover">
-                            <button v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
+                            <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
                             <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover || item.type=='image'">px
                         </div>
                         <div v-else>不支持</div>
                     </div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old">分辨率：{{item.width}}&times;{{item.height}}</div>
+                    <div class="item-old">尺寸：{{item.width}}&times;{{item.height}}</div>
                     <div class="item-new">
                         <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" :disabled="item.type=='audio'" title="输出宽">
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
-                    </div>
-                </dd>
-                <dd class="item-row">
-                    <div class="item-old">加水印：</div>
-                    <div class="item-new">
-                        <div v-if="item.type === 'audio'">不支持</div>
-                        <button :class="item.logo ? 'item-logo-btn' : ''" v-on:click="itemFn($event,index,'logo')">
-                            <img class="item-logo-img" v-if="item.logo" :src="item.logo">
-                            <i v-else class="icon icon-plus"> 添加</i>
-                        </button>
                     </div>
                 </dd>
                 <dd class="item-row">
@@ -330,6 +334,7 @@
         {{app.window.title}} ({{app.name}}-v{{app.version}}) {{app.copyright}}
     </footer>
 </div>
+<!-- dialog -->
 <div id="dialog" class="dialog-outer" :class="{'dialog-show': show}">
     <div class="dialog-inner">
         <div class="dialog-header">
@@ -341,6 +346,19 @@
         </div>
     </div>
 </div>
+
+<!-- contextmenu -->
+<ul id="contextmenu" class="contextmenu" :class="{'contextmenu-show':show}" :style="{top:y+'px',left:x+'px'}">
+    <li v-for="(item, index) in menu" v-on:click="contextmenuFn($event, index)">
+        <div v-html="item.html"></div>
+        <ul v-if="item.submenu">
+            <li v-for="(subitem, subindex) in item.submenu" v-on:click="contextmenuFn($event, index+'-'+subindex)">
+                <div v-html="subitem.html"></div>
+            </li>
+        </ul>
+    </li>
+</ul>
+
 <script type="text/javascript" src="../src/index.js"></script>
 </body>
 </html>

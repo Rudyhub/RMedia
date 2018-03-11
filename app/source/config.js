@@ -21,7 +21,6 @@ module.exports = {
 	ffmpegPath: ffmpegPath,
 	ffprobePath: path.normalize(appRoot+'\\ffmpeg\\ffprobe.exe'),
 	audioThumb: path.normalize('..\\css\\audio.jpg'),
-	loadingGif: path.normalize('..\\css\\loading.gif'),
 	logPath: path.normalize(appRoot + '\\cache\\log.txt'),
 	cacheThumb: path.normalize(appRoot + '\\cache\\thumb'),
 	output: {

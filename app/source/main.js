@@ -10,9 +10,8 @@ const win = nw.Window.get(),
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
-    canvas = document.createElement('canvas'),
-    vWidth = document.body.offsetWidth * .19 - 2,
-    vScale = .57;
+    logoInput = document.createElement('input'),
+    canvas = document.createElement('canvas');
 
 win.on('loaded',()=>{
     win.width = screen.availWidth;
@@ -36,7 +35,7 @@ function listItems(files){
         function recycle(file){
             item = {
                 path: file.path,
-                thumb: config.loadingGif,
+                thumb: '',
                 canplay: !!videoEl.canPlayType(file.type),
                 playing: 0,
                 progress: 0,
@@ -44,12 +43,9 @@ function listItems(files){
                 alpha: vue.toolbar.toggle.alpha,
                 type: '',
                 series: false,
-                logo: '',
-                logoX: 5,
-                logoY: 5,
-                logoW: 10,
-                alphaW: 0, //预览窗口left透明区域的width
-                alphaH: 0, //预览窗口top透明区域的height
+                logoX: 1,
+                logoY: 2,
+                logoW: 12,
 
                 duration: 0,
                 startTime: 0,
@@ -111,14 +107,7 @@ function listItems(files){
                     item.vchannel = json.vchannel;
 
                     vue.reItem(item);
-                    if(item.scale < vScale){
-                        item.alphaW = 0;
-                        item.alphaH = (vWidth*vScale - vWidth * item.scale) * .5;
-                    }else{
-                        item.alphaH = 0;
-                        item.alphaW = (vWidth - (vWidth*vScale)/item.scale) * .5;
-                    }
-                    console.log(item.alphaW, item.alphaH);
+
                     i++;
                     if(files[i]) recycle(files[i]);
                 },
@@ -145,7 +134,7 @@ function listItems(files){
     }
 }
 
-shortcut({inputEl, outputEl, win, capture, listItems});
+shortcut({inputEl, outputEl, listItems});
 
 const vue = new Vue({
 	el: '#app',
@@ -153,8 +142,11 @@ const vue = new Vue({
         app: Object.freeze(nw.App.manifest),
 		output: config.output.folder,
         items: {},
+        viewWidth: win.width * .19,
+        viewScale: .5625,
         isStarted: false,
 		winToggle: true,
+        logo: '',
         batchParams: {
             speed: 'slow',
             nameAll: nw.App.manifest.name,
@@ -193,27 +185,34 @@ const vue = new Vue({
             itemCss: '',
             imgCss: ''
         },
-        toformats: ['mp4','webm','ogg','mp3','wav','jpg','png','gif','jpeg','webp','ico','bmp'],
+        toformats: Object.freeze(['mp4','webm','ogg','mp3','wav','jpg','png','gif','jpeg','webp','ico','bmp']),
         framestep: 2
 	},
     created(){
-        inputEl.type = outputEl.type = 'file';
+        inputEl.type = outputEl.type = logoInput.type = 'file';
         inputEl.multiple = true;
         outputEl.nwdirectory = true;
+
         inputEl.addEventListener('change', (e)=>{
             vue.dropMenuClose('chosefile');
             listItems(inputEl.files);
+        });
+        inputEl.addEventListener('cancel', ()=>{
+            vue.dropMenuClose('chosefile');
         });
 
         outputEl.addEventListener('change', ()=>{
             vue.dropMenuClose('chosedir');
             vue.output = outputEl.files[0].path || '';
         });
-        inputEl.addEventListener('cancel', ()=>{
-            vue.dropMenuClose('chosefile');
-        });
         outputEl.addEventListener('cancel', ()=>{
             vue.dropMenuClose('chosedir');
+        });
+
+        logoInput.addEventListener('change', ()=>{
+            if(/^image\/[\w-]+$/i.test(logoInput.files[0].type)){
+                vue.logo = logoInput.files[0].path;
+            }
         });
     },
 	methods: {
@@ -254,6 +253,9 @@ const vue = new Vue({
             item.towidth = item.width;
             item.toheight = item.height;
             item.tofps = item.fps;
+        },
+        zoomItemFn(e){
+            vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
         },
         //event function
         titlebarFn(name){
@@ -977,40 +979,27 @@ const vue = new Vue({
                 break;
                 case 'logo':
                 {
-                    if(item.logo){
-                        utils.dialog.show = true;
-                        utils.dialog.title = '水印(logo)';
-                        utils.dialog.body = '<p>What are 要弄啥嘞？</p>';
-                        utils.dialog.setBtn('更新','删除','取消');
-                        utils.dialog.callback = (code)=>{
-                            if(code === 0){
-                                logoFn();
-                            }else if(code === 1){
-                                item.logo = '';
-                            }
-                        }
+                    if(e.type === 'click'){
+                        logoInput.value = '';
+                        logoInput.click();
                     }else{
-                        logoFn();
+                        // vue.logo = '';
+                        utils.menu.show = true;
+                        utils.menu.x = e.x;
+                        utils.menu.y = e.y;
+                        utils.menu.setItem(
+                            {html:'替换'},
+                            {
+                                html:'调整',
+                                submenu:[{html:'宽度比'},{html: '水平位置比'},{html:'垂直位置比'}]
+                            },
+                            {html:'删除'}
+                        );
+                        utils.menu.callback = (a)=>{
+                            console.log(a);
+                        }
                     }
                     
-                    function logoFn(){
-                        let tmpEl = inputEl.cloneNode();
-                        tmpEl.value = '';
-                        tmpEl.addEventListener('change', changeFn);
-                        function changeFn(){
-                            if(tmpEl.files.length){
-                                if(/^image\/[\w-]+$/i.test(tmpEl.files[0].type)){
-                                    item.logo = tmpEl.files[0].path;
-                                }
-                            }
-                        }
-                        tmpEl.addEventListener('cancel',function cancelFn(){
-                            tmpEl = null;
-                            tmpEl.removeEventListener('change', changeFn);
-                            tmpEl.removeEventListener('cancel', cancelFn);
-                        });
-                        tmpEl.click();
-                    }
                 }
             }
         }
