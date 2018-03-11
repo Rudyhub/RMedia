@@ -3,6 +3,14 @@ childprocess = require('child_process'),
 config = require('./config'),
 utils = require('./utils');
 
+//用于暂存单帧base64数据的临时文件，即预览图数据来源。
+let THUMB_TEMP_FILE = process.uptime()+'.temp';
+fs.writeFileSync(THUMB_TEMP_FILE,'');
+
+nw.process.on('exit',()=>{
+    fs.unlinkSync(THUMB_TEMP_FILE);
+});
+
 module.exports = {
     ffmpeg: null,
     //第一个子数组为支持直接预览的格式，第二个需要转码
@@ -118,11 +126,9 @@ module.exports = {
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
 
-        ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.cacheThumb+'"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
-                let tmp = fs.readFileSync(config.cacheThumb);
-                thumb = window.URL.createObjectURL(new Blob([tmp], {type:'image/'+o.format}));
-                tmp = null;
+                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{
                 if(status && o.fail){
                     status = false;
@@ -147,9 +153,6 @@ module.exports = {
                 o.fail(e);
             }
         });
-        ffmpeg.stdout.write = (data)=>{
-            console.log(data);
-        }
     },
     info(o){
         let self = this;
