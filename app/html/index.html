@@ -87,9 +87,9 @@
                             <button v-on:click="batchParamsFn($event, 'logo')"><i class="icon icon-plus"></i> 添加</button>
                         </div>
                         <div class="inline-b half">
-                            <p class="tip">宽度比例：<input type="number"> (%)</p>
-                            <p class="tip">距离左端：<input type="number"> (%)</p>
-                            <p class="tip">距离顶端：<input type="number"> (%)</p>
+                            <p class="tip">尺寸比例：<input type="number"> (%)</p>
+                            <p class="tip">水平位置：<input type="number"> (%)</p>
+                            <p class="tip">垂直位置：<input type="number"> (%)</p>
                         </div>
                     </div>
                 </div>
@@ -227,8 +227,8 @@
 
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
 
-                            <div class="item-logo" v-on:click="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoW+'%'}">
-                                <img class="item-logo-icon" v-if="logo" :src="logo" v-on:contextmenu.prevent="itemFn($event,index,'logo')">
+                            <div class="item-logo" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
+                                <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
                                 <b class="item-logo-icon" v-else>LOGO</b>
                             </div>
                         </div>
@@ -365,15 +365,12 @@
 
 <!-- contextmenu -->
 <ul id="contextmenu" class="contextmenu" :class="{'contextmenu-show':show}" :style="{top:y+'px',left:x+'px'}">
-    <li v-for="(item, index) in menu" v-on:click="contextmenuFn($event, index)">
-        <div v-html="item.html"></div>
-        <ul v-if="item.submenu">
-            <li v-for="(subitem, subindex) in item.submenu" v-on:click="contextmenuFn($event, index+'-'+subindex)">
-                <div v-html="subitem.html"></div>
-            </li>
-        </ul>
+    <li class="contextmenu-item" v-for="item in items" v-on:click="contextmenuFn">
+        <div class="contextmenu-item-inner" v-html="item.html" :data-name="item.name"></div>
+        <sub-menu v-if="item.submenu" :item="item"></sub-menu>
     </li>
 </ul>
+
 
 <script type="text/javascript" src="../src/index.js"></script>
 </body>

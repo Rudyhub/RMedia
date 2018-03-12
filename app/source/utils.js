@@ -1,4 +1,9 @@
 const Vue = require('./vue.min');
+
+// Vue.component('sub-menu',{
+
+// });
+
 module.exports = {
     timemat(time){
         let t,
@@ -81,6 +86,7 @@ module.exports = {
                 this.btns.splice(0, this.btns.length);
                 if(typeof this.callback === 'function'){
                     this.callback.call(e.currentTarget, code);
+                    // this.callback = null;
                 }
             }
         }
@@ -91,19 +97,41 @@ module.exports = {
             show: false,
             x: 0,
             y: 0,
-            menu: []
+            items: []
         },
         methods: {
             setItem(){
-                this.menu.splice(0, this.menu.length);
-                this.menu.push(...arguments);
+                this.items.splice(0, this.items.length);
+                this.items.push(...arguments);
             },
-            contextmenuFn(e, key){
+            contextmenuFn(e){
+                let target = e.target;
+                if(!target.hasAttribute('data-name')) return false;
                 this.show = false;
-                this.menu.splice(0, this.menu.length);
+                this.items.splice(0, this.items.length);
                 if(typeof this.callback === 'function'){
-                    this.callback.call(e.currentTarget, key);
+                    this.callback.call(target, target.dataset.name);
+                    this.callback = null;
+                    this.x = this.y = 0;
                 }
+            },
+            remove(){
+                this.items.splice(0, this.items.length);
+                this.show = false;
+                this.callback = null;
+            }
+        },
+        components: {
+            'sub-menu': {
+                name: 'sub-menu',
+                template: `
+                <ul class="contextmenu-submenu">
+                    <li class="contextmenu-item" v-for="subitem in item.submenu">
+                        <div class="contextmenu-item-inner" v-html="subitem.html" :data-name="subitem.name"></div>
+                        <sub-menu v-if="subitem.submenu" :item="subitem"></sub-menu>
+                    </li>
+                </ul>`,
+                props: ['item']
             }
         }
     })

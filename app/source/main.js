@@ -43,9 +43,11 @@ function listItems(files){
                 alpha: vue.toolbar.toggle.alpha,
                 type: '',
                 series: false,
+                logo: '',
                 logoX: 1,
                 logoY: 2,
-                logoW: 12,
+                logoScale: 0,
+                logoSize: 12,
 
                 duration: 0,
                 startTime: 0,
@@ -146,7 +148,6 @@ const vue = new Vue({
         viewScale: .5625,
         isStarted: false,
 		winToggle: true,
-        logo: '',
         batchParams: {
             speed: 'slow',
             nameAll: nw.App.manifest.name,
@@ -210,7 +211,25 @@ const vue = new Vue({
 
         logoInput.addEventListener('change', ()=>{
             if(/^image\/[\w-]+$/i.test(logoInput.files[0].type)){
-                vue.logo = logoInput.files[0].path;
+                let activeIndex = logoInput.dataset.activeIndex,
+                    logoPath = logoInput.files[0].path,
+                    img = new Image();
+                img.onload = ()=>{
+                    if(activeIndex === 'all'){
+                        for(let key in vue.items){
+                            if(vue.items[key].lock){
+                                vue.items[key].logo = logoPath;
+                                vue.items[key].logoScale = img.height / img.width;
+                            }
+                        }
+                    }else{
+                        vue.items[activeIndex].logo = logoPath;
+                        vue.items[activeIndex].logoScale = img.height / img.width;
+                    }
+                    img.onload = null;
+                    img = null;
+                };
+                img.src = logoPath;
             }
         });
     },
@@ -978,27 +997,67 @@ const vue = new Vue({
                 break;
                 case 'logo':
                 {
-                    if(e.type === 'click'){
-                        logoInput.value = '';
-                        logoInput.click();
-                    }else{
-                        // vue.logo = '';
-                        utils.menu.show = true;
-                        utils.menu.x = e.x;
-                        utils.menu.y = e.y;
-                        utils.menu.setItem(
-                            {html:'替换'},
-                            {
-                                html:'调整',
-                                submenu:[{html:'宽度比'},{html: '水平位置比'},{html:'垂直位置比'}]
-                            },
-                            {html:'删除'}
-                        );
-                        utils.menu.callback = (a)=>{
-                            console.log(a);
+                    logoInput.dataset.activeIndex = index;
+                    utils.menu.show = true;
+                    utils.menu.x = e.x;
+                    utils.menu.y = e.y;
+                    let menu = [{html: item.logo ? '替换':'添加',name:'add'}];
+                    if(item.logo){
+                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',submenu:[
+                            {html:'左上',name:'lt'},
+                            {html:'右上',name:'rt'},
+                            {html:'中心',name:'c'},
+                            {html:'左下',name:'lb'},
+                            {html:'右下',name:'rb'}
+                        ]});
+                    } 
+                    menu.push({html:'关闭菜单',name:'close'});
+                    utils.menu.setItem(...menu);
+                    utils.menu.callback = (name)=>{
+                        switch(name){
+                            case 'add':
+                                logoInput.value = '';
+                                logoInput.click();
+                            break;
+                            case 'delete':
+                                item.logo = '';
+                            break;
+                            /*位置推算：
+                                目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
+                                已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
+                                设： item宽、高分别为 W1、 H1，logo宽高分别为 W2、H2;
+                                求：Hs，即(H2/H1)。
+                                解：
+                                    因: A = W2/W1; B = H2/W2; C = H1/W1;
+                                    故: H1 = W1*C; H2 = W2*B;
+                                    推导: Hs = H2/H1
+                                        = (W2*B) / (W1*C)
+                                        = (W2/W1) * (B/C)
+                                        = A * (B/C);
+                                套入：Hs = item.logoSize * (item.logoScale / item.scale);
+                            */
+                            case 'lt':
+                                item.logoX = 1;
+                                item.logoY = 2;
+                            break;
+                            case 'rt':
+                                item.logoX = 99 - item.logoSize;
+                                item.logoY = 2;
+                            break;
+                            case 'c':
+                                item.logoX = (99 - item.logoSize)/2;
+                                item.logoY = (98 - item.logoSize * (item.logoScale / item.scale))/2;
+                            break;
+                            case 'lb':
+                                item.logoX = 1;
+                                item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                            break;
+                            case 'rb':
+                                item.logoX = 99 - item.logoSize;
+                                item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                            break;
                         }
-                    }
-                    
+                    } 
                 }
             }
         }
