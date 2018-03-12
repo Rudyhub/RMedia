@@ -24,6 +24,7 @@ Window7 x64和Window10 x64可以使用，其他平台没有测试过。
 3. git
 4. ffmpeg
 5. nwjs
+6. vue
 
 ### 开始
 
