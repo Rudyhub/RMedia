@@ -163,7 +163,7 @@ const capture = {
 					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
 					utils.dialog.setBtn('覆盖','重试','取消');
 					utils.dialog.callback = function(code){
-						utils.dialog.callback = null;
+						
 						if(code === 0){
 							begin();
 						}else if(code === 1){

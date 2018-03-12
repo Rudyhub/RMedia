@@ -237,6 +237,15 @@ summary{
     width: 50%;
 }
 
+.icon-btn{
+    cursor: pointer;
+    padding: .5em .6em;
+    display: inline-block;
+}
+.icon-btn:hover{
+    color: var(--blue1);
+}
+
 .color-1{
     color: var(--blue2);
 }
@@ -375,6 +384,14 @@ summary{
     font-size: var(--fs14);
     color: var(--gray1);
     white-space: nowrap;
+    border-top: 1px solid var(--black3);
+    position: relative;
+}
+.drop-panel-group:first-child{
+    border-top: none;
+}
+.drop-panel-group:last-child{
+    padding: .5em;
 }
 .drop-panel-group input[type=text]{
     width: 8em;
@@ -391,6 +408,27 @@ summary{
     color: var(--gray2);
     font-size: 12px;
 }
+.drop-panel-logo-range{
+    width: 42%;
+}
+.drop-panel-logobox{
+    margin-top: 3.4em;
+    width: calc(68% - 8.5em);
+    height: 7em;
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.drop-panel-logo{
+    max-width: 100%;
+    max-height: 100%;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    margin: auto;
+}
 
 .item-list{
     font-size: 0;
@@ -406,6 +444,7 @@ summary{
     background: var(--black1);
     border-radius: 4px;
     overflow: hidden;
+    position: relative;
 }
 .item-preview-inner{
     height: 10.8vw;

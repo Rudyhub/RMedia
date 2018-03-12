@@ -82,15 +82,13 @@
                 </div>
                 <div class="drop-panel-group">
                     设置水印(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                    <div>
-                        <div class="inline-b half text-center">
-                            <button v-on:click="batchParamsFn($event, 'logo')"><i class="icon icon-plus"></i> 添加</button>
-                        </div>
-                        <div class="inline-b half">
-                            <p class="tip">尺寸比例：<input type="number"> (%)</p>
-                            <p class="tip">水平位置：<input type="number"> (%)</p>
-                            <p class="tip">垂直位置：<input type="number"> (%)</p>
-                        </div>
+                    <i class="icon-btn icon icon-plus" v-on:click="batchParamsFn($event, 'logo', 'add')"></i>
+                    <i class="icon-btn icon icon-minus" v-on:click="batchParamsFn($event, 'logo', 'del')"></i>
+                    <p class="tip">尺寸比例：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'size')" min="0" max="100" step="1" type="range"></p>
+                    <p class="tip">水平位置：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'left')" min="0" max="100" step="1" type="range"></p>
+                    <p class="tip">垂直位置：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'top')" min="0" max="100" step="1" type="range"></p>
+                    <div class="tip drop-panel-logobox">
+                        <img class="drop-panel-logo" :src="batchParams.logo" alt="LOGO预览区">
                     </div>
                 </div>
                 <div class="drop-panel-group">

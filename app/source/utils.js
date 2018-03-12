@@ -1,9 +1,4 @@
 const Vue = require('./vue.min');
-
-// Vue.component('sub-menu',{
-
-// });
-
 module.exports = {
     timemat(time){
         let t,
@@ -86,7 +81,7 @@ module.exports = {
                 this.btns.splice(0, this.btns.length);
                 if(typeof this.callback === 'function'){
                     this.callback.call(e.currentTarget, code);
-                    // this.callback = null;
+                    this.callback = null;
                 }
             }
         }

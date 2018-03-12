@@ -122,7 +122,7 @@ function listItems(files){
                     </details>`;
                     utils.dialog.setBtn('是','否');
                     utils.dialog.callback = function(code){
-                        utils.dialog.callback = null;
+                        
                         if(code === 1){
                             window.URL.revokeObjectURL(vue.items[key].thumb);
                             vue.$delete(vue.items, key);
@@ -153,7 +153,8 @@ const vue = new Vue({
             nameAll: nw.App.manifest.name,
             widthLimit: config.output.width,
             heightLimit: config.output.height,
-            sizeLimit: 0
+            sizeLimit: 0,
+            logo: ''
         },
         toolbar: {
             drop: 0,
@@ -216,6 +217,7 @@ const vue = new Vue({
                     img = new Image();
                 img.onload = ()=>{
                     if(activeIndex === 'all'){
+                        vue.batchParams.logo = logoPath;
                         for(let key in vue.items){
                             if(vue.items[key].lock){
                                 vue.items[key].logo = logoPath;
@@ -350,7 +352,7 @@ const vue = new Vue({
                 utils.dialog.body = '<p>文件正在处理，如果中止，不能确保已输出的部分是正常的，是否中止？</p>';
                 utils.dialog.setBtn('中止当前','中止全部','取消');
                 utils.dialog.callback = function(code){
-                    utils.dialog.callback = null;
+
                     if(code === 0 || code === 1){
                         Media.ffmpeg.stdin.write('q\n');
                         Media.ffmpeg.signalCode = '主动中止，' + this.innerText;
@@ -518,7 +520,7 @@ const vue = new Vue({
                                 utils.dialog.body = `<p>${msg}！接下来选择如何处理已完成？</p>`;
                                 utils.dialog.setBtn('移除','保留');
                                 utils.dialog.callback = function(code){
-                                    utils.dialog.callback = null;
+                                    
                                     for(let key in vue.items){
                                         if(code === 0 && vue.items[key].progress){
                                             window.URL.revokeObjectURL(vue.items[key].thumb);
@@ -615,6 +617,20 @@ const vue = new Vue({
                     target.value = val > config.output.height ? config.output.height : val;
                 }
                 break;
+                case 'logo':
+                {
+                    if(arguments[2] === 'del'){
+                        vue.batchParams.logo = '';
+                        for(let key in vue.items){
+                            if(vue.items[key].lock) vue.items[key].logo = '';
+                        }
+                    }else{
+                        logoInput.dataset.activeIndex = 'all';
+                        logoInput.value = '';
+                        logoInput.click();
+                    }
+                }
+                break;
                 case 0:
                 {
                     let sizeLimit = parseFloat(vue.$refs.sizeLimitEl.value) || 0,
@@ -661,7 +677,24 @@ const vue = new Vue({
                 default:
                     vue.dropMenuClose('batch');
             }
-            
+        },
+        logoFn(e, name){
+            let val = parseFloat(e.currentTarget.value),
+                key, item;
+            for(key in vue.items){
+                item = vue.items[key];
+                switch(name){
+                    case 'size':
+                        item.logoSize = val;
+                    break;
+                    case 'left':
+                        item.logoX = (100-item.logoSize) * (val/100);
+                    break;
+                    case 'top':
+                        item.logoY = (100 - item.logoSize * (item.logoScale / item.scale)) * (val /100);
+                    break;
+                }
+            }
         },
         nameAllFn(code){
             vue.dropMenuClose('batch');
@@ -703,7 +736,7 @@ const vue = new Vue({
                     </details>`;
                     utils.dialog.setBtn('继续','退出');
                     utils.dialog.callback = function(c){
-                        utils.dialog.callback = null;
+                        
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -822,7 +855,7 @@ const vue = new Vue({
                     utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
                     utils.dialog.setBtn('启用','关闭');
                     utils.dialog.callback = function(code){
-                        utils.dialog.callback = null;
+                        
                         if(code === 0){
                             Media.killAll();
                         }
@@ -969,7 +1002,7 @@ const vue = new Vue({
                         utils.dialog.title = '注意';
                         utils.dialog.body = '<p>取预览图的位置必须是在截取时间'+utils.timemat(item.startTime*1000)+'到'+utils.timemat(item.endTime*1000)+'</p>';
                         utils.dialog.callback = ()=>{
-                            utils.dialog.callback = null;
+                            
                             item.coverTime = item.currentTime > item.startTime ? item.endTime : item.startTime;
                             item.currentTime = item.coverTime;
                             if(item.canplay){

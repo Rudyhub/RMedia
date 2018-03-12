@@ -218,7 +218,7 @@ module.exports = {
                 utils.dialog.body = '<p>文件已存在，是否覆盖？</p>';
                 utils.dialog.setBtn('覆盖','否');
                 utils.dialog.callback = (code)=>{
-                    utils.dialog.callback = null;
+                    
                     if(code === 0){
                         ffmpeg.stdin.write('y\n');
                     }else{
