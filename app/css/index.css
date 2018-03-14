@@ -79,6 +79,7 @@ body{
 input,button,textarea{
     -webkit-appearance: none;
     box-sizing: border-box;
+    outline: none;
 }
 input,select,textarea{
     border: 1px solid var(--gray3);
@@ -86,12 +87,12 @@ input,select,textarea{
     color: var(--gray1);
     padding: .2em;
     vertical-align: middle;
+    outline: none;
 }
-input:hover,select:hover,
-input:focus,select:focus,
+input:not([type=checkbox]):hover,select:hover,
+input:not([type=checkbox]):focus,select:focus,
 textarea:focus{
     transition: all var(--dur1);
-    outline: none;
     box-shadow: var(--blue1) 0 0 .4em;
     border-color: var(--blue1);
 }
@@ -106,11 +107,18 @@ input[disabled]{
     width: 1em;
     height: 1em;
     border-radius: .2em;
+    position: relative;
 }
 [type=checkbox]:checked{
-    background: #88543b;
-    box-shadow: var(--light1) 0 0 .4em;
     border-color: var(--light1);
+    font-family: 'fupicon';
+}
+[type=checkbox]:checked:before{
+    content: '\ea12';
+    position: absolute;
+    top: 0;
+    left: 0;
+    color: var(--light1);
 }
 [type=file]{
     -webkit-appearance: none;
