@@ -239,7 +239,7 @@
                     </div>
                 </dt>
                 <dd class="item-row">
-                    <div class="item-controls" :class="{'zoom-out': !item.duration}">
+                    <div class="item-controls scale-0" :class="{'zoom-in': item.duration}">
                         <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
                         <br>
                         微调：{{item.currentTime | timemat}}
@@ -292,11 +292,11 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">大小：{{item.size | sizemat}}</div>
-                    <div class="item-new" :class="{'zoom-out': item.type !== 'video'}">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
+                    <div class="item-new scale-0" :class="item.type === 'video'?'zoom-in':''">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">截取：{{item.duration | timemat}}</div>
-                    <div class="item-new" :class="{'zoom-out':item.duration}">
+                    <div class="item-new scale-0" :class="item.duration?'zoom-in':''">
                         <button class="btn-s" v-on:click="itemFn($event,index,'setstart')" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
                         - 
                         <button class="btn-s" v-on:click="itemFn($event,index,'setend')" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
@@ -304,7 +304,7 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
-                    <div class="item-new" :class="{'zoom-out':item.type === 'audio' || item.series}">
+                    <div class="item-new scale-0" :class="(item.type!=='audio' && item.totype!=='audio' && !item.series)?'zoom-in':''">
                         <input type="checkbox" v-model="item.cover">
                         <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.duration <= 0">{{item.coverTime | timemat}}</button>
                         <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover">px
@@ -312,7 +312,7 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">尺寸：{{item.width}}&times;{{item.height}}</div>
-                    <div class="item-new" :class="{'zoom-out': !item.width || !item.height}">
+                    <div class="item-new scale-0" :class="(item.width && item.height)?'zoom-in':''">
                         <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
                         &times;
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
@@ -325,7 +325,7 @@
                         {{item.achannel}}
                         {{item.aclayout}}
                     </div>
-                    <div class="item-new" :class="{'zoom-out': item.aclayout < 1}">
+                    <div class="item-new scale-0" :class="(item.aclayout>1 || (item.achannel && item.vchannel))?'zoom-in':''">
                         <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
                     </div>
                 </dd>

@@ -4,6 +4,7 @@ const win = nw.Window.get(),
     Media = require('./Media'),
     utils = require('./utils'),
     capture = require('./capture'),
+    Vue = require('./vue.min'),
     shortcut = require('./shortcut'),
     crypto = require('crypto'),
 
@@ -38,6 +39,7 @@ function listItems(files){
                 progress: 0,
                 lock: vue.toolbar.toggle.lock,
                 alpha: vue.toolbar.toggle.alpha,
+                type: '',
                 series: false,
                 logo: '',
                 logoX: 1,
@@ -70,8 +72,6 @@ function listItems(files){
 
                 format: '',
                 toformat: '',
-                type: '',
-                totype: '',
 
                 fps: 0,
                 tofps: 0,
@@ -139,7 +139,7 @@ function listItems(files){
 
 shortcut({inputEl, outputEl, listItems});
 
-const vue = new utils.Vue({
+const vue = new Vue({
 	el: '#app',
 	data: {
         app: Object.freeze(nw.App.manifest),
@@ -267,7 +267,6 @@ const vue = new utils.Vue({
             item.quality = quality ? quality.toFixed(2) : 100;
             item.toname = item.name.slice(0, -item.format.length-1);
             item.toformat = utils.usableType(item.format, item.type) ? item.format : config.output.format[item.type];
-            item.totype = item.type;
             item.startTime = 0;
             item.endTime = item.duration;
             item.cover = false;
@@ -368,9 +367,8 @@ const vue = new utils.Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-            console.log(Media.cammand(vue.items[ keys[i] ], vue.output));
             if(len){
-                // recycle(vue.items[ keys[i] ]);
+                recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -583,7 +581,7 @@ const vue = new utils.Vue({
                     ctx.drawImage(img, x, y, w, h);
                 }
 
-                utils.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
+                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
             }else if(code == 'matrix'){
@@ -733,9 +731,9 @@ const vue = new utils.Vue({
                     i++;
                     output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
                     if(code === 1){
-                        utils.rename(item.path, output, oneComplete);
+                        Media.rename(item.path, output, oneComplete);
                     }else if(code === 2){
-                        utils.copyFile(item.path, output, oneComplete);
+                        Media.copyFile(item.path, output, oneComplete);
                     }
                 }
             };
@@ -751,6 +749,7 @@ const vue = new utils.Vue({
                     </details>`;
                     utils.dialog.setBtn('继续','退出');
                     utils.dialog.callback = function(c){
+                        
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -991,12 +990,6 @@ const vue = new utils.Vue({
                     }else if(item.type === 'video'){
                         vue.getThumb(item);
                     }
-                }
-                break;
-                case 'toformat':
-                {
-                    item.toformat = target.value;
-                    item.totype = utils.type(item.toformat);
                 }
                 break;
                 case 'setstart':
