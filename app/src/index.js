@@ -1751,7 +1751,7 @@ module.exports = {
 
             let filters = '[0:v]scale='+w+':'+h;
             //如果有水印
-            if(item.logo){
+            if(item.logo && !item.series){
                 cammand.push('-i', item.logo);
                 let lw = Math.round(item.logoSize/100 * w),
                     lh = Math.round(lw * item.logoScale),
@@ -1796,7 +1796,7 @@ module.exports = {
         }
 
         //如果有预览图
-        if(item.cover){
+        if(item.cover && !item.series){
             w = item.coverWidth;
             h = Math.round(w * item.scale);
             if(w%2 !== 0) w--;

@@ -809,6 +809,10 @@ summary{
 .zoom-in{
     transform: scale(1) !important;
 }
+.zoom-out{
+    animation: zoomOut .5s cubic-bezier(.4,1.13,.76,1.21);
+    animation-fill-mode: forwards;
+}
 
 @keyframes zoomIn{
     0%{
@@ -816,6 +820,14 @@ summary{
     }
     100%{
         transform: scale(1);
+    }
+}
+@keyframes zoomOut{
+    0%{
+        transform: scale(1);
+    }
+    100%{
+        transform: scale(0);
     }
 }
 @keyframes rotating{

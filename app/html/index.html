@@ -225,7 +225,7 @@
 
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
 
-                            <div class="item-logo" v-if="item.totype !== 'audio' && item.towidth > 0 && item.toheight > 0" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
+                            <div class="item-logo" v-if="item.totype !== 'audio' && item.towidth > 0 && item.toheight > 0 && !item.series" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
                                 <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
                                 <b class="item-logo-icon" v-else>LOGO</b>
                             </div>
@@ -239,13 +239,13 @@
                     </div>
                 </dt>
                 <dd class="item-row">
-                    <div class="item-controls">
+                    <div class="item-controls" :class="{'zoom-out': !item.duration}">
                         <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
                         <br>
                         微调：{{item.currentTime | timemat}}
-                        <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')" :disabled="item.type=='image'"><i class="icon icon-previous2"></i></button>
-                        <input type="number" v-model="framestep" title="设置微调量" :disabled="item.type=='image'">
-                        <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')" :disabled="item.type=='image'"><i class="icon icon-next2"></i></button>
+                        <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
+                        <input type="number" v-model="framestep" title="设置微调量">
+                        <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
                         {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
                     </div>
                 </dd>
@@ -292,19 +292,19 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">大小：{{item.size | sizemat}}</div>
-                    <div class="item-new" v-if="item.type === 'video'">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
+                    <div class="item-new" :class="{'zoom-out': item.type !== 'video'}">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">截取：{{item.duration | timemat}}</div>
-                    <div class="item-new" v-if="item.duration">
-                        <button class="btn-s" v-on:click="itemFn($event,index,'setstart')" :disabled="item.type=='image'" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
+                    <div class="item-new" :class="{'zoom-out':item.duration}">
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setstart')" title="点击即获取当前时间">{{item.startTime | timemat}}</button>
                         - 
-                        <button class="btn-s" v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setend')" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
                     </div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
-                    <div class="item-new" v-if="item.type !== 'audio'">
+                    <div class="item-new" :class="{'zoom-out':item.type === 'audio' || item.series}">
                         <input type="checkbox" v-model="item.cover">
                         <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.duration <= 0">{{item.coverTime | timemat}}</button>
                         <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover">px
@@ -312,10 +312,10 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">尺寸：{{item.width}}&times;{{item.height}}</div>
-                    <div class="item-new" v-if="item.width && item.height">
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" :disabled="item.type=='audio'" title="输出宽">
+                    <div class="item-new" :class="{'zoom-out': !item.width || !item.height}">
+                        <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
                         &times;
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
+                        <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
                         px
                     </div>
                 </dd>
@@ -325,7 +325,7 @@
                         {{item.achannel}}
                         {{item.aclayout}}
                     </div>
-                    <div class="item-new" v-if="(item.vchannel && item.achannel) || (item.aclayout > 1)">
+                    <div class="item-new" :class="{'zoom-out': item.aclayout < 1}">
                         <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
                     </div>
                 </dd>
