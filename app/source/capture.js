@@ -1,7 +1,6 @@
 const win = nw.Window.get(),
 config = require('./config'),
 {spawn} = require('child_process'),
-fs = require('fs'),
 utils = require('./utils');
 
 const capture = {
@@ -112,7 +111,7 @@ const capture = {
 		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
 		//删除日志文件
 		try{
-			fs.unlinkSync(config.logPath);
+			utils.fs.unlinkSync(config.logPath);
 		}catch(err){}
 		error = null;
 		isComplete = false;
@@ -156,7 +155,7 @@ const capture = {
 		}
 		checkOutput();
 		function checkOutput(){
-			fs.access(output, (err)=>{
+			utils.fs.access(output, (err)=>{
 				if(!err){
 					win.show();
 					utils.dialog.show = true;
@@ -176,7 +175,7 @@ const capture = {
 			});
 		}
 		function begin(){
-			log = fs.createWriteStream(config.logPath, {  
+			log = utils.fs.createWriteStream(config.logPath, {  
 				flags: 'a',  
 				encoding: 'utf-8',  
 				mode: '0666'
@@ -193,14 +192,14 @@ const capture = {
 			});
 			ffmpeg.once('close', (a, b)=>{
 				if(a !== 0){
-					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>录制失败：</p><p>'+utils.fs.readFileSync(config.logPath,'utf-8')+'</p>');
 					error.code = 1;
 				}
 				complete();
 			});
 			ffmpeg.once('error', ()=>{
 				if(!error){
-					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>启动失败：</p><p>'+utils.fs.readFileSync(config.logPath,'utf-8')+'</p>');
 					error.code = 2;
 				}
 				complete();

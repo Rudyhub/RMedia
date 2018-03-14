@@ -1,30 +1,17 @@
-const fs = require('fs'),
-childprocess = require('child_process'),
+const childprocess = require('child_process'),
 config = require('./config'),
 utils = require('./utils');
 
 //用于暂存单帧base64数据的临时文件，即预览图数据来源。
 let THUMB_TEMP_FILE = 'rmedia.temp';
-fs.writeFileSync(THUMB_TEMP_FILE,'');
+utils.fs.writeFileSync(THUMB_TEMP_FILE,'');
 
 nw.process.on('exit',()=>{
-    fs.unlinkSync(THUMB_TEMP_FILE);
+    utils.fs.unlinkSync(THUMB_TEMP_FILE);
 });
 
 module.exports = {
     ffmpeg: null,
-    //第一个子数组为支持直接预览的格式，第二个需要转码
-    formats: {
-        image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
-        video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
-        audio: [['mp3','wav','mpeg'],['wma','mid']]
-    },
-    is(ext,name,bool){
-        if(!bool){
-            return this.formats[name][0].indexOf(ext) !== -1;
-        }
-        return this.formats[name][0].indexOf(ext) !== -1 && this.formats[name][1].indexOf(ext) !== -1;
-    },
     metadata(url,success,fail){
         let ext = url.slice(url.lastIndexOf('.')+1).toLowerCase(),
             json = {
@@ -82,7 +69,7 @@ module.exports = {
             if(json.width > 0 && json.height > 0){
                 if(json.fps === 0 || json.ext === 'gif'){
                     json.type = 'image';
-                    if(json.ext !== 'gif') json.duration = 0;
+                    json.duration = 0;
                 }else{
                     json.type = 'video'; 
                 }
@@ -129,7 +116,7 @@ module.exports = {
 
         ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
-                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
+                thumb = window.URL.createObjectURL(new Blob([utils.fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{
                 if(status && o.fail){
                     status = false;
@@ -170,7 +157,7 @@ module.exports = {
                 json.thumb = config.audioThumb;
                 o.success(json);
             }else{
-                if(self.is(json.ext,'image')){
+                if(utils.usableType(json.ext,'image')){
                     json.thumb = o.input;
                     o.success(json);
                 }else{
@@ -198,35 +185,158 @@ module.exports = {
             if(fn) fn(stderr.toString());
         });
     },
+    cammand(item, outFolder){
+        let bita, bitv, w, h, total, outPath, cammand;
+
+        bita = item.bita < config.output.bita ? item.bita : config.output.bita;
+        bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
+        w = Math.round(item.towidth);
+        h = Math.round(item.toheight);
+        total = item.endTime - item.startTime;
+        outPath = utils.path(outFolder + '\\' + item.toname);
+        cammand = [];
+
+        //时间
+        if(item.startTime > 0) cammand.push('-ss', item.startTime);
+        if(total > 0 && item.endTime !== item.duration) cammand.push('-t', total);
+
+        //输入
+        if(item.type === 'image' && item.series){
+            if(item.totype === 'image' && item.toformat !== 'gif'){
+                return `在文件“${item.path}”选中了序列图，所以输出格式必须是视频或gif。请选好后再继续？`;
+            }
+            let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
+                match = reg.exec(item.path);
+            if(match && match[1]){
+                cammand.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
+                    return '%0'+$1.length+'d.'+item.format;
+                }));
+            }else{
+                return `<p>选中了序列图，但输入的文件“${item.path}”不符合！</p>
+                <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
+                <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
+                <p>然后只需要选择第一张图片即可</p>`;
+            }
+        }else{
+            cammand.push('-i', item.path);
+        }
+        
+        //如果输出音频
+        if(item.totype === 'audio'){
+            if(item.achannel){
+                if(bita) cammand.push('-ab', bita+'k');
+                if(item.split && item.aclayout > 1){
+                    cammand.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
+                    return cammand;
+                }
+                if(item.type !== 'audio') cammand.push('-vn');
+                cammand.push(outPath+'.'+item.toformat);
+                return cammand;
+            }
+            return `输入的文件“${item.path}”无音频数据或者无法解析音频数据。`;
+        }
+
+        //尺寸
+        if(w>0 && h>0){
+            if(w%2 !== 0) w--;
+            if(h%2 !== 0) h--;
+
+            let filters = '[0:v]scale='+w+':'+h;
+            //如果有水印
+            if(item.logo){
+                cammand.push('-i', item.logo);
+                let lw = Math.round(item.logoSize/100 * w),
+                    lh = Math.round(lw * item.logoScale),
+                    lt = Math.round(item.logoY/100 * h),
+                    ll = Math.round(item.logoX/100 * w);
+
+                filters += '[media];[1:v]scale='+lw+':'+lh+'[logo];[media][logo]overlay='+ll+':'+lt;
+            }
+            cammand.push('-filter_complex', filters);
+        }
+
+        //如果输出视频
+        if(item.totype === 'video'){
+            if(item.type === 'video'){
+                if(bitv) cammand.push('-vb', bitv+'k');
+            }
+            if(item.type !== 'image'){
+                if(bita) cammand.push('-ab', bita+'k');
+            }
+            if(item.type !== 'audio') cammand.push('-pix_fmt', 'yuv420p');
+
+            if(item.split){
+                if(item.vchannel) cammand.push('-map', item.vchannel);
+
+                cammand.push(outPath+'.'+item.toformat);
+
+                if(item.achannel){
+                    if(item.aclayout > 1){
+                        cammand.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
+                    }else{
+                        cammand.push('-map', item.achannel, outPath+'.mp3');
+                    }
+                }
+            }else{
+                cammand.push(outPath +'.'+ item.toformat);
+            }
+        }
+        
+        //如果输出图片
+        if(item.totype === 'image'){
+            cammand.push(outPath +'.'+ item.toformat);
+        }
+
+        //如果有预览图
+        if(item.cover){
+            w = item.coverWidth;
+            h = Math.round(w * item.scale);
+            if(w%2 !== 0) w--;
+            if(h%2 !== 0) h--;
+
+            cammand.push('-map', item.vchannel);
+            if(item.coverTime > 0){
+                cammand.push('-ss', item.coverTime - item.startTime, '-vframes', 1);
+            }
+            cammand.push('-s', w+'x'+h, outPath+'_thumb.jpg');
+        }
+
+        return cammand;
+    },
     convert(o){
         let self = this,
-            ffmpeg,
-            line;
+            // lines = [],
+            line,
+            // file,
+            ffmpeg;
 
         if(!o.cammand) return;
         if(!o.cammand.length) return;
-        o.cammand.unshift('-hide_banner');
-        ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
 
+        o.cammand.unshift('-hide_banner','-y');
+
+        ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
-            line = stderr.toString();
-            console.log(line);
+            line = stderr.toString().trim();
+            // if(lines.length > 3) lines.shift();
+            // lines.push(line);
             //检查文件是否存在
-            if(/Overwrite[\s\S]*?\[y\/N\]/i.exec(line)){
-                utils.dialog.show = true;
-                utils.dialog.title = '文件已存在';
-                utils.dialog.body = '<p>文件已存在，是否覆盖？</p>';
-                utils.dialog.setBtn('覆盖','否');
-                utils.dialog.callback = (code)=>{
-                    
-                    if(code === 0){
-                        ffmpeg.stdin.write('y\n');
-                    }else{
-                        ffmpeg.stdin.write('n\n');
-                        ffmpeg.signalCode = '主动中止，不覆盖。';
-                    }
-                }
-            }
+            // if(/Overwrite[\s\S]*?\[y\/N\]/i.test(line)){
+            //     console.log(lines.join('').replace(/\n+/g, ''))
+            //     // file = regFile.exec(lines.join(''));
+            //     utils.dialog.show = true;
+            //     utils.dialog.title = '文件已存在';
+            //     utils.dialog.body = 'd';//'<p>文件“'+(file && file[1] ? file[1] : '')+'”已存在，是否覆盖？</p>';
+            //     utils.dialog.setBtn('覆盖','否');
+            //     utils.dialog.callback = (code)=>{
+            //         if(code === 0){
+            //             ffmpeg.stdin.write('y\n');
+            //         }else{
+            //             ffmpeg.stdin.write('n\n');
+            //             ffmpeg.signalCode = '主动中止，不覆盖。';
+            //         }
+            //     }
+            // }
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );
@@ -241,37 +351,5 @@ module.exports = {
             if(o.complete) o.complete(2, '启动失败 '+err);
         });
         self.ffmpeg = ffmpeg;
-    },
-    rename(oldname, newname, callback){
-        fs.access(newname, (err)=>{
-            if(!err){
-                callback('文件【'+newname+'】'+'已存在!');
-            }else{
-                fs.rename(oldname, newname, callback);
-            }
-        });
-    },
-    copyFile(oldname, newname, callback){
-        fs.access(newname, (err)=>{
-            if(!err){
-                callback('文件【'+newname+'】'+'已存在!');
-            }else{
-                fs.copyFile(oldname, newname, callback);
-            }
-        });
-    },
-    canvasToFile(path, data, dialog){
-        fs.writeFile(path, data.replace(/^data:image\/\w+;base64,/, ''), 'base64', (err)=>{
-            if(err){
-                dialog.show = true;
-                dialog.title = '失败！';
-                dialog.body = '<p>错误信息：'+err.message+'</p>';
-            }else{
-                dialog.show = true;
-                dialog.title = '成功！';
-                dialog.body = '<p>文件输出位置：'+path+'</p>';
-            }
-        });
-    },
-    writeFile: fs.writeFile
+    }
 };

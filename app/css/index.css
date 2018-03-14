@@ -718,7 +718,7 @@ summary{
     transform: rotate(180deg);
 }
 .dialog-body{
-    margin: 1em 1em 0;
+    margin: 1em;
 }
 .dialog-footer{
     text-align: center;

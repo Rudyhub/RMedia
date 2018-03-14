@@ -4,8 +4,8 @@ const win = nw.Window.get(),
     Media = require('./Media'),
     utils = require('./utils'),
     capture = require('./capture'),
-    Vue = require('./vue.min'),
     shortcut = require('./shortcut'),
+    crypto = require('crypto'),
 
     videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
@@ -23,14 +23,11 @@ win.on('loaded',()=>{
 function listItems(files){
     let i = 0,
         item,
+        hex,
         key,
         tobitv,
         tobita;
     if(files.length){
-        for(key in vue.items){
-            window.URL.revokeObjectURL(vue.items[key].thumb);
-            vue.$delete(vue.items, key);
-        }
         recycle(files[0]);
         function recycle(file){
             item = {
@@ -41,7 +38,6 @@ function listItems(files){
                 progress: 0,
                 lock: vue.toolbar.toggle.lock,
                 alpha: vue.toolbar.toggle.alpha,
-                type: '',
                 series: false,
                 logo: '',
                 logoX: 1,
@@ -58,7 +54,7 @@ function listItems(files){
                 coverWidth: 480,
 
                 name: file.name,
-                toname: file.name.slice(0, file.name.lastIndexOf('.')),
+                toname: '',
 
                 bitv: 0,
                 bita: 0,
@@ -74,6 +70,8 @@ function listItems(files){
 
                 format: '',
                 toformat: '',
+                type: '',
+                totype: '',
 
                 fps: 0,
                 tofps: 0,
@@ -84,7 +82,10 @@ function listItems(files){
                 vchannel: ''
             };
 
-            vue.$set(vue.items, key = Object.keys(vue.items).length, item);
+            hex = crypto.createHash('md5');
+            hex.update(file.path);
+            key = hex.digest('base64');
+            vue.$set(vue.items, key, item);
             // Media.meta(file.path);
             Media.info({
                 input: file.path,
@@ -138,7 +139,7 @@ function listItems(files){
 
 shortcut({inputEl, outputEl, listItems});
 
-const vue = new Vue({
+const vue = new utils.Vue({
 	el: '#app',
 	data: {
         app: Object.freeze(nw.App.manifest),
@@ -265,7 +266,8 @@ const vue = new Vue({
 
             item.quality = quality ? quality.toFixed(2) : 100;
             item.toname = item.name.slice(0, -item.format.length-1);
-            item.toformat = Media.is(item.format, item.type) ? item.format : config.output.format[item.type];
+            item.toformat = utils.usableType(item.format, item.type) ? item.format : config.output.format[item.type];
+            item.totype = item.type;
             item.startTime = 0;
             item.endTime = item.duration;
             item.cover = false;
@@ -366,8 +368,9 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
+            console.log(Media.cammand(vue.items[ keys[i] ], vue.output));
             if(len){
-                recycle(vue.items[ keys[i] ]);
+                // recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -377,12 +380,12 @@ const vue = new Vue({
             function recycle(item){
                 bita = item.bita < config.output.bita ? item.bita : config.output.bita;
                 bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
-                w = item.towidth;
-                h = item.toheight;
+                w = Math.round(item.towidth);
+                h = Math.round(item.toheight);
                 total = item.endTime - item.startTime;
                 output = vue.output + '\\' + item.toname + '.' + item.toformat;
                 cammand = [];
-                //如果是分离音视频
+                /*
                 if(item.split){
                     if(item.vchannel && item.achannel){
                         if(item.startTime > 0) cammand.push('-ss', item.startTime);
@@ -482,13 +485,24 @@ const vue = new Vue({
                 //只允许输出为视频文件时可输出预览图
                 if(item.cover && Media.is(item.toformat, 'video')){
                     w = item.coverWidth;
-                    h = w * item.scale;
+                    h = Math.round(w * item.scale);
                     if(w%2 !== 0) w--;
                     if(h%2 !== 0) h--;
                     if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
                     cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
                 }
 
+                //检查输入文件是否存在
+                if(!Media.has(item.path)){
+                    utils.dialog.show = true;
+                    utils.dialog.title = '文件不存在';
+                    utils.dialog.body = '<p>文件“'+item.path+'”不存在，可能已被删除或转移。</p>';
+                    return;
+                }
+
+                //判断输出文件是否已存在，提示是否覆盖
+                // if(!Media.has(item.path))
+                
                 item.progress = 0;
                 vue.isStarted = true;
 
@@ -540,6 +554,7 @@ const vue = new Vue({
                         }
                     }
                 });
+                */
             }
         },
         spriteFn(code){
@@ -568,7 +583,7 @@ const vue = new Vue({
                     ctx.drawImage(img, x, y, w, h);
                 }
 
-                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
+                utils.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
             }else if(code == 'matrix'){
@@ -718,9 +733,9 @@ const vue = new Vue({
                     i++;
                     output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
                     if(code === 1){
-                        Media.rename(item.path, output, oneComplete);
+                        utils.rename(item.path, output, oneComplete);
                     }else if(code === 2){
-                        Media.copyFile(item.path, output, oneComplete);
+                        utils.copyFile(item.path, output, oneComplete);
                     }
                 }
             };
@@ -736,7 +751,6 @@ const vue = new Vue({
                     </details>`;
                     utils.dialog.setBtn('继续','退出');
                     utils.dialog.callback = function(c){
-                        
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -977,6 +991,12 @@ const vue = new Vue({
                     }else if(item.type === 'video'){
                         vue.getThumb(item);
                     }
+                }
+                break;
+                case 'toformat':
+                {
+                    item.toformat = target.value;
+                    item.totype = utils.type(item.toformat);
                 }
                 break;
                 case 'setstart':

@@ -225,7 +225,7 @@
 
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
 
-                            <div class="item-logo" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
+                            <div class="item-logo" v-if="item.totype !== 'audio' && item.towidth > 0 && item.toheight > 0" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
                                 <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
                                 <b class="item-logo-icon" v-else>LOGO</b>
                             </div>
@@ -252,8 +252,8 @@
                 <dd class="item-row">
                     <div class="item-old">
                         <b>输入：</b>
-                        <span class="float-r">
-                            <input type="checkbox" v-model="item.series" :disabled="item.type !== 'image'"> 序列图
+                        <span class="float-r" v-if="item.type === 'image'">
+                            <input type="checkbox" v-model="item.series"> 序列图
                         </span>
                     </div>
                     <div class="item-new"><b>输出：</b>
@@ -267,7 +267,7 @@
                 <dd class="item-row">
                     <div class="item-old">格式：{{item.format}}</div>
                     <div class="item-new">
-                        <select v-model="item.toformat">
+                        <select v-on:input="itemFn($event,index,'toformat')" :value="item.toformat">
                             <optgroup>
                                 <option value="mp4">mp4</option>
                                 <option value="webm">webm</option>
@@ -292,7 +292,7 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">大小：{{item.size | sizemat}}</div>
-                    <div class="item-new">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
+                    <div class="item-new" v-if="item.type === 'video'">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">截取：{{item.duration | timemat}}</div>
@@ -301,16 +301,14 @@
                         - 
                         <button class="btn-s" v-on:click="itemFn($event,index,'setend')"  :disabled="item.type=='image'" title="点击即获取当前时间">{{item.endTime | timemat}}</button>
                     </div>
-                    <div class="item-new" v-else>不支持</div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
-                    <div class="item-new" v-if="item.type === 'video'">
+                    <div class="item-new" v-if="item.type !== 'audio'">
                         <input type="checkbox" v-model="item.cover">
-                        <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.type=='image'">{{item.coverTime | timemat}}</button>
-                        <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover || item.type=='image'">px
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.duration <= 0">{{item.coverTime | timemat}}</button>
+                        <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover">px
                     </div>
-                    <div class="item-new" v-else>不支持</div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">尺寸：{{item.width}}&times;{{item.height}}</div>
@@ -320,14 +318,16 @@
                         <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" :disabled="item.type=='audio'" title="输出高">
                         px
                     </div>
-                    <div class="item-new" v-else>不支持</div>
                 </dd>
                 <dd class="item-row">
-                    <div class="item-old">分离提取: {{item.vchannel}} {{item.achannel}}</div>
-                    <div class="item-new" v-if="item.vchannel && item.achannel">
+                    <div class="item-old">分离提取:
+                        {{item.vchannel}}
+                        {{item.achannel}}
+                        {{item.aclayout}}
+                    </div>
+                    <div class="item-new" v-if="(item.vchannel && item.achannel) || (item.aclayout > 1)">
                         <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
                     </div>
-                    <div class="item-new" v-else>不支持</div>
                 </dd>
                 <dd class="item-mask" v-if="item.progress">
                     <div class="item-progress-loaded" :style="{width: item.progress+'%'}"></div>

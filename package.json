@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "sdk": "cd ./app && start ..\\nwjs-v0.26.6-win-x64-sdk\\nw.exe .",
+    "dev": "cd ./app && start ..\\nwjs-v0.26.6-win-x64-sdk\\nw.exe .",
     "nw": "cd ./app && start ..\\nwjs-v0.26.6-win-x64\\nw.exe ."
   },
   "repository": {

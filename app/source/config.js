@@ -1,13 +1,12 @@
-const path = require('path'),
-	cp = require('child_process'),
+const cp = require('child_process'),
 	utils = require('./utils');
 
-let appRoot = path.dirname(process.execPath),
-	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe'),
+let appRoot = utils.path(true).dirname(process.execPath),
+	ffmpegPath = utils.path(appRoot+'\\ffmpeg\\ffmpeg.exe'),
 	checkPath = cp.spawnSync(ffmpegPath,['-version']);
 if(checkPath.error){
 	appRoot = process.cwd();
-	ffmpegPath = path.normalize(appRoot+'\\ffmpeg\\ffmpeg.exe');
+	ffmpegPath = utils.path(appRoot+'\\ffmpeg\\ffmpeg.exe');
 	checkPath = cp.spawnSync(ffmpegPath, ['-version']);
 	if(checkPath.error){
 		utils.dialog.show = true;
@@ -19,12 +18,12 @@ if(checkPath.error){
 module.exports = {
 	appRoot: appRoot,
 	ffmpegPath: ffmpegPath,
-	ffprobePath: path.normalize(appRoot+'\\ffmpeg\\ffprobe.exe'),
-	audioThumb: path.normalize('..\\css\\audio.jpg'),
-	logPath: path.normalize(appRoot + '\\cache\\log.txt'),
-	cacheThumb: path.normalize(appRoot + '\\cache\\thumb'),
+	ffprobePath: utils.path(appRoot+'\\ffmpeg\\ffprobe.exe'),
+	audioThumb: utils.path('..\\css\\audio.jpg'),
+	logPath: utils.path(appRoot + '\\cache\\log.txt'),
+	cacheThumb: utils.path(appRoot + '\\cache\\thumb'),
 	output: {
-		folder: process.env.USERPROFILE+'\\desktop',
+		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,
 		height: 720,
 		bitv: 1024,
