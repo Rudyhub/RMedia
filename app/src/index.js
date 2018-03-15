@@ -72,7 +72,7 @@ const fs = __webpack_require__(7),
     Vue = __webpack_require__(3),
     formats = {
         image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
-        video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
+        video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
         audio: [['mp3','wav','mpeg'],['wma','mid']]
     };
 module.exports = {
@@ -326,7 +326,6 @@ const win = nw.Window.get(),
     shortcut = __webpack_require__(11),
     crypto = __webpack_require__(12),
 
-    videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
     logoInput = document.createElement('input'),
@@ -349,10 +348,11 @@ function listItems(files){
     if(files.length){
         recycle(files[0]);
         function recycle(file){
+            console.log(file.type);
             item = {
                 path: file.path,
                 thumb: '',
-                canplay: !!videoEl.canPlayType(file.type),
+                canplay: false,
                 playing: 0,
                 progress: 0,
                 lock: vue.toolbar.toggle.lock,
@@ -421,6 +421,7 @@ function listItems(files){
                     item.height = json.height;
 
                     item.format = json.ext;
+                    item.canplay = (/(mp4|mp3|ogg|mpeg|mkv|wav|webm)/i.test(json.ext));
                     item.fps = json.fps;
 
                     item.achannel = json.achannel;
@@ -584,7 +585,7 @@ const vue = new Vue({
 
             item.quality = quality ? quality.toFixed(2) : 100;
             item.toname = item.name.slice(0, -item.format.length-1);
-            item.toformat = utils.usableType(item.format, item.type) ? item.format : config.output.format[item.type];
+            item.toformat = item.type !== 'image' || !/(jpg|png|gif|jpeg|ico|webp|bmp)/i.test(item.format) ?  config.output.format[item.type] : item.format;
             item.startTime = 0;
             item.endTime = item.duration;
             item.cover = false;
@@ -685,8 +686,9 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
+            console.log(Media.cammand(vue.items[ keys[i] ]));
             if(len){
-                recycle(vue.items[ keys[i] ]);
+                // recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -1201,6 +1203,7 @@ const vue = new Vue({
         videoFn(e, index, type){
             let item = vue.items[index],
                 video = vue.$refs['id'+index][0];
+            if(!item) return;
             switch(type){
                 case 'timeupdate':
                     item.currentTime = video.currentTime;
@@ -1345,6 +1348,12 @@ const vue = new Vue({
                     }else{
                         item.coverTime = item.currentTime;
                     }
+                }
+                break;
+                case 'toformat':
+                {
+                    item.toformat = target.value;
+                    item.totype = utils.type(item.toformat);
                 }
                 break;
                 case 'towidth':
@@ -1615,7 +1624,7 @@ module.exports = {
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
 
-        ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
                 thumb = window.URL.createObjectURL(new Blob([utils.fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{

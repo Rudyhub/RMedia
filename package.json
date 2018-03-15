@@ -8,7 +8,9 @@
   },
   "scripts": {
     "dev": "cd ./app && start ..\\nwjs-v0.26.6-win-x64-sdk\\nw.exe .",
-    "nw": "cd ./app && start ..\\nwjs-v0.26.6-win-x64\\nw.exe ."
+    "dev32": "cd ./app && start ..\\nwjs-sdk-v0.26.6-win-ia32\\nw.exe .",
+    "nw": "cd ./app && start ..\\nwjs-v0.26.6-win-x64\\nw.exe .",
+    "nw32": "cd ./app && start ..\\nwjs-v0.26.6-win-ia32\\nw.exe ."
   },
   "repository": {
     "type": "git",

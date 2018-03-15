@@ -3,7 +3,7 @@ const fs = require('fs'),
     Vue = require('./vue.min'),
     formats = {
         image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
-        video: [['mp4','ogg','webm'],['ts','flv','mkv','rm','mov','wmv','avi','rmvb']],
+        video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
         audio: [['mp3','wav','mpeg'],['wma','mid']]
     };
 module.exports = {

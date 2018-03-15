@@ -97,7 +97,11 @@ textarea:focus{
     border-color: var(--blue1);
 }
 select[disabled],
-input[disabled]{
+input[disabled],
+select[disabled]:hover,
+select[disabled]:focus,
+input[disabled]:hover,
+input[disabled]:focus{
     transition: none;
     color: var(--gray) !important;
     box-shadow: none;

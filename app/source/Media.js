@@ -114,7 +114,7 @@ module.exports = {
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
 
-        ffmpeg = childprocess.exec(config.ffmpegPath+' -ss '+(o.time || '00:00:00')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
                 thumb = window.URL.createObjectURL(new Blob([utils.fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{

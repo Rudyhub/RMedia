@@ -8,7 +8,6 @@ const win = nw.Window.get(),
     shortcut = require('./shortcut'),
     crypto = require('crypto'),
 
-    videoEl = document.createElement('video'),
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
     logoInput = document.createElement('input'),
@@ -31,10 +30,11 @@ function listItems(files){
     if(files.length){
         recycle(files[0]);
         function recycle(file){
+            console.log(file.type);
             item = {
                 path: file.path,
                 thumb: '',
-                canplay: !!videoEl.canPlayType(file.type),
+                canplay: false,
                 playing: 0,
                 progress: 0,
                 lock: vue.toolbar.toggle.lock,
@@ -103,6 +103,7 @@ function listItems(files){
                     item.height = json.height;
 
                     item.format = json.ext;
+                    item.canplay = (/(mp4|mp3|ogg|mpeg|mkv|wav|webm)/i.test(json.ext));
                     item.fps = json.fps;
 
                     item.achannel = json.achannel;
@@ -266,7 +267,7 @@ const vue = new Vue({
 
             item.quality = quality ? quality.toFixed(2) : 100;
             item.toname = item.name.slice(0, -item.format.length-1);
-            item.toformat = utils.usableType(item.format, item.type) ? item.format : config.output.format[item.type];
+            item.toformat = item.type !== 'image' || !/(jpg|png|gif|jpeg|ico|webp|bmp)/i.test(item.format) ?  config.output.format[item.type] : item.format;
             item.startTime = 0;
             item.endTime = item.duration;
             item.cover = false;
@@ -367,8 +368,9 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
+            console.log(Media.cammand(vue.items[ keys[i] ]));
             if(len){
-                recycle(vue.items[ keys[i] ]);
+                // recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -883,6 +885,7 @@ const vue = new Vue({
         videoFn(e, index, type){
             let item = vue.items[index],
                 video = vue.$refs['id'+index][0];
+            if(!item) return;
             switch(type){
                 case 'timeupdate':
                     item.currentTime = video.currentTime;
@@ -1027,6 +1030,12 @@ const vue = new Vue({
                     }else{
                         item.coverTime = item.currentTime;
                     }
+                }
+                break;
+                case 'toformat':
+                {
+                    item.toformat = target.value;
+                    item.totype = utils.type(item.toformat);
                 }
                 break;
                 case 'towidth':

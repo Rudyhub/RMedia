@@ -225,7 +225,7 @@
 
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
 
-                            <div class="item-logo" v-if="item.totype !== 'audio' && item.towidth > 0 && item.toheight > 0 && !item.series" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
+                            <div class="item-logo" v-if="item.type!=='audio' && item.totype!=='audio'&& item.towidth>0 && item.toheight>0 && !item.series" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
                                 <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
                                 <b class="item-logo-icon" v-else>LOGO</b>
                             </div>
@@ -275,7 +275,6 @@
                             </optgroup>
                             <optgroup v-if="item.type!=='image'">
                                 <option value="mp3">mp3</option>
-                                <option value="aac">aac</option>
                                 <option value="wav">wav</option>
                             </optgroup>
                             <optgroup v-if="item.type!=='audio'">
@@ -306,7 +305,7 @@
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
                     <div class="item-new scale-0" :class="(item.type!=='audio' && item.totype!=='audio' && !item.series)?'zoom-in':''">
                         <input type="checkbox" v-model="item.cover">
-                        <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" :disabled="!item.cover || item.duration <= 0">{{item.coverTime | timemat}}</button>
+                        <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" v-if="item.cover && item.duration>0">{{item.coverTime | timemat}}</button>
                         <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover">px
                     </div>
                 </dd>
