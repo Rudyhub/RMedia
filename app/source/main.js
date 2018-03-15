@@ -30,7 +30,6 @@ function listItems(files){
     if(files.length){
         recycle(files[0]);
         function recycle(file){
-            console.log(file.type);
             item = {
                 path: file.path,
                 thumb: '',
@@ -86,7 +85,7 @@ function listItems(files){
             hex.update(file.path);
             key = hex.digest('base64');
             vue.$set(vue.items, key, item);
-            // Media.meta(file.path);
+
             Media.info({
                 input: file.path,
                 success: (json)=>{
