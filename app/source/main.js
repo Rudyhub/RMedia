@@ -442,6 +442,7 @@ const vue = new Vue({
                         utils.dialog.setBtn('覆盖','否');
                         utils.dialog.callback = (c)=>{
                             if(c===0) Media.convert(options);
+                            else vue.isStarted = false;
                         }
                     }
                 }else{

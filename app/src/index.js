@@ -761,6 +761,7 @@ const vue = new Vue({
                         utils.dialog.setBtn('覆盖','否');
                         utils.dialog.callback = (c)=>{
                             if(c===0) Media.convert(options);
+                            else vue.isStarted = false;
                         }
                     }
                 }else{
@@ -1739,13 +1740,13 @@ module.exports = {
             if(h%2 !== 0) h--;
 
             result.cmd.push('-map', item.vchannel);
-            if(item.coverTime > 0){
-                result.cmd.push('-ss', item.coverTime - item.startTime, '-vframes', 1);
-            }
+            if(item.coverTime > 0) result.cmd.push('-ss', item.coverTime - item.startTime);
+            if(item.duration > 0) result.cmd.push('-vframes', 1);
             //2...
             if(utils.has(outPath+'.'+item.toformat)) exists.push('_thumb.jpg');
             result.cmd.push('-s', w+'x'+h, outPath+'_thumb.jpg');
         }
+
         //如果文件已存在，枚举所有
         if(exists.length){
             let i = 0, len = exists.length, msg = '<p><b>输出的以下文件已存在：</b></p><ol>';
