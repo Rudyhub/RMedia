@@ -344,7 +344,7 @@ const vue = new Vue({
             }
         },
         convertFn(e){
-            let item, bita, bitv, w, h, total, output, cammand, keys, len, i, target;
+            let item, total, cammand, keys, len, i, target, options;
 
             target = e.currentTarget;
             target.dataset.stopAll = 0;
@@ -368,9 +368,9 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-            console.log(Media.cammand(vue.items[ keys[i] ], vue.output).join(' '));
+
             if(len){
-                // recycle(vue.items[ keys[i] ]);
+                recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -378,136 +378,10 @@ const vue = new Vue({
             }
 
             function recycle(item){
-                bita = item.bita < config.output.bita ? item.bita : config.output.bita;
-                bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
-                w = Math.round(item.towidth);
-                h = Math.round(item.toheight);
+                cammand = Media.cammand(item, vue.output);
                 total = item.endTime - item.startTime;
-                output = vue.output + '\\' + item.toname + '.' + item.toformat;
-                cammand = [];
-                /*
-                if(item.split){
-                    if(item.vchannel && item.achannel){
-                        if(item.startTime > 0) cammand.push('-ss', item.startTime);
-                        if(total > 0) cammand.push('-t', total);
-
-                        cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p');
-
-                        if(w && h){
-                            if(w%2 !== 0) w--;
-                            if(h%2 !== 0) h--;
-                            cammand.push('-s', w+'x'+h);
-                        }
-
-                        cammand.push(output);
-
-                        achannel = item.achannel.replace(':','.');
-                        if(item.aclayout === 2){
-                            cammand.push('-map_channel', achannel+'.0', vue.output + '\\' + item.toname + '_1.mp3',
-                                '-map_channel', achannel+'.1', vue.output + '\\' + item.toname + '_2.mp3');
-                        }else{
-                            cammand.push('-map', item.achannel, vue.output + '\\' + item.toname + '.mp3');
-                        }
-                    }else{
-                        utils.dialog.show = true;
-                        utils.dialog.body = '<p>文件“'+item.path+'”不支持分离！</p>';
-                    }
-                }else{
-                    //如果是序列图
-                    if(item.series){
-                        if(item.type !== 'image'){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '警告！';
-                            utils.dialog.body = '<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>';
-                            return;
-                        }
-                        if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '警告！';
-                            utils.dialog.body = '<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>';
-                            return;
-                        }
-                        let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
-                            match = reg.exec(item.path);
-                        if(match && match[1]){
-                            cammand.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
-                                return '%0'+$1.length+'d.'+item.format;
-                            }));
-                        }else{
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = `<p>序列图不满足条件！</p>
-                            <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
-                            <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                            <p>然后只需要选择第一张图片即可</p>`;
-                        }
-                    }else{
-                       //图片不能输出为音频
-                        if(item.type === 'image' && Media.is(item.toformat, 'audio')){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = '<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>';
-                            return;
-                        }
-                        //音频不能输出为图片
-                        if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = '<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>';
-                            return;
-                        }
-
-                        if(item.startTime > 0) cammand.push('-ss', item.startTime);
-                        if(item.path) cammand.push('-i', item.path);
-
-                        //输出为单图时
-                        if(Media.is(item.toformat, 'image') && item.toformat !== 'gif'){
-                            cammand.push('-vframes',1);
-                        }
-                        //输出为其他时
-                        else{
-                            if(item.endTime < item.duration) cammand.push('-t', total);
-                            if(bitv) cammand.push('-b:v', bitv+'k');
-                            if(bita) cammand.push('-b:a', bita+'k');
-                        }
-                    }
-                    //比例
-                    if(w && h){
-                        if(w%2 !== 0) w--;
-                        if(h%2 !== 0) h--;
-                        cammand.push('-s', w+'x'+h);
-                    }
-
-                    if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
-                    cammand.push('-preset', vue.batchParams.speed, output);
-                }
-                
-                //只允许输出为视频文件时可输出预览图
-                if(item.cover && Media.is(item.toformat, 'video')){
-                    w = item.coverWidth;
-                    h = Math.round(w * item.scale);
-                    if(w%2 !== 0) w--;
-                    if(h%2 !== 0) h--;
-                    if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
-                    cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
-                }
-
-                //检查输入文件是否存在
-                if(!Media.has(item.path)){
-                    utils.dialog.show = true;
-                    utils.dialog.title = '文件不存在';
-                    utils.dialog.body = '<p>文件“'+item.path+'”不存在，可能已被删除或转移。</p>';
-                    return;
-                }
-
-                //判断输出文件是否已存在，提示是否覆盖
-                // if(!Media.has(item.path))
-                
-                item.progress = 0;
-                vue.isStarted = true;
-
-                Media.convert({
-                    cammand,
+                options = {
+                    cammand: cammand.cmd,
                     progress(t){
                         if(total){
                             item.progress = Math.round((t/total)*100);
@@ -553,8 +427,26 @@ const vue = new Vue({
                             item.progress = 0;
                         }
                     }
-                });
-                */
+                };
+
+                item.progress = 0;
+                vue.isStarted = true;
+
+                if(cammand.error){
+                    utils.dialog.show = true;
+                    utils.dialog.body = cammand.error.message;
+                    if(cammand.error.code === 1){
+                        utils.dialog.title = '错误！';
+                    }else if(cammand.error.code === 2){
+                        utils.dialog.title = '文件已存在！';
+                        utils.dialog.setBtn('覆盖','否');
+                        utils.dialog.callback = (c)=>{
+                            if(c===0) Media.convert(options);
+                        }
+                    }
+                }else{
+                    Media.convert(options);
+                }
             }
         },
         spriteFn(code){

@@ -324,7 +324,7 @@
                         {{item.achannel}}
                         {{item.aclayout}}
                     </div>
-                    <div class="item-new scale-0" :class="(item.aclayout>1 || (item.achannel && item.vchannel))?'zoom-in':''">
+                    <div class="item-new scale-0" :class="((item.aclayout>1 || (item.achannel && item.vchannel)) && item.totype!=='image')?'zoom-in':''">
                         <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
                     </div>
                 </dd>

@@ -1,11 +1,12 @@
 const fs = require('fs'),
-    path = require('path'),
-    Vue = require('./vue.min'),
-    formats = {
-        image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
-        video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
-        audio: [['mp3','wav','mpeg'],['wma','mid']]
-    };
+path = require('path'),
+Vue = require('./vue.min'),
+formats = {
+    image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
+    video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
+    audio: [['mp3','wav','mpeg'],['wma','mid']]
+};
+    
 module.exports = {
     fs,
     Vue,

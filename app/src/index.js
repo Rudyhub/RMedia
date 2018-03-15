@@ -68,13 +68,14 @@
 /***/ (function(module, exports, __webpack_require__) {
 
 const fs = __webpack_require__(7),
-    path = __webpack_require__(8),
-    Vue = __webpack_require__(3),
-    formats = {
-        image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
-        video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
-        audio: [['mp3','wav','mpeg'],['wma','mid']]
-    };
+path = __webpack_require__(8),
+Vue = __webpack_require__(3),
+formats = {
+    image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
+    video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
+    audio: [['mp3','wav','mpeg'],['wma','mid']]
+};
+    
 module.exports = {
     fs,
     Vue,
@@ -662,7 +663,7 @@ const vue = new Vue({
             }
         },
         convertFn(e){
-            let item, bita, bitv, w, h, total, output, cammand, keys, len, i, target;
+            let item, total, cammand, keys, len, i, target, options;
 
             target = e.currentTarget;
             target.dataset.stopAll = 0;
@@ -686,9 +687,9 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-            console.log(Media.cammand(vue.items[ keys[i] ], vue.output).join(' '));
+
             if(len){
-                // recycle(vue.items[ keys[i] ]);
+                recycle(vue.items[ keys[i] ]);
             }else{
                 utils.dialog.show = true;
                 utils.dialog.title = '哦嚯！';
@@ -696,136 +697,10 @@ const vue = new Vue({
             }
 
             function recycle(item){
-                bita = item.bita < config.output.bita ? item.bita : config.output.bita;
-                bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
-                w = Math.round(item.towidth);
-                h = Math.round(item.toheight);
+                cammand = Media.cammand(item, vue.output);
                 total = item.endTime - item.startTime;
-                output = vue.output + '\\' + item.toname + '.' + item.toformat;
-                cammand = [];
-                /*
-                if(item.split){
-                    if(item.vchannel && item.achannel){
-                        if(item.startTime > 0) cammand.push('-ss', item.startTime);
-                        if(total > 0) cammand.push('-t', total);
-
-                        cammand.push('-i', item.path, '-map', item.vchannel, '-pix_fmt', 'yuv420p');
-
-                        if(w && h){
-                            if(w%2 !== 0) w--;
-                            if(h%2 !== 0) h--;
-                            cammand.push('-s', w+'x'+h);
-                        }
-
-                        cammand.push(output);
-
-                        achannel = item.achannel.replace(':','.');
-                        if(item.aclayout === 2){
-                            cammand.push('-map_channel', achannel+'.0', vue.output + '\\' + item.toname + '_1.mp3',
-                                '-map_channel', achannel+'.1', vue.output + '\\' + item.toname + '_2.mp3');
-                        }else{
-                            cammand.push('-map', item.achannel, vue.output + '\\' + item.toname + '.mp3');
-                        }
-                    }else{
-                        utils.dialog.show = true;
-                        utils.dialog.body = '<p>文件“'+item.path+'”不支持分离！</p>';
-                    }
-                }else{
-                    //如果是序列图
-                    if(item.series){
-                        if(item.type !== 'image'){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '警告！';
-                            utils.dialog.body = '<p>选择只有图片才支持“序列”选项，文件：“'+item.path+'”不是图片文件。</p>';
-                            return;
-                        }
-                        if(item.toformat !== 'gif' && !Media.is(item.toformat, 'video')){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '警告！';
-                            utils.dialog.body = '<p>序列图只能转为视频或动图(gif)，您当前选择的输出格式“'+item.toformat+'”不被支持</p>';
-                            return;
-                        }
-                        let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
-                            match = reg.exec(item.path);
-                        if(match && match[1]){
-                            cammand.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
-                                return '%0'+$1.length+'d.'+item.format;
-                            }));
-                        }else{
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = `<p>序列图不满足条件！</p>
-                            <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
-                            <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                            <p>然后只需要选择第一张图片即可</p>`;
-                        }
-                    }else{
-                       //图片不能输出为音频
-                        if(item.type === 'image' && Media.is(item.toformat, 'audio')){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = '<p>文件：“'+item.path+'”，图像文件无法输出为音频！</p>';
-                            return;
-                        }
-                        //音频不能输出为图片
-                        if(item.type === 'audio' && (Media.is(item.toformat, 'image') || item.cover) ){
-                            utils.dialog.show = true;
-                            utils.dialog.title = '错误！';
-                            utils.dialog.body = '<p>文件：“'+item.path+'”，音频文件无法输出为图像</p>';
-                            return;
-                        }
-
-                        if(item.startTime > 0) cammand.push('-ss', item.startTime);
-                        if(item.path) cammand.push('-i', item.path);
-
-                        //输出为单图时
-                        if(Media.is(item.toformat, 'image') && item.toformat !== 'gif'){
-                            cammand.push('-vframes',1);
-                        }
-                        //输出为其他时
-                        else{
-                            if(item.endTime < item.duration) cammand.push('-t', total);
-                            if(bitv) cammand.push('-b:v', bitv+'k');
-                            if(bita) cammand.push('-b:a', bita+'k');
-                        }
-                    }
-                    //比例
-                    if(w && h){
-                        if(w%2 !== 0) w--;
-                        if(h%2 !== 0) h--;
-                        cammand.push('-s', w+'x'+h);
-                    }
-
-                    if(Media.is(item.toformat, 'video')) cammand.push('-pix_fmt','yuv420p');
-                    cammand.push('-preset', vue.batchParams.speed, output);
-                }
-                
-                //只允许输出为视频文件时可输出预览图
-                if(item.cover && Media.is(item.toformat, 'video')){
-                    w = item.coverWidth;
-                    h = Math.round(w * item.scale);
-                    if(w%2 !== 0) w--;
-                    if(h%2 !== 0) h--;
-                    if(item.coverTime > 0) cammand.push('-ss', item.coverTime - item.startTime);
-                    cammand.push('-vframes', 1, '-s', w+'x'+h,vue.output+'\\'+item.toname+'.jpg');
-                }
-
-                //检查输入文件是否存在
-                if(!Media.has(item.path)){
-                    utils.dialog.show = true;
-                    utils.dialog.title = '文件不存在';
-                    utils.dialog.body = '<p>文件“'+item.path+'”不存在，可能已被删除或转移。</p>';
-                    return;
-                }
-
-                //判断输出文件是否已存在，提示是否覆盖
-                // if(!Media.has(item.path))
-                
-                item.progress = 0;
-                vue.isStarted = true;
-
-                Media.convert({
-                    cammand,
+                options = {
+                    cammand: cammand.cmd,
                     progress(t){
                         if(total){
                             item.progress = Math.round((t/total)*100);
@@ -871,8 +746,26 @@ const vue = new Vue({
                             item.progress = 0;
                         }
                     }
-                });
-                */
+                };
+
+                item.progress = 0;
+                vue.isStarted = true;
+
+                if(cammand.error){
+                    utils.dialog.show = true;
+                    utils.dialog.body = cammand.error.message;
+                    if(cammand.error.code === 1){
+                        utils.dialog.title = '错误！';
+                    }else if(cammand.error.code === 2){
+                        utils.dialog.title = '文件已存在！';
+                        utils.dialog.setBtn('覆盖','否');
+                        utils.dialog.callback = (c)=>{
+                            if(c===0) Media.convert(options);
+                        }
+                    }
+                }else{
+                    Media.convert(options);
+                }
             }
         },
         spriteFn(code){
@@ -1696,7 +1589,7 @@ module.exports = {
         });
     },
     cammand(item, outFolder){
-        let bita, bitv, w, h, total, outPath, cammand;
+        let bita, bitv, w, h, total, outPath, result, exists;
 
         bita = item.bita < config.output.bita ? item.bita : config.output.bita;
         bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
@@ -1704,46 +1597,70 @@ module.exports = {
         h = Math.round(item.toheight);
         total = item.endTime - item.startTime;
         outPath = utils.path(outFolder + '\\' + item.toname);
-        cammand = [];
+        result = {
+            error: null,
+            cmd: []
+        };
+        exists = [];
 
         //时间
-        if(item.startTime > 0) cammand.push('-ss', item.startTime);
-        if(total > 0 && item.endTime !== item.duration) cammand.push('-t', total);
+        if(item.startTime > 0) result.cmd.push('-ss', item.startTime);
+        if(total > 0 && item.endTime !== item.duration) result.cmd.push('-t', total);
 
         //输入
         if(item.type === 'image' && item.series){
             if(item.totype === 'image' && item.toformat !== 'gif'){
-                return `在文件“${item.path}”选中了序列图，所以输出格式必须是视频或gif。请选好后再继续？`;
+                result.error = new Error(`在文件“${item.path}”选中了序列图，所以输出格式必须是视频或gif。请选好后再继续？`);
+                result.error.code = 1;
+                return result;
             }
             let reg = new RegExp('(\\d+)\\.'+item.format+'$','i'),
                 match = reg.exec(item.path);
             if(match && match[1]){
-                cammand.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
+                result.cmd.push('-r', 25, '-i', item.path.replace(reg, function($0,$1){
                     return '%0'+$1.length+'d.'+item.format;
                 }));
             }else{
-                return `<p>选中了序列图，但输入的文件“${item.path}”不符合！</p>
+                result.error = new Error(`<p>选中了序列图，但输入的文件“${item.path}”不符合！</p>
                 <p>序列图名称必须是有规律、等长度、末尾带序列化数字的名称。</p>
                 <p>如：001.png、002.png、003.png... 或 img01.png、img02.png、img03.png...</p>
-                <p>然后只需要选择第一张图片即可</p>`;
+                <p>然后只需要选择第一张图片即可</p>`);
+                result.error.code = 1;
+                return result;
             }
         }else{
-            cammand.push('-i', item.path);
+            result.cmd.push('-i', item.path);
         }
-        
+
+        //1.判断输入文件是否存在，有中途被转移或删除的情况
+        if(!utils.has(item.path)){
+            result.error = new Error('输入文件“'+item.path+'”不存在，可能文件路径被更改或文件被删除。');
+            result.error.code = 1;
+            return result;
+        }
+
         //如果输出音频
         if(item.totype === 'audio'){
             if(item.achannel){
-                if(bita) cammand.push('-ab', bita+'k');
+                if(bita) result.cmd.push('-ab', bita+'k');
                 if(item.split && item.aclayout > 1){
-                    cammand.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
-                    return cammand;
+                    //2.判断如果文件已存在，把已存在的暂存到exists中，方便枚举到error中，外部可用以提示是否覆盖。以下同里
+                    if(utils.has(outPath+'_left.mp3')) exists.push('_left.mp3');
+                    if(utils.has(outPath+'_right.mp3')) exists.push('_right.mp3');
+
+                    result.cmd.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
+                    return result;
                 }
-                if(item.type !== 'audio') cammand.push('-vn');
-                cammand.push(outPath+'.'+item.toformat);
-                return cammand;
+                if(item.type !== 'audio') result.cmd.push('-vn');
+                //2...
+                if(utils.has(outPath+'.'+item.toformat)) exists.push('.'+item.toformat);
+
+                result.cmd.push(outPath+'.'+item.toformat);
+                return result;
             }
-            return `输入的文件“${item.path}”无音频数据或者无法解析音频数据。`;
+            result.error = new Error(`输入的文件“${item.path}”无音频数据或者无法解析音频数据。`);
+            result.error.code = 1;
+            return result;
         }
 
         //尺寸
@@ -1754,7 +1671,15 @@ module.exports = {
             let filters = '[0:v]scale='+w+':'+h;
             //如果有水印
             if(item.logo && !item.series){
-                cammand.push('-i', item.logo);
+                //1...
+                if(!utils.has(item.logo)){
+                    result.error = new Error('输入文件“'+item.path+'”不存在，可能文件路径被更改或文件被删除。');
+                    result.error.code = 1;
+                    return result;
+                }
+
+                result.cmd.push('-i', item.logo);
+
                 let lw = Math.round(item.logoSize/100 * w),
                     lh = Math.round(lw * item.logoScale),
                     lt = Math.round(item.logoY/100 * h),
@@ -1762,39 +1687,48 @@ module.exports = {
 
                 filters += '[media];[1:v]scale='+lw+':'+lh+'[logo];[media][logo]overlay='+ll+':'+lt;
             }
-            cammand.push('-filter_complex', filters);
+            result.cmd.push('-filter_complex', filters);
         }
 
         //如果输出视频
         if(item.totype === 'video'){
             if(item.type === 'video'){
-                if(bitv) cammand.push('-vb', bitv+'k');
+                if(bitv) result.cmd.push('-vb', bitv+'k');
             }
             if(item.type !== 'image'){
-                if(bita) cammand.push('-ab', bita+'k');
+                if(bita) result.cmd.push('-ab', bita+'k');
             }
-            if(item.type !== 'audio') cammand.push('-pix_fmt', 'yuv420p');
+            if(item.type !== 'audio') result.cmd.push('-pix_fmt', 'yuv420p');
 
             if(item.split){
-                if(item.vchannel) cammand.push('-map', item.vchannel);
+                if(item.vchannel) result.cmd.push('-map', item.vchannel);
 
-                cammand.push(outPath+'.'+item.toformat);
+                result.cmd.push(outPath+'.'+item.toformat);
 
                 if(item.achannel){
                     if(item.aclayout > 1){
-                        cammand.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
+                        //2...
+                        if(utils.has(outPath+'_left.mp3')) exists.push('_left.mp3');
+                        if(utils.has(outPath+'_right.mp3')) exists.push('_right.mp3');
+                        result.cmd.push('-map_channel', item.achannel.replace(':','.')+'.0', outPath+'_left.mp3', '-map_channel', item.achannel.replace(':','.')+'.1', outPath+'_right.mp3');
                     }else{
-                        cammand.push('-map', item.achannel, outPath+'.mp3');
+                        //2...
+                        if(utils.has(outPath+'.'+item.toformat)) exists.push('.mp3');
+                        result.cmd.push('-map', item.achannel, outPath+'.mp3');
                     }
                 }
             }else{
-                cammand.push(outPath +'.'+ item.toformat);
+                //2...
+                if(utils.has(outPath+'.'+item.toformat)) exists.push('.'+item.toformat);
+                result.cmd.push(outPath +'.'+ item.toformat);
             }
         }
         
         //如果输出图片
         if(item.totype === 'image'){
-            cammand.push(outPath +'.'+ item.toformat);
+            //2...
+            if(utils.has(outPath+'.'+item.toformat)) exists.push('.'+item.toformat);
+            result.cmd.push(outPath +'.'+ item.toformat);
         }
 
         //如果有预览图
@@ -1804,14 +1738,26 @@ module.exports = {
             if(w%2 !== 0) w--;
             if(h%2 !== 0) h--;
 
-            cammand.push('-map', item.vchannel);
+            result.cmd.push('-map', item.vchannel);
             if(item.coverTime > 0){
-                cammand.push('-ss', item.coverTime - item.startTime, '-vframes', 1);
+                result.cmd.push('-ss', item.coverTime - item.startTime, '-vframes', 1);
             }
-            cammand.push('-s', w+'x'+h, outPath+'_thumb.jpg');
+            //2...
+            if(utils.has(outPath+'.'+item.toformat)) exists.push('_thumb.jpg');
+            result.cmd.push('-s', w+'x'+h, outPath+'_thumb.jpg');
         }
-
-        return cammand;
+        //如果文件已存在，枚举所有
+        if(exists.length){
+            let i = 0, len = exists.length, msg = '<p><b>输出的以下文件已存在：</b></p><ol>';
+            for(; i<len; i++){
+                msg += `<li>${outPath+exists[i]}</li>`;
+            }
+            msg += '</ol>';
+            result.error = new Error(msg);
+            result.error.code = 2;
+        }
+        exists = null;
+        return result;
     },
     convert(o){
         let self = this,
