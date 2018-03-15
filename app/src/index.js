@@ -592,6 +592,7 @@ const vue = new Vue({
             item.towidth = item.width > config.output.width ? config.output.width : item.width;
             item.toheight = parseInt(item.towidth * item.scale);
             item.tofps = item.fps;
+            item.totype = utils.type(item.toformat);
         },
         zoomItemFn(e){
             vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
@@ -685,7 +686,7 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-            console.log(Media.cammand(vue.items[ keys[i] ]));
+            console.log(Media.cammand(vue.items[ keys[i] ], vue.output).join(' '));
             if(len){
                 // recycle(vue.items[ keys[i] ]);
             }else{
