@@ -75,7 +75,42 @@ formats = {
     video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
     audio: [['mp3','wav','mpeg'],['wma','mid']]
 };
-    
+//拖拽指令
+Vue.directive('drag',{
+    bind(el, binding){
+        let drag = el.querySelectorAll('[data-drag]'),
+            len = drag.length,
+            style = window.getComputedStyle,
+            i = 0,
+            start_x = 0, start_y = 0, cur_x = 0, cur_y = 0, matrix;
+
+        if(len)
+           for(; i<len; i++) drag[i].addEventListener('mousedown', downFn);
+        else
+            el.addEventListener('mousedown', downFn);
+        
+        function downFn(e){
+            matrix = style(el)['transform'].split(',');
+            start_x = e.x;
+            start_y = e.y;
+            cur_x = parseInt(style(el)['left']) || 0;
+            cur_y = parseInt(style(el)['top']) || 0;
+            el.style.transition = 'none';
+            document.addEventListener('mousemove', moveFn);
+            document.addEventListener('mouseup', upFn);
+        }
+        function moveFn(e){
+            el.style.left = (e.x-start_x+cur_x)+'px';
+            el.style.top = (e.y-start_y+cur_y)+'px';
+        }
+        function upFn(e){
+            el.style.cssText = el.style.cssText.replace(/\s*transition:\s*none[;]?/i,'');
+            document.removeEventListener('mousemove', moveFn);
+            document.removeEventListener('mouseup', upFn);
+        }
+    }
+});
+
 module.exports = {
     fs,
     Vue,
@@ -869,9 +904,9 @@ const vue = new Vue({
                         key,
                         n = 0;
 
-                    vue.batchParams.widthLimit = wl;
-                    vue.batchParams.heightLimit = hl;
-                    vue.batchParams.sizeLimit = sizeLimit*1024*1024;
+                    if(wl) vue.batchParams.widthLimit = wl;
+                    if(hl) vue.batchParams.heightLimit = hl;
+                    if(sizeLimit) vue.batchParams.sizeLimit = sizeLimit*1024*1024;
 
                     for( key in vue.items){
                         item = vue.items[key];
@@ -884,7 +919,7 @@ const vue = new Vue({
                                 item.toheight = wl * item.scale;
                             }
                             quality = (vue.batchParams.sizeLimit / item.size * 100).toFixed(2);
-                            if(vue.batchParams.sizeLimit < item.size){
+                            if(sizeLimit && vue.batchParams.sizeLimit < item.size){
                                 item.quality = quality;
                             }else{
                                 item.quality = 100;
@@ -1762,9 +1797,7 @@ module.exports = {
     },
     convert(o){
         let self = this,
-            // lines = [],
             line,
-            // file,
             ffmpeg;
 
         if(!o.cammand) return;
@@ -1775,25 +1808,7 @@ module.exports = {
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
-            // if(lines.length > 3) lines.shift();
-            // lines.push(line);
-            //检查文件是否存在
-            // if(/Overwrite[\s\S]*?\[y\/N\]/i.test(line)){
-            //     console.log(lines.join('').replace(/\n+/g, ''))
-            //     // file = regFile.exec(lines.join(''));
-            //     utils.dialog.show = true;
-            //     utils.dialog.title = '文件已存在';
-            //     utils.dialog.body = 'd';//'<p>文件“'+(file && file[1] ? file[1] : '')+'”已存在，是否覆盖？</p>';
-            //     utils.dialog.setBtn('覆盖','否');
-            //     utils.dialog.callback = (code)=>{
-            //         if(code === 0){
-            //             ffmpeg.stdin.write('y\n');
-            //         }else{
-            //             ffmpeg.stdin.write('n\n');
-            //             ffmpeg.signalCode = '主动中止，不覆盖。';
-            //         }
-            //     }
-            // }
+
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );

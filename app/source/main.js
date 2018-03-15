@@ -550,9 +550,9 @@ const vue = new Vue({
                         key,
                         n = 0;
 
-                    vue.batchParams.widthLimit = wl;
-                    vue.batchParams.heightLimit = hl;
-                    vue.batchParams.sizeLimit = sizeLimit*1024*1024;
+                    if(wl) vue.batchParams.widthLimit = wl;
+                    if(hl) vue.batchParams.heightLimit = hl;
+                    if(sizeLimit) vue.batchParams.sizeLimit = sizeLimit*1024*1024;
 
                     for( key in vue.items){
                         item = vue.items[key];
@@ -565,7 +565,7 @@ const vue = new Vue({
                                 item.toheight = wl * item.scale;
                             }
                             quality = (vue.batchParams.sizeLimit / item.size * 100).toFixed(2);
-                            if(vue.batchParams.sizeLimit < item.size){
+                            if(sizeLimit && vue.batchParams.sizeLimit < item.size){
                                 item.quality = quality;
                             }else{
                                 item.quality = 100;

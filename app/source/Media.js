@@ -358,9 +358,7 @@ module.exports = {
     },
     convert(o){
         let self = this,
-            // lines = [],
             line,
-            // file,
             ffmpeg;
 
         if(!o.cammand) return;
@@ -371,25 +369,7 @@ module.exports = {
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
-            // if(lines.length > 3) lines.shift();
-            // lines.push(line);
-            //检查文件是否存在
-            // if(/Overwrite[\s\S]*?\[y\/N\]/i.test(line)){
-            //     console.log(lines.join('').replace(/\n+/g, ''))
-            //     // file = regFile.exec(lines.join(''));
-            //     utils.dialog.show = true;
-            //     utils.dialog.title = '文件已存在';
-            //     utils.dialog.body = 'd';//'<p>文件“'+(file && file[1] ? file[1] : '')+'”已存在，是否覆盖？</p>';
-            //     utils.dialog.setBtn('覆盖','否');
-            //     utils.dialog.callback = (code)=>{
-            //         if(code === 0){
-            //             ffmpeg.stdin.write('y\n');
-            //         }else{
-            //             ffmpeg.stdin.write('n\n');
-            //             ffmpeg.signalCode = '主动中止，不覆盖。';
-            //         }
-            //     }
-            // }
+
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );

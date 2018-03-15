@@ -185,6 +185,14 @@ summary{
     -webkit-app-region: drag;
     position: relative;
 }
+[data-drag]{
+    cursor: move;
+    user-select: none;
+}
+.drag-bar{
+    background: var(--gray3);
+    height: 1.5em;
+}
 .btn-l{
     font-size: var(--fs20);
 }

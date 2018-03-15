@@ -50,7 +50,8 @@
             <!-- 二级菜单 -->
 
             <!-- batch -->
-            <div class="drop-panel" ref="batch">
+            <div class="drop-panel" ref="batch" v-drag>
+                <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <p>
                         压缩速度级别：
@@ -114,7 +115,8 @@
                 </div>
             </div>
             <!-- capture -->
-            <div class="drop-panel" ref="capture">
+            <div class="drop-panel" ref="capture" v-drag>
+                <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <h3>【参数设置】：</h3>
                     <p>
@@ -152,7 +154,8 @@
                 </div>
             </div>
             <!-- sprite -->
-            <div class="drop-panel" ref="sprite">
+            <div class="drop-panel" ref="sprite" v-drag>
+                <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <p>排列方式：
                         <select v-on:change="spriteFn('matrix',$event)">
@@ -347,6 +350,7 @@
         {{app.window.title}} ({{app.name}}-v{{app.version}}) {{app.copyright}}
     </footer>
 </div>
+
 <!-- dialog -->
 <div id="dialog" class="dialog-outer" :class="{'dialog-show': show}">
     <div class="dialog-inner">
