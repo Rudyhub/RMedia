@@ -220,14 +220,15 @@
                         height: (viewWidth * viewScale)+'px'
                     }">
                         <div class="item-preview-centent">
+                            <!-- play button -->
                             <div class="play-btn" v-on:click="videoFn($event,index)" v-if="item.canplay">
                                 <i class="play-btn-icon icon icon-play2" :class="{playing: item.playing}"></i>
                             </div>
-
+                            <!-- file -->
                             <video v-if="item.thumb" class="item-preview-img" :ref="'id'+index" :src="item.path" :poster="item.thumb" v-on:timeupdate="videoFn($event,index,'timeupdate')" v-on:play="videoFn($event,index,'play')" v-on:pause="videoFn($event,index,'pause')"></video>
-
+                            <!-- loading icon -->
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
-
+                            <!-- logo -->
                             <div class="item-logo" v-if="item.type!=='audio' && item.totype!=='audio'&& item.towidth>0 && item.toheight>0 && !item.series" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
                                 <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
                                 <b class="item-logo-icon" v-else>LOGO</b>

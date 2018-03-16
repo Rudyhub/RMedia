@@ -180,10 +180,16 @@ module.exports = {
         }, o.fail);
     },
     killAll(fn){
-        if(this.ffmpeg) this.ffmpeg.signalCode = '强制退出';
+        if(this.ffmpeg) this.ffmpeg.signalCode = '强制退出所有';
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
             if(fn) fn(stderr.toString());
         });
+    },
+    end(signalCode){
+        if(this.ffmpeg){
+            this.ffmpeg.stdin.write('q\n');
+            this.ffmpeg.signalCode = signalCode;
+        }
     },
     cammand(item, outFolder){
         let bita, bitv, w, h, total, outPath, result, exists;

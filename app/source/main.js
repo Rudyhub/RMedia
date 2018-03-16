@@ -265,7 +265,7 @@ const vue = new Vue({
                 quality = (tobitv+tobita)/(item.bitv+item.bita)*100;
 
             item.quality = quality ? quality.toFixed(2) : 100;
-            item.toname = item.name.slice(0, -item.format.length-1);
+            item.toname = vue.batchParams.nameAll+'_'+item.name.slice(0, -item.format.length-1);
             item.toformat = item.type !== 'image' || !/(jpg|png|gif|jpeg|ico|webp|bmp)/i.test(item.format) ?  config.output.format[item.type] : item.format;
             item.startTime = 0;
             item.endTime = item.duration;
@@ -356,8 +356,7 @@ const vue = new Vue({
                 utils.dialog.callback = function(code){
 
                     if(code === 0 || code === 1){
-                        Media.ffmpeg.stdin.write('q\n');
-                        Media.ffmpeg.signalCode = '主动中止，' + this.innerText;
+                        Media.ffmpeg.end('主动中止，' + this.innerText);
                         vue.isStarted = false;
                         target.dataset.stopAll = code;
                     }
@@ -476,7 +475,7 @@ const vue = new Vue({
                     ctx.drawImage(img, x, y, w, h);
                 }
 
-                Media.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
+                utils.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
             }else if(code == 'matrix'){
