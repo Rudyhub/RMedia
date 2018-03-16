@@ -1,5 +1,5 @@
 <!DOCTYPE HTML>
-<html>
+<html xmlns:v-on="http://www.w3.org/1999/xhtml">
 <head>
 	<meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
@@ -243,15 +243,40 @@
                     </div>
                 </dt>
                 <dd class="item-row">
-                    <div class="item-controls scale-0" :class="{'zoom-in': item.duration}">
-                        <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
-                        <br>
-                        微调：{{item.currentTime | timemat}}
-                        <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
-                        <input type="number" v-model="framestep" title="设置微调量">
-                        <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
-                        {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
-                    </div>
+                    <ul class="item-controls scale-0" :class="{'zoom-in': item.duration}">
+                        <li class="item-controls-row">
+                            <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
+                        </li>
+                        <li class="item-controls-row text-center">
+                            微调：{{item.currentTime | timemat}}
+                            <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
+                            <input type="number" v-model="framestep" title="设置微调量">
+                            <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
+                            {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
+                        </li>
+                    </ul>
+                </dd>
+                <dd class="item-row">
+                    <ul class="item-controls" v-on:click="itemFn($event,index,'logo')">
+                        <li class="item-controls-row">
+                            LOGO添加删除：
+                            <i class="icon-btn icon icon-plus" data-name="add"></i>
+                            <i class="icon-btn icon icon-minus" data-name="del"></i>
+                        </li>
+                        <li class="item-controls-row">
+                            LOGO显示时间：
+                            <button class="btn-s" data-name="start">{{item.logoStart | timemat}}</button> -
+                            <button class="btn-s" data-name="end">{{item.logoEnd | timemat}}</button>
+                        </li>
+                        <li class="item-controls-row">
+                            LOGO快速定位：
+                            <button class="btn-s" data-name="lt">左上</button>
+                            <button class="btn-s" data-name="lb">左下</button>
+                            <button class="btn-s" data-name="ct">中心</button>
+                            <button class="btn-s" data-name="rt">右上</button>
+                            <button class="btn-s" data-name="rb">右下</button>
+                        </li>
+                    </ul>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">
@@ -366,12 +391,10 @@
 </div>
 
 <!-- contextmenu -->
-<ul id="contextmenu" class="contextmenu" :class="{'contextmenu-show':show}" :style="{top:y+'px',left:x+'px'}">
-    <li class="contextmenu-item" v-for="item in items" v-on:click="contextmenuFn">
-        <div class="contextmenu-item-inner" v-html="item.html" :data-name="item.name"></div>
-        <sub-menu v-if="item.submenu" :item="item"></sub-menu>
-    </li>
-</ul>
+<div id="contextmenu" class="contextmenu" :style="{top:y+'px',left:x+'px'}">
+    <menu-tree v-if="items" :items="items" v-on:click.native="contextmenuFn" :class="{'tree-show':show}"></menu-tree>
+</div>
+
 
 <script type="text/javascript" src="../src/index.js"></script>
 </body>

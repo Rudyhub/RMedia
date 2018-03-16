@@ -45,6 +45,8 @@ function listItems(files){
                 logoY: 2,
                 logoScale: 0,
                 logoSize: 12,
+                logoStart: 0,
+                logoEnd: 0,
 
                 duration: 0,
                 startTime: 0,
@@ -275,6 +277,8 @@ const vue = new Vue({
             item.toheight = parseInt(item.towidth * item.scale);
             item.tofps = item.fps;
             item.totype = utils.type(item.toformat);
+            item.logoStart = 0;
+            item.logoEnd = item.duration;
         },
         zoomItemFn(e){
             vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
@@ -304,7 +308,6 @@ const vue = new Vue({
                 case 'close':
                 {
                     win.close(true);
-                    win = null;
                 }
             }
         },
@@ -950,17 +953,21 @@ const vue = new Vue({
                     utils.menu.y = e.y;
                     let menu = [{html: item.logo ? '替换':'添加',name:'add'}];
                     if(item.logo){
-                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',submenu:[
+                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',items:[
                             {html:'左上',name:'lt'},
                             {html:'右上',name:'rt'},
                             {html:'中心',name:'c'},
                             {html:'左下',name:'lb'},
                             {html:'右下',name:'rb'}
+                        ]},{html:'时间范围',items:[
+                            {html:'设置起点',name:'start'},
+                            {html:'设置终点',name:'end'},
                         ]});
                     } 
                     menu.push({html:'关闭菜单',name:'close'});
                     utils.menu.setItem(...menu);
                     utils.menu.callback = (name)=>{
+                        console.log(name);
                         switch(name){
                             case 'add':
                                 logoInput.value = '';

@@ -75,41 +75,8 @@ formats = {
     video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
     audio: [['mp3','wav','mpeg'],['wma','mid']]
 };
-//拖拽指令
-Vue.directive('drag',{
-    bind(el){
-        let drag = el.querySelectorAll('[data-drag]'),
-            len = drag.length,
-            style = window.getComputedStyle,
-            i = 0,
-            start_x = 0, start_y = 0, cur_x = 0, cur_y = 0, matrix;
-
-        if(len)
-           for(; i<len; i++) drag[i].addEventListener('mousedown', downFn);
-        else
-            el.addEventListener('mousedown', downFn);
-        
-        function downFn(e){
-            matrix = style(el)['transform'].split(',');
-            start_x = e.x;
-            start_y = e.y;
-            cur_x = parseInt(style(el)['left']) || 0;
-            cur_y = parseInt(style(el)['top']) || 0;
-            el.style.transition = 'none';
-            document.addEventListener('mousemove', moveFn);
-            document.addEventListener('mouseup', upFn);
-        }
-        function moveFn(e){
-            el.style.left = (e.x-start_x+cur_x)+'px';
-            el.style.top = (e.y-start_y+cur_y)+'px';
-        }
-        function upFn(){
-            el.style.cssText = el.style.cssText.replace(/\s*transition:\s*none[;]?/i,'');
-            document.removeEventListener('mousemove', moveFn);
-            document.removeEventListener('mouseup', upFn);
-        }
-    }
-});
+__webpack_require__(9)(Vue);
+__webpack_require__(10)(Vue);
 
 module.exports = {
     fs,
@@ -270,19 +237,6 @@ module.exports = {
                     this.x = this.y = 0;
                 }
             }
-        },
-        components: {
-            'sub-menu': {
-                name: 'sub-menu',
-                template: `
-                <ul class="contextmenu-submenu">
-                    <li class="contextmenu-item" v-for="subitem in item.submenu">
-                        <div class="contextmenu-item-inner" v-html="subitem.html" :data-name="subitem.name"></div>
-                        <sub-menu v-if="subitem.submenu" :item="subitem"></sub-menu>
-                    </li>
-                </ul>`,
-                props: ['item']
-            }
         }
     })
 };
@@ -355,12 +309,12 @@ module.exports = require("child_process");
 const win = nw.Window.get(),
     version = __webpack_require__(5),
     config = __webpack_require__(1),
-    Media = __webpack_require__(9),
+    Media = __webpack_require__(11),
     utils = __webpack_require__(0),
-    capture = __webpack_require__(10),
+    capture = __webpack_require__(12),
     Vue = __webpack_require__(3),
-    shortcut = __webpack_require__(11),
-    crypto = __webpack_require__(12),
+    shortcut = __webpack_require__(13),
+    crypto = __webpack_require__(14),
 
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
@@ -399,6 +353,8 @@ function listItems(files){
                 logoY: 2,
                 logoScale: 0,
                 logoSize: 12,
+                logoStart: 0,
+                logoEnd: 0,
 
                 duration: 0,
                 startTime: 0,
@@ -629,6 +585,8 @@ const vue = new Vue({
             item.toheight = parseInt(item.towidth * item.scale);
             item.tofps = item.fps;
             item.totype = utils.type(item.toformat);
+            item.logoStart = 0;
+            item.logoEnd = item.duration;
         },
         zoomItemFn(e){
             vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
@@ -658,7 +616,6 @@ const vue = new Vue({
                 case 'close':
                 {
                     win.close(true);
-                    win = null;
                 }
             }
         },
@@ -1304,17 +1261,21 @@ const vue = new Vue({
                     utils.menu.y = e.y;
                     let menu = [{html: item.logo ? '替换':'添加',name:'add'}];
                     if(item.logo){
-                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',submenu:[
+                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',items:[
                             {html:'左上',name:'lt'},
                             {html:'右上',name:'rt'},
                             {html:'中心',name:'c'},
                             {html:'左下',name:'lb'},
                             {html:'右下',name:'rb'}
+                        ]},{html:'时间范围',items:[
+                            {html:'设置起点',name:'start'},
+                            {html:'设置终点',name:'end'},
                         ]});
                     } 
                     menu.push({html:'关闭菜单',name:'close'});
                     utils.menu.setItem(...menu);
                     utils.menu.callback = (name)=>{
+                        console.log(name);
                         switch(name){
                             case 'add':
                                 logoInput.value = '';
@@ -1434,6 +1395,69 @@ module.exports = require("path");
 
 /***/ }),
 /* 9 */
+/***/ (function(module, exports) {
+
+
+module.exports = (Vue)=>{
+    //拖拽指令
+    Vue.directive('drag',{
+        bind(el){
+            let drag = el.querySelectorAll('[data-drag]'),
+                len = drag.length,
+                style = window.getComputedStyle,
+                i = 0,
+                start_x = 0, start_y = 0, cur_x = 0, cur_y = 0, matrix;
+
+            if(len)
+                for(; i<len; i++) drag[i].addEventListener('mousedown', downFn);
+            else
+                el.addEventListener('mousedown', downFn);
+
+            function downFn(e){
+                matrix = style(el)['transform'].split(',');
+                start_x = e.x;
+                start_y = e.y;
+                cur_x = parseInt(style(el)['left']) || 0;
+                cur_y = parseInt(style(el)['top']) || 0;
+                el.style.transition = 'none';
+                document.addEventListener('mousemove', moveFn);
+                document.addEventListener('mouseup', upFn);
+            }
+            function moveFn(e){
+                el.style.left = (e.x-start_x+cur_x)+'px';
+                el.style.top = (e.y-start_y+cur_y)+'px';
+            }
+            function upFn(){
+                el.style.cssText = el.style.cssText.replace(/\s*transition:\s*none[;]?/i,'');
+                document.removeEventListener('mousemove', moveFn);
+                document.removeEventListener('mouseup', upFn);
+            }
+        }
+    });
+};
+
+/***/ }),
+/* 10 */
+/***/ (function(module, exports) {
+
+
+module.exports = (Vue)=>{
+    //menu tree
+    Vue.component('menu-tree',{
+        name: 'menu-tree',
+        template: `
+        <ul class="tree">
+            <li class="tree-item" v-for="item in items">
+                <div class="tree-item-name" v-html="item.html" :data-name="item.name"></div>
+                <menu-tree v-if="item.items" :items="item.items"></menu-tree>
+            </li>
+        </ul>`,
+        props: ['items']
+    });
+};
+
+/***/ }),
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const childprocess = __webpack_require__(2),
@@ -1832,7 +1856,7 @@ module.exports = {
 };
 
 /***/ }),
-/* 10 */
+/* 12 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const win = nw.Window.get(),
@@ -2057,7 +2081,7 @@ const capture = {
 module.exports = capture;
 
 /***/ }),
-/* 11 */
+/* 13 */
 /***/ (function(module, exports) {
 
 module.exports = (o)=>{
@@ -2083,7 +2107,7 @@ module.exports = (o)=>{
 };
 
 /***/ }),
-/* 12 */
+/* 14 */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto");
