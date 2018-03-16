@@ -2,3 +2,4 @@ node_modules/
 nwjs*/
 ffmpeg/
 *.temp
+.idea/

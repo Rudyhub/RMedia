@@ -8,7 +8,7 @@ formats = {
 };
 //拖拽指令
 Vue.directive('drag',{
-    bind(el, binding){
+    bind(el){
         let drag = el.querySelectorAll('[data-drag]'),
             len = drag.length,
             style = window.getComputedStyle,
@@ -34,7 +34,7 @@ Vue.directive('drag',{
             el.style.left = (e.x-start_x+cur_x)+'px';
             el.style.top = (e.y-start_y+cur_y)+'px';
         }
-        function upFn(e){
+        function upFn(){
             el.style.cssText = el.style.cssText.replace(/\s*transition:\s*none[;]?/i,'');
             document.removeEventListener('mousemove', moveFn);
             document.removeEventListener('mouseup', upFn);
@@ -174,7 +174,7 @@ module.exports = {
                 if(typeof this.callback === 'function'){
                     this.callback.call(e.currentTarget, code);
                 }
-            },
+            }
         }
     }),
     menu: new Vue({
