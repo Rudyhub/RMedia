@@ -1738,9 +1738,9 @@ module.exports = {
                     ll = Math.round(item.logoX/100 * w),
                     st = item.logoEnd>item.logoStart ? item.logoStart-item.startTime : 0,
                     et = item.logoEnd>item.logoStart ? item.logoEnd-item.startTime : 0;
-                if(st > 0) ll = 'if(gte(t,'+st+'),'+ll+',NAN)';
-                if(st > 0 && et > 0) lt = 'if(lte(t,'+et+'),'+lt+',NAN)';
-                filters += '[media];[1:v]scale='+lw+':'+lh+'[logo];[media][logo]overlay='+ll+':'+lt;
+                if(st > 0) ll = 'if(gte(t,'+Math.round(st)+'),'+ll+',NAN)';
+                if(st > 0 && et > 0) lt = 'if(lte(t,'+Math.round(et)+'),'+lt+',NAN)';
+                filters += '[media];[1:v]scale='+lw+':'+lh+'[logo];[media][logo]overlay=\''+ll+'\':\''+lt+'\'';
             }
             result.cmd.push('-filter_complex', filters);
         }
@@ -1827,7 +1827,6 @@ module.exports = {
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
-
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );
