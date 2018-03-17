@@ -243,7 +243,11 @@
                 <dd class="item-row">
                     <ul class="item-controls scale-0" :class="{'zoom-in': item.duration}">
                         <li class="item-controls-row">
-                            <input class="item-range-time" type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
+                            <input class="item-range-time" type="range"
+                                   v-on:input="itemFn($event,index,'currentTime')"
+                                   v-on:change="itemFn($event,index,'timeSlide')"
+                                   :style="'background-image: linear-gradient(90deg, #ffb100, #4b7bff '+item.startTime/item.duration*100+'%,transparent '+item.startTime/item.duration*100+'%, transparent '+item.endTime/item.duration*100+'%, #4b7bff '+item.endTime/item.duration*100+'%, #ffb100)'"
+                                   :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制">
                         </li>
                         <li class="item-controls-row text-center">
                             微调：{{item.currentTime | timemat}}
@@ -263,8 +267,8 @@
                         </li>
                         <li class="item-controls-row">
                             LOGO显示时间：
-                            <button class="btn-s" data-name="start">{{item.logoStart | timemat}}</button> -
-                            <button class="btn-s" data-name="end">{{item.logoEnd | timemat}}</button>
+                            <button class="btn-s" data-name="start" :disabled="item.currentTime < item.startTime || item.currentTime > item.endTime">{{item.logoStart | timemat}}</button> -
+                            <button class="btn-s" data-name="end" :disabled="item.currentTime < item.startTime || item.currentTime > item.endTime">{{item.logoEnd | timemat}}</button>
                         </li>
                         <li class="item-controls-row">
                             LOGO快速定位：

@@ -26,7 +26,7 @@ module.exports = {
 		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,
 		height: 720,
-		bitv: 1024,
+		bitv: 2048,
 		bita: 128,
 		fps: 25,
 		format: {
