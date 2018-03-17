@@ -139,6 +139,9 @@ input[disabled]:focus{
 [type=range] {
     border-radius: var(--r2);
 }
+[type=range]::-webkit-slider-runnable-track{
+    background: transparent;
+}
 [type=range]:focus {
     outline: none;
 }
@@ -456,15 +459,16 @@ summary{
 .item{
     display: inline-block;
     width: 19vw;
-    border: 1px solid;
+    border: 1px solid #35373a;
     box-sizing: border-box;
     vertical-align: top;
     font-size: var(--fs14);
     margin: .4vw;
-    background: var(--black1);
+    background: #35373a;
     border-radius: 4px;
     overflow: hidden;
     position: relative;
+    box-shadow: var(--black3) 0 3px 5px;
 }
 .item-preview-inner{
     height: 10.8vw;
@@ -486,14 +490,8 @@ summary{
     position: absolute;
     top: 5px;
     left: 5px;
-    display: block;
     z-index: 3;
-    cursor: pointer;
-}
-.item-logo-icon{
     display: block;
-    width: 100%;
-    height: 100%;
 }
 .item-controls{
     width: 100%;
@@ -506,23 +504,6 @@ summary{
 .item-controls-row{
     padding: .2vw .5vw;
 }
-.item-controls [type=range]{
-    margin-right: auto;
-    margin-left: auto;
-    display: block;
-    height: .2vw;
-    padding: .2vw 0;
-    box-sizing: border-box;
-    background: transparent;
-}
-.item-controls [type=range]::-webkit-slider-runnable-track{
-    background: transparent;
-}
-/*.item-logo-control{*/
-    /*font-size: var(--fs16);*/
-    /*padding: .3em .5em;*/
-    /*box-sizing: border-box;*/
-/*}*/
 .item-progress-percent{
     position: absolute;
     width: 100%;
@@ -572,7 +553,7 @@ summary{
     overflow: hidden;
     font-size: 0;
     white-space: nowrap;
-    border-bottom: 2px solid var(--black3);
+    border-top: 2px solid var(--black3);
 }
 .item-old,
 .item-new{
@@ -591,18 +572,22 @@ summary{
 .item-size-range{
     position: fixed;
 }
-.item input,
-.item select{
+.item-input,
+.item-select{
     color: var(--blue1);
 }
-.item [type=text],
-.item [type=range]{
+.item-toname,
+.item-range-time{
     width: 98%;
 }
-.item [type=number]{
+.item-range-logo{
+    width: calc(100% - 5.5em);
+    display: inline-block;
+}
+.item-number{
     width: 3.5em;
 }
-.item [type=checkbox]{
+.item-checkbox{
     margin: 0;
 }
 .item-mask{

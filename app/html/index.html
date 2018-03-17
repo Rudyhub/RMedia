@@ -229,10 +229,8 @@
                             <!-- loading icon -->
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
                             <!-- logo -->
-                            <div class="item-logo" v-if="item.type!=='audio' && item.totype!=='audio'&& item.towidth>0 && item.toheight>0 && !item.series" v-on:click="itemFn($event,index,'logo')" v-on:contextmenu.prevent="itemFn($event,index,'logo')" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}">
-                                <img class="item-logo-icon" v-if="item.logo" :src="item.logo">
-                                <b class="item-logo-icon" v-else>LOGO</b>
-                            </div>
+
+                            <img class="item-logo" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}" v-show="item.logo" :src="item.logo">
                         </div>
                     </div>
                     <div class="item-tools">
@@ -245,19 +243,19 @@
                 <dd class="item-row">
                     <ul class="item-controls scale-0" :class="{'zoom-in': item.duration}">
                         <li class="item-controls-row">
-                            <input type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
+                            <input class="item-range-time" type="range" v-on:input="itemFn($event,index,'currentTime')" v-on:change="itemFn($event,index,'timeSlide')" :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制" :disabled="item.type=='image'">
                         </li>
                         <li class="item-controls-row text-center">
                             微调：{{item.currentTime | timemat}}
                             <button class="btn-s" :title="'上'+framestep+'帧'" v-on:click="itemFn($event,index,'prevFrame')"><i class="icon icon-previous2"></i></button>
-                            <input type="number" v-model="framestep" title="设置微调量">
+                            <input class="item-number" type="number" v-model="framestep" title="设置微调量">
                             <button  class="btn-s" :title="'下'+framestep+'帧'" v-on:click="itemFn($event,index,'nextFrame')"><i class="icon icon-next2"></i></button>
                             {{item.currentTime*item.fps | mathRound}}/{{item.duration*item.fps | mathRound}}
                         </li>
                     </ul>
                 </dd>
                 <dd class="item-row">
-                    <ul class="item-controls" v-on:click="itemFn($event,index,'logo')">
+                    <ul class="item-controls scale-0" v-on:click="itemFn($event,index,'logo')" :class="(item.type!=='audio' && item.totype!=='audio'&& item.towidth>0 && item.toheight>0 && !item.series)?'zoom-in':''">
                         <li class="item-controls-row">
                             LOGO添加删除：
                             <i class="icon-btn icon icon-plus" data-name="add"></i>
@@ -276,37 +274,42 @@
                             <button class="btn-s" data-name="rt">右上</button>
                             <button class="btn-s" data-name="rb">右下</button>
                         </li>
+                        <li class="item-controls-row">LOGO精确控制：<br>
+                            尺寸比例：<input class="item-range-logo" v-on:input="logoFn($event,'size',index)" min="0" max="100" step="1" type="range" title="尺寸控制"><br>
+                            水平位置：<input class="item-range-logo" v-on:input="logoFn($event,'left',index)" min="0" max="100" step="1" type="range" title="水平方向位置控制"><br>
+                            垂直位置：<input class="item-range-logo" v-on:input="logoFn($event,'top',index)" min="0" max="100" step="1" type="range" title="垂直方向位置控制"><br>
+                        </li>
                     </ul>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">
-                        <b>输入：</b>
+                        <b>输入参数：</b>
                         <span class="float-r" v-if="item.type === 'image'">
-                            <input type="checkbox" v-model="item.series"> 序列图
+                            <input class="item-checkbox" type="checkbox" v-model="item.series" title="是否是序列图"> 序列图
                         </span>
                     </div>
-                    <div class="item-new"><b>输出：</b>
+                    <div class="item-new"><b>输出参数：</b>
                         <i class="item-tool icon icon-undo2 float-r" v-on:click="itemFn($event,index,'reset')" title="重置"></i>
                     </div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">文件：{{item.name}}</div>
-                    <div class="item-new"><input type="text" v-model.lazy="item.toname"></div>
+                    <div class="item-new"><input class="item-toname" type="text" v-model.lazy="item.toname" title="输出名称"></div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">格式：{{item.format}}</div>
                     <div class="item-new">
-                        <select v-on:input="itemFn($event,index,'toformat')" :value="item.toformat">
-                            <optgroup>
+                        <select class="item-select" v-on:input="itemFn($event,index,'toformat')" :value="item.toformat" title="输出类型">
+                            <optgroup label="video">
                                 <option value="mp4">mp4</option>
                                 <option value="webm">webm</option>
                                 <option value="ogg">ogg</option>
                             </optgroup>
-                            <optgroup v-if="item.type!=='image'">
+                            <optgroup label="audio" v-if="item.type!=='image'">
                                 <option value="mp3">mp3</option>
                                 <option value="wav">wav</option>
                             </optgroup>
-                            <optgroup v-if="item.type!=='audio'">
+                            <optgroup label="image" v-if="item.type!=='audio'">
                                 <option value="jpg">jpg</option>
                                 <option value="png">png</option>
                                 <option value="gif">gif</option>
@@ -320,7 +323,10 @@
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">大小：{{item.size | sizemat}}</div>
-                    <div class="item-new scale-0" :class="item.type === 'video'?'zoom-in':''">{{item.size*item.quality/100 | sizemat}} <input type="number" v-model.number="item.quality">%</div>
+                    <div class="item-new scale-0" :class="item.type === 'video'?'zoom-in':''">
+                        {{item.size*item.quality/100 | sizemat}}
+                        <input class="item-number" type="number" v-model.number="item.quality" title="输出质量">%
+                    </div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">截取：{{item.duration | timemat}}</div>
@@ -333,17 +339,17 @@
                 <dd class="item-row">
                     <div class="item-old">预览图：{{item.startTime | timemat}}</div>
                     <div class="item-new scale-0" :class="(item.type!=='audio' && item.totype!=='audio' && !item.series)?'zoom-in':''">
-                        <input type="checkbox" v-model="item.cover">
+                        <input class="item-checkbox" type="checkbox" v-model="item.cover" title="是否生成预览图">
                         <button class="btn-s" v-on:click="itemFn($event,index,'setcover')" title="点击即获取当前时间" v-if="item.cover && item.duration>0">{{item.coverTime | timemat}}</button>
-                        <input type="number" v-model.number="item.coverWidth" :disabled="!item.cover">px
+                        <input class="item-number" type="number" v-model.number="item.coverWidth" :disabled="!item.cover" title="设置预览图尺寸">px
                     </div>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">尺寸：{{item.width}}&times;{{item.height}}</div>
                     <div class="item-new scale-0" :class="(item.width && item.height)?'zoom-in':''">
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
+                        <input class="item-number" type="number" min="0" v-on:input="itemFn($event,index,'towidth')" :value="item.towidth" title="输出宽">
                         &times;
-                        <input type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
+                        <input class="item-number" type="number" min="0" v-on:input="itemFn($event,index,'toheight')" :value="item.toheight" title="输出高">
                         px
                     </div>
                 </dd>
@@ -354,7 +360,7 @@
                         {{item.aclayout}}
                     </div>
                     <div class="item-new scale-0" :class="((item.aclayout>1 || (item.achannel && item.vchannel)) && item.totype!=='image')?'zoom-in':''">
-                        <input type="checkbox" v-model="item.split"> {{item.split ? '是':'否'}}
+                        <input class="item-checkbox" type="checkbox" v-model="item.split" title="分离提取音频声道和视频"> {{item.split ? '是':'否'}}
                     </div>
                 </dd>
                 <dd class="item-mask" v-if="item.progress">

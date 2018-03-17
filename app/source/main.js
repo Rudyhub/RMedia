@@ -314,10 +314,8 @@ const vue = new Vue({
         toolbarFn(e){
             let target = e.currentTarget,
                 name = target.name,
-                classList = target.classList,
                 dropMenu = vue.$refs[name],
-                prevMenu,
-                key;
+                prevMenu;
 
             if(name !== vue.toolbar.drop){
                 if(prevMenu = vue.$refs[vue.toolbar.drop]) prevMenu.classList.remove('zoom-in');
@@ -458,7 +456,6 @@ const vue = new Vue({
                 if(code === -1 || !Object.keys(vue.items).length) return;
                 let spriteList = document.getElementById('sprite-list'),
                     items = spriteList.querySelectorAll('.sprite-item'),
-                    imgs = spriteList.querySelectorAll('img'),
                     len = items.length,
                     i = 0,
                     x = 0, y = 0, w = 0, h = 0,
@@ -588,23 +585,41 @@ const vue = new Vue({
                     vue.dropMenuClose('batch');
             }
         },
-        logoFn(e, name){
-            let val = parseFloat(e.currentTarget.value),
-                key, item;
-            for(key in vue.items){
-                item = vue.items[key];
+        logoFn(e, name, index){
+            let val = parseFloat(e.currentTarget.value);
+            if(index){
+                calc(vue.items[index]);
+            }else{
+                for(let key in vue.items) calc(vue.items[key]);
+            }
+            /*位置推算：
+                目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
+                已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
+                设： item宽、高分别为 W1、 H1，logo宽高分别为 W2、H2;
+                求：Hs，即(H2/H1)。
+                解：
+                    因: A = W2/W1; B = H2/W2; C = H1/W1;
+                    故: H1 = W1*C; H2 = W2*B;
+                    推导: Hs = H2/H1
+                        = (W2*B) / (W1*C)
+                        = (W2/W1) * (B/C)
+                        = A * (B/C);
+                套入：Hs = item.logoSize * (item.logoScale / item.scale);
+            */
+            function calc(item){
                 switch(name){
                     case 'size':
                         item.logoSize = val;
-                    break;
+                        break;
                     case 'left':
                         item.logoX = (100-item.logoSize) * (val/100);
-                    break;
+                        break;
                     case 'top':
                         item.logoY = (100 - item.logoSize * (item.logoScale / item.scale)) * (val /100);
-                    break;
+                        break;
                 }
             }
+
         },
         nameAllFn(code){
             vue.dropMenuClose('batch');
@@ -770,7 +785,7 @@ const vue = new Vue({
                             Media.killAll();
                         }
                         target.classList.remove('active-1');
-                    }
+                    };
                 break;
                 case 'helpBook':
                     nw.Shell.openExternal(vue.app.documentation);
@@ -804,8 +819,7 @@ const vue = new Vue({
         itemFn(e, index, str){
             let item = vue.items[index],
                 target = e.target,
-                step,
-                tmptime;
+                step;
 
             switch(str){
                 case 'del':
@@ -948,70 +962,43 @@ const vue = new Vue({
                 case 'logo':
                 {
                     logoInput.dataset.activeIndex = index;
-                    utils.menu.show = true;
-                    utils.menu.x = e.x;
-                    utils.menu.y = e.y;
-                    let menu = [{html: item.logo ? '替换':'添加',name:'add'}];
-                    if(item.logo){
-                        menu.push({html:'删除',name:'delete'},{html:'快速定位 <i class="icon icon-point-right"></i>',items:[
-                            {html:'左上',name:'lt'},
-                            {html:'右上',name:'rt'},
-                            {html:'中心',name:'c'},
-                            {html:'左下',name:'lb'},
-                            {html:'右下',name:'rb'}
-                        ]},{html:'时间范围',items:[
-                            {html:'设置起点',name:'start'},
-                            {html:'设置终点',name:'end'},
-                        ]});
-                    } 
-                    menu.push({html:'关闭菜单',name:'close'});
-                    utils.menu.setItem(...menu);
-                    utils.menu.callback = (name)=>{
-                        console.log(name);
-                        switch(name){
-                            case 'add':
-                                logoInput.value = '';
-                                logoInput.click();
+                    switch (e.target.dataset.name){
+                        case 'add':
+                            logoInput.value = '';
+                            logoInput.click();
                             break;
-                            case 'delete':
-                                item.logo = '';
+                        case 'del':
+                            item.logo = '';
                             break;
-                            /*位置推算：
-                                目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
-                                已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
-                                设： item宽、高分别为 W1、 H1，logo宽高分别为 W2、H2;
-                                求：Hs，即(H2/H1)。
-                                解：
-                                    因: A = W2/W1; B = H2/W2; C = H1/W1;
-                                    故: H1 = W1*C; H2 = W2*B;
-                                    推导: Hs = H2/H1
-                                        = (W2*B) / (W1*C)
-                                        = (W2/W1) * (B/C)
-                                        = A * (B/C);
-                                套入：Hs = item.logoSize * (item.logoScale / item.scale);
-                            */
-                            case 'lt':
-                                item.logoX = 1;
-                                item.logoY = 2;
+                        case 'start':
+                            item.logoStart = item.currentTime;
+                            if(item.logoEnd < item.logoStart) item.logoEnd = item.logoStart;
                             break;
-                            case 'rt':
-                                item.logoX = 99 - item.logoSize;
-                                item.logoY = 2;
+                        case 'end':
+                            item.logoEnd = item.currentTime;
+                            if(item.logoEnd < item.logoStart) item.logoStart = item.logoEnd;
                             break;
-                            case 'c':
-                                item.logoX = (99 - item.logoSize)/2;
-                                item.logoY = (98 - item.logoSize * (item.logoScale / item.scale))/2;
+                        case 'lt':
+                            item.logoX = 1;
+                            item.logoY = 2;
                             break;
-                            case 'lb':
-                                item.logoX = 1;
-                                item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                        case 'rt':
+                            item.logoX = 99 - item.logoSize;
+                            item.logoY = 2;
                             break;
-                            case 'rb':
-                                item.logoX = 99 - item.logoSize;
-                                item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                        case 'ct':
+                            item.logoX = (99 - item.logoSize)/2;
+                            item.logoY = (98 - item.logoSize * (item.logoScale / item.scale))/2;
                             break;
-                        }
-                    } 
+                        case 'lb':
+                            item.logoX = 1;
+                            item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                            break;
+                        case 'rb':
+                            item.logoX = 99 - item.logoSize;
+                            item.logoY = 98 - item.logoSize * (item.logoScale / item.scale);
+                            break;
+                    }
                 }
             }
         }

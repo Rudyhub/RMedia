@@ -286,8 +286,11 @@ module.exports = {
                 let lw = Math.round(item.logoSize/100 * w),
                     lh = Math.round(lw * item.logoScale),
                     lt = Math.round(item.logoY/100 * h),
-                    ll = Math.round(item.logoX/100 * w);
-
+                    ll = Math.round(item.logoX/100 * w),
+                    st = item.logoEnd>item.logoStart ? item.logoStart-item.startTime : 0,
+                    et = item.logoEnd>item.logoStart ? item.logoEnd-item.startTime : 0;
+                if(st > 0) ll = 'if(gte(t,'+st+'),'+ll+',NAN)';
+                if(st > 0 && et > 0) lt = 'if(lte(t,'+et+'),'+lt+',NAN)';
                 filters += '[media];[1:v]scale='+lw+':'+lh+'[logo];[media][logo]overlay='+ll+':'+lt;
             }
             result.cmd.push('-filter_complex', filters);
