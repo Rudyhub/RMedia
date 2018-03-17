@@ -24,9 +24,7 @@ function listItems(files){
     let i = 0,
         item,
         hex,
-        key,
-        tobitv,
-        tobita;
+        key;
     if(files.length){
         recycle(files[0]);
         function recycle(file){
