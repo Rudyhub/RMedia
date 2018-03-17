@@ -13,12 +13,9 @@ const win = nw.Window.get(),
     logoInput = document.createElement('input'),
     canvas = document.createElement('canvas');
 
-win.on('loaded',()=>{
-    win.width = screen.availWidth;
-    win.height = screen.availHeight;
-    win.x = win.y = 0;
-    win.show();
-});
+
+win.maximize();
+win.show();
 
 function listItems(files){
     let i = 0,
@@ -162,7 +159,9 @@ const vue = new Vue({
             toggle: {
                 lock: 1,
                 alpha: 1
-            }
+            },
+            x: 0,
+            y: 0
         },
         active: {
             mainSubmenu: ''
@@ -196,19 +195,19 @@ const vue = new Vue({
         outputEl.nwdirectory = true;
 
         inputEl.addEventListener('change', (e)=>{
-            vue.dropMenuClose('chosefile');
+            vue.toolbar.drop = 'chosefile';
             listItems(inputEl.files);
         });
         inputEl.addEventListener('cancel', ()=>{
-            vue.dropMenuClose('chosefile');
+            vue.toolbar.drop = '';
         });
 
         outputEl.addEventListener('change', ()=>{
-            vue.dropMenuClose('chosedir');
+            vue.toolbar.drop = 'chosedir';
             vue.output = outputEl.files[0].path || '';
         });
         outputEl.addEventListener('cancel', ()=>{
-            vue.dropMenuClose('chosedir');
+            vue.toolbar.drop = '';
         });
 
         logoInput.addEventListener('change', ()=>{
@@ -237,13 +236,6 @@ const vue = new Vue({
         });
     },
 	methods: {
-        // common function
-        dropMenuClose(name){
-            vue.toolbar.drop = '';
-            try{
-                vue.$refs[name].classList.remove('zoom-in');
-            }catch(err){}
-        },
         getThumb(item){
             if(!item) return;
             Media.thumb({
@@ -312,20 +304,18 @@ const vue = new Vue({
         toolbarFn(e){
             let target = e.currentTarget,
                 name = target.name,
-                dropMenu = vue.$refs[name],
-                prevMenu;
+                command,
+                item,
+                key;
 
-            if(name !== vue.toolbar.drop){
-                if(prevMenu = vue.$refs[vue.toolbar.drop]) prevMenu.classList.remove('zoom-in');
+            if(vue.toolbar.drop === name){
+                vue.toolbar.drop = '';
+            }else{
+                vue.toolbar.drop = name;
+                vue.toolbar.x = e.x;
+                vue.toolbar.y = e.y+30;
             }
-            vue.toolbar.drop = name;
 
-            if(dropMenu){
-                dropMenu.classList.toggle('zoom-in');
-                dropMenu.style.top = (target.offsetTop + target.offsetHeight)+ 'px';
-                dropMenu.style.left = target.offsetLeft + 'px';
-                if(!dropMenu.classList.contains('zoom-in')) vue.toolbar.drop = '';
-            }
             switch(name){
                 case 'chosefile': inputEl.value = ''; inputEl.click(); break;
                 case 'chosedir': outputEl.click(); break;
@@ -340,10 +330,44 @@ const vue = new Vue({
                         height: win.height*.8
                     });
                 break;
+                case 'concat':
+                    command = [];
+                    for(key in vue.items){
+                        item = vue.items[key];
+                        if(item.lock){
+                            if(item.type !== 'video'){
+                                utils.dialog.show = true;
+                                utils.dialog.body = '拼接失败！文件“'+item.path+'”不是视频，无法拼接。';
+                            }else{
+                                command.push('-i', item.path);
+                            }
+                        }
+                    }
+                    console.log(command);
+                    break;
+                case 'mix':
+
+                    break;
+                case 'firstAid':
+                    utils.dialog.show = true;
+                    utils.dialog.title = '严重提示！';
+                    utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
+                    utils.dialog.setBtn('启用','关闭');
+                    utils.dialog.callback = function(code){
+
+                        if(code === 0){
+                            Media.killAll();
+                        }
+                        target.classList.remove('active-1');
+                    };
+                    break;
+                case 'helpBook':
+                    nw.Shell.openExternal(vue.app.documentation);
+                    break;
             }
         },
         convertFn(e){
-            let item, total, cammand, keys, len, i, target, options;
+            let total, cammand, keys, len, i, target, options;
 
             target = e.currentTarget;
             target.dataset.stopAll = 0;
@@ -355,11 +379,11 @@ const vue = new Vue({
                 utils.dialog.callback = function(code){
 
                     if(code === 0 || code === 1){
-                        Media.ffmpeg.end('主动中止，' + this.innerText);
+                        Media.end('主动中止，' + this.innerText);
                         vue.isStarted = false;
                         target.dataset.stopAll = code;
                     }
-                }
+                };
                 return false;
             }
 
@@ -450,7 +474,7 @@ const vue = new Vue({
         },
         spriteFn(code){
             if(typeof code !== 'string'){
-                vue.dropMenuClose('sprite');
+                vue.toolbar.drop = '';
                 if(code === -1 || !Object.keys(vue.items).length) return;
                 let spriteList = document.getElementById('sprite-list'),
                     items = spriteList.querySelectorAll('.sprite-item'),
@@ -570,17 +594,17 @@ const vue = new Vue({
                             item.toname = utils.namemat(vue.batchParams.nameAll, ++n);
                         }
                     }
-                    vue.dropMenuClose('batch');
+                    vue.toolbar.drop = '';
                 }
                 break;
                 case 1:
                 {
                     for( key in vue.items) vue.reItem(vue.items[key]);
-                    vue.dropMenuClose('batch');
+                    vue.toolbar.drop = '';
                 }
                 break;
                 default:
-                    vue.dropMenuClose('batch');
+                    vue.toolbar.drop = '';
             }
         },
         logoFn(e, name, index){
@@ -620,7 +644,6 @@ const vue = new Vue({
 
         },
         nameAllFn(code){
-            vue.dropMenuClose('batch');
             if(code === -1) return;
 
             let output, n;
@@ -646,7 +669,7 @@ const vue = new Vue({
                         Media.copyFile(item.path, output, oneComplete);
                     }
                 }
-            };
+            }
             function oneComplete(err){
                 item = vue.items[k];
                 if(err){
@@ -762,32 +785,7 @@ const vue = new Vue({
                 capture.start(output, vue.capParams);
             }
             if(code === 0 || code === -1){
-                vue.dropMenuClose('capture');
-            }
-        },
-        helpFn(e){
-            let target = e.currentTarget,
-                name = target.name;
-
-            vue.dropMenuClose('help');
-
-            switch(name){
-                case 'firstAid':
-                    utils.dialog.show = true;
-                    utils.dialog.title = '严重提示！';
-                    utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
-                    utils.dialog.setBtn('启用','关闭');
-                    utils.dialog.callback = function(code){
-                        
-                        if(code === 0){
-                            Media.killAll();
-                        }
-                        target.classList.remove('active-1');
-                    };
-                break;
-                case 'helpBook':
-                    nw.Shell.openExternal(vue.app.documentation);
-                break;
+                vue.toolbar.drop = '';
             }
         },
         videoFn(e, index, type){

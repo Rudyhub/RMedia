@@ -30,27 +30,57 @@
                 <button class="toolbar-item" name="batch" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'batch'}">
                     <i class="icon icon-cog"></i> 批量设置
                 </button>
-                <button class="toolbar-item" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
-                    <i class="icon icon-camera"></i> 屏幕录制
-                </button>
-                <button class="toolbar-item" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
-                    <i class="icon icon-table2"></i> 图片拼接
-                </button>
-                <button class="toolbar-item" name="pdf2pic" v-on:click="toolbarFn">
-                    <i class="icon icon-library"></i> PDF转图片
-                </button>
-                <button class="toolbar-item" name="help" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'help'}">
-                    <i class="icon icon-question"></i> 帮助
+                <button class="toolbar-item" name="more" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'more'}">
+                    <i class="icon icon-list"></i> 更多功能
                 </button>
                 <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
                     <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
                 </button>
                 <input class="toolbar-item" type="range" min=".19" max=".98" step="0.01" v-on:input="zoomItemFn">
             </div>
-            <!-- 二级菜单 -->
 
+            <!-- 二级菜单 -->
+            <ul class="submenu" :class="{'zoom-in':toolbar.drop=='more'}" :style="{top:toolbar.y+'px',left:toolbar.x+'px'}" v-drag>
+                <li data-drag class="drag-bar"></li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="capture" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'capture'}">
+                        <i class="icon icon-camera"></i> 屏幕录制
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="pdf2pic" v-on:click="toolbarFn">
+                        <i class="icon icon-library"></i> PDF转图片
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="sprite" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'sprite'}">
+                        <i class="icon icon-table2"></i> 图片拼接
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="concat" v-on:click="toolbarFn">
+                        <i class="icon icon-loop"></i> 音/视频拼接
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="mix" v-on:click="toolbarFn">
+                        <i class="icon icon-shuffle"></i> 音/视频混合
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="firstAid" v-on:click="toolbarFn">
+                        <i class="icon icon-aid-kit"></i> 崩溃急救
+                    </button>
+                </li>
+                <li class="submenu-item">
+                    <button class="submenu-btn" name="helpBook" v-on:click="toolbarFn">
+                        <i class="icon icon-book"></i> 帮助文档
+                    </button>
+                </li>
+            </ul>
+            <!-- 参数设置面板 -->
             <!-- batch -->
-            <div class="drop-panel" ref="batch" v-drag>
+            <div class="drop-panel" :class="{'zoom-in':toolbar.drop=='batch'}" :style="{top:toolbar.y+'px',left:toolbar.x+'px'}" v-drag>
                 <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <p>
@@ -115,7 +145,7 @@
                 </div>
             </div>
             <!-- capture -->
-            <div class="drop-panel" ref="capture" v-drag>
+            <div class="drop-panel" :class="{'zoom-in':toolbar.drop=='capture'}" :style="{top:toolbar.y+'px',left:toolbar.x+'px'}" v-drag>
                 <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <h3>【参数设置】：</h3>
@@ -154,7 +184,7 @@
                 </div>
             </div>
             <!-- sprite -->
-            <div class="drop-panel" ref="sprite" v-drag>
+            <div class="drop-panel" :class="{'zoom-in':toolbar.drop=='sprite'}" :style="{top:toolbar.y+'px',left:toolbar.x+'px'}" v-drag>
                 <div data-drag class="drag-bar"></div>
                 <div class="drop-panel-group">
                     <p>排列方式：
@@ -199,15 +229,6 @@
                     <button class="btn-s" v-on:click="spriteFn(-1)">取消</button>
                 </div>
             </div>
-            <!-- help -->
-            <ul class="submenu" ref="help">
-                <li class="submenu-item">
-                    <button class="submenu-btn" name="firstAid" v-on:click="helpFn"><i class="icon icon-aid-kit"></i> 崩溃急救</button>
-                </li>
-                <li class="submenu-item">
-                    <button class="submenu-btn" name="helpBook" v-on:click="helpFn"><i class="icon icon-book"></i> 帮助文档</button>
-                </li>
-            </ul>
         </section>
     </header>
     <main class="body">
