@@ -342,20 +342,6 @@ const vue = new Vue({
                     target.value = val > config.output.height ? config.output.height : val;
                 }
                 break;
-                case 'logo':
-                {
-                    if(arguments[2] === 'del'){
-                        vue.batchParams.logo = '';
-                        for(let key in vue.items){
-                            if(vue.items[key].lock) vue.items[key].logo = '';
-                        }
-                    }else{
-                        logoInput.dataset.activeIndex = 'all';
-                        logoInput.value = '';
-                        logoInput.click();
-                    }
-                }
-                break;
                 case 0:
                 {
                     let sizeLimit = parseFloat(vue.$refs.sizeLimitEl.value) || 0,
