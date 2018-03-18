@@ -915,13 +915,20 @@ const vue = new Vue({
                     vue.toolbar.drop = '';
             }
         },
-        logoFn(e, name, index){
-            let val = parseFloat(e.currentTarget.value);
-            if(index){
-                calc(vue.items[index]);
+        logoFn(name, val, index){
+            console.log(index)
+            if(name === 'add'){
+                logoInput.dataset.activeIndex = 'all';
+                logoInput.value = '';
+                logoInput.click();
             }else{
-                for(let key in vue.items) calc(vue.items[key]);
+                if(index){
+                    calc(vue.items[index]);
+                }else{
+                    for(let key in vue.items) calc(vue.items[key]);
+                }
             }
+            
             /*位置推算：
                 目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
                 已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
@@ -947,6 +954,8 @@ const vue = new Vue({
                     case 'top':
                         item.logoY = (100 - item.logoSize * (item.logoScale / item.scale)) * (val /100);
                         break;
+                    case 'del':
+                        item.logo  = '';
                 }
             }
 
@@ -1436,6 +1445,36 @@ module.exports = (Vue)=>{
             </li>
         </ul>`,
         props: ['items']
+    });
+    
+    Vue.component('control-logo',{
+        name: 'control-logo',
+        template:`
+        <div class="control-logo">
+            <div class="control-logo-header">
+                LOGO控制：
+                <i v-on:click="logoFn($event,'add',param)" class="icon-btn icon icon-plus"></i>
+                <i v-on:click="logoFn($event,'del',param)" class="icon-btn icon icon-minus"></i>
+            </div>
+            <div class="control-logo-body">
+                <div class="control-logo-names">
+                    <div class="control-logo-name">尺寸比例：</div>
+                    <div class="control-logo-name">水平位置：</div>
+                    <div class="control-logo-name">垂直位置：</div>
+                </div>
+                <div class="control-logo-ranges">
+                    <input v-on:input="logoFn($event,'size',param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="尺寸比例"/>
+                    <input v-on:input="logoFn($event,'left',param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="水平位置"/>
+                    <input v-on:input="logoFn($event,'top', param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="垂直位置"/>
+                </div>
+            </div>
+        </div>`,
+        props: ['param'],
+        methods: {
+            logoFn(e, name, param){
+                this.$emit('logo', name, parseFloat(e.currentTarget.value), param);
+            }
+        }
     });
 };
 

@@ -859,3 +859,24 @@ summary{
         transform: rotateZ(360deg);
     }
 }
+
+.control-logo{
+    position: relative;
+    box-sizing: border-box;
+    padding: .5em;
+    font-size: var(--fs14);
+}
+.control-logo-body{
+    display: flex;
+}
+.control-logo-names{
+    width: 5em;
+}
+.control-logo-ranges{
+    flex-grow: 1;
+    white-space: normal;
+}
+.control-logo-range{
+    width: 100%;
+    padding: 0;
+}

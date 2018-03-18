@@ -607,13 +607,20 @@ const vue = new Vue({
                     vue.toolbar.drop = '';
             }
         },
-        logoFn(e, name, index){
-            let val = parseFloat(e.currentTarget.value);
-            if(index){
-                calc(vue.items[index]);
+        logoFn(name, val, index){
+            console.log(index)
+            if(name === 'add'){
+                logoInput.dataset.activeIndex = 'all';
+                logoInput.value = '';
+                logoInput.click();
             }else{
-                for(let key in vue.items) calc(vue.items[key]);
+                if(index){
+                    calc(vue.items[index]);
+                }else{
+                    for(let key in vue.items) calc(vue.items[key]);
+                }
             }
+            
             /*位置推算：
                 目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
                 已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
@@ -639,6 +646,8 @@ const vue = new Vue({
                     case 'top':
                         item.logoY = (100 - item.logoSize * (item.logoScale / item.scale)) * (val /100);
                         break;
+                    case 'del':
+                        item.logo  = '';
                 }
             }
 
