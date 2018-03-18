@@ -143,6 +143,21 @@ module.exports = {
             }
         });
     },
+    useThumb(item){
+        if(!item) return;
+        this.thumb({
+            input: item.path,
+            time: item.currentTime,
+            success(src){
+                item.thumb = src;
+            },
+            fail(){
+                utils.dialog.show = true;
+                utils.dialog.title = '错误！';
+                utils.dialog.body = '无法生成预览。';
+            }
+        });
+    },
     info(o){
         let self = this;
         if(!o.input) {

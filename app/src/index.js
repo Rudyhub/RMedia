@@ -67,8 +67,8 @@
 /* 0 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const fs = __webpack_require__(2),
-path = __webpack_require__(8),
+const fs = __webpack_require__(4),
+path = __webpack_require__(6),
 Vue = __webpack_require__(1),
 formats = {
     image: [['jpg','jpeg','png','gif','webp','ico','bmp','jps','mpo'],['tga','psd','iff','pbm','pcx','tif']],
@@ -251,15 +251,9 @@ module.exports = {
 
 /***/ }),
 /* 2 */
-/***/ (function(module, exports) {
-
-module.exports = require("fs");
-
-/***/ }),
-/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const cp = __webpack_require__(4),
+const cp = __webpack_require__(3),
 	utils = __webpack_require__(0);
 
 let appRoot = utils.path(true).dirname(process.execPath),
@@ -296,33 +290,41 @@ module.exports = {
 			audio: 'mp3'
 		}
 	}
-}
+};
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports) {
+
+module.exports = require("child_process");
 
 /***/ }),
 /* 4 */
 /***/ (function(module, exports) {
 
-module.exports = require("child_process");
+module.exports = require("fs");
 
 /***/ }),
 /* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const win = nw.Window.get(),
-    version = __webpack_require__(6),
-    config = __webpack_require__(3),
-    Media = __webpack_require__(9),
+    config = __webpack_require__(2),
+    Media = __webpack_require__(7),
     utils = __webpack_require__(0),
-    capture = __webpack_require__(10),
+    capture = __webpack_require__(8),
     Vue = __webpack_require__(1),
-    shortcut = __webpack_require__(11),
-    crypto = __webpack_require__(12),
+    shortcut = __webpack_require__(9),
+    crypto = __webpack_require__(10),
+    appInfo = Object.freeze(nw.App.manifest),
 
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
     logoInput = document.createElement('input'),
     canvas = document.createElement('canvas');
+
 //init
+__webpack_require__(11);
 __webpack_require__(13);
 __webpack_require__(14);
 
@@ -548,21 +550,6 @@ const vue = new Vue({
         });
     },
 	methods: {
-        getThumb(item){
-            if(!item) return;
-            Media.thumb({
-                input: item.path,
-                time: item.currentTime,
-                success(src){
-                    item.thumb = src;
-                },
-                fail(){
-                    utils.dialog.show = true;
-                    utils.dialog.title = '错误！';
-                    utils.dialog.body = '<p>微调发生错误！</p>';
-                }
-            });
-        },
         reItem(item){
             let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv;
                 tobita = item.bita <= config.output.bita ? item.bita : config.output.bita,
@@ -584,34 +571,6 @@ const vue = new Vue({
         },
         zoomItemFn(e){
             vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
-        },
-        //event function
-        titlebarFn(name){
-            switch(name){
-                case 'min':
-                {
-                    win.minimize();
-                }
-                break;
-                case 'toggle':
-                {
-                    let w = screen.width * .8,
-                        h = Math.round(w * .5625),
-                        x = (screen.width - w) / 2,
-                        y = (screen.height - h) / 2;
-                    if(vue.winToggle = !vue.winToggle){
-                        win.maximize();
-                    }else{
-                        win.moveTo(x, y);
-                        win.resizeTo(w, h);
-                    }
-                }
-                break;
-                case 'close':
-                {
-                    win.close(true);
-                }
-            }
         },
         toolbarFn(e){
             let target = e.currentTarget,
@@ -674,7 +633,7 @@ const vue = new Vue({
                     };
                     break;
                 case 'helpBook':
-                    nw.Shell.openExternal(vue.app.documentation);
+                    nw.Shell.openExternal(appInfo.documentation);
                     break;
             }
         },
@@ -920,7 +879,6 @@ const vue = new Vue({
             }
         },
         logoFn(name, val, index){
-            console.log(index);
             if(name === 'add'){
                 logoInput.dataset.activeIndex = index;
                 logoInput.value = '';
@@ -1190,7 +1148,7 @@ const vue = new Vue({
                     if(item.canplay){
                         vue.$refs['id'+index][0].currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -1207,7 +1165,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -1224,7 +1182,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -1261,7 +1219,7 @@ const vue = new Vue({
                             if(item.canplay){
                                 vue.$refs['id'+index][0].currentTime = item.currentTime;
                             }else if(item.type === 'video'){
-                                vue.getThumb(item);
+                                Media.useThumb(item);
                             }
                         }
                     }else{
@@ -1350,58 +1308,23 @@ const vue = new Vue({
     }
 });
 
-document.title = vue.app.window.title;
-//check update
-version(vue.app.documentation, vue.app.version, utils.dialog);
+document.title = appInfo.window.title;
+
 
 /***/ }),
 /* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-const https = __webpack_require__(7),
-	utils = __webpack_require__(0),
-	aEl = document.createElement('a');
-module.exports = (url, version)=>{
-	https.get(url, (res)=>{
-		res.on('data', (data)=>{
-			let match = /data-version=\"([^\"]*?)\"\s+data-loadurl=\"([^\"]*?)\"/i.exec(data.toString());
-			if(match && match[1] && match[1] !== version){
-				utils.dialog.show = true;
-				utils.dialog.title = '版本更新';
-				utils.dialog.body = '<p>有新版本，更新到：v'+match[1]+'。更新详情请查看【帮助文档】</p>';
-				utils.dialog.setBtn('下载更新','暂不');
-				utils.dialog.callback = function(code){
-					if(code === 0){
-						aEl.href = match[2];
-						aEl.download = match[2].slice(match[2].lastIndexOf('/')+1);
-						aEl.click();
-					}
-				}
-			}
-		});
-	});
-}
-
-/***/ }),
-/* 7 */
-/***/ (function(module, exports) {
-
-module.exports = require("https");
-
-/***/ }),
-/* 8 */
 /***/ (function(module, exports) {
 
 module.exports = require("path");
 
 /***/ }),
-/* 9 */
+/* 7 */
 /***/ (function(module, exports, __webpack_require__) {
 
-const childprocess = __webpack_require__(4),
-config = __webpack_require__(3),
+const childprocess = __webpack_require__(3),
+config = __webpack_require__(2),
 utils = __webpack_require__(0),
-fs = __webpack_require__(2);
+fs = __webpack_require__(4);
 
 //用于暂存单帧base64数据的临时文件，即预览图数据来源。
 let THUMB_TEMP_FILE = 'rmedia.temp';
@@ -1540,6 +1463,21 @@ module.exports = {
             if(status && o.fail){
                 status = false;
                 o.fail(e);
+            }
+        });
+    },
+    useThumb(item){
+        if(!item) return;
+        this.thumb({
+            input: item.path,
+            time: item.currentTime,
+            success(src){
+                item.thumb = src;
+            },
+            fail(){
+                utils.dialog.show = true;
+                utils.dialog.title = '错误！';
+                utils.dialog.body = '无法生成预览。';
             }
         });
     },
@@ -1797,14 +1735,14 @@ module.exports = {
 };
 
 /***/ }),
-/* 10 */
+/* 8 */
 /***/ (function(module, exports, __webpack_require__) {
 
 const win = nw.Window.get(),
-config = __webpack_require__(3),
-{spawn} = __webpack_require__(4),
+config = __webpack_require__(2),
+{spawn} = __webpack_require__(3),
 utils = __webpack_require__(0),
-fs = __webpack_require__(2);
+fs = __webpack_require__(4);
 
 const capture = {
 	ffmpeg: null,
@@ -2023,7 +1961,7 @@ const capture = {
 module.exports = capture;
 
 /***/ }),
-/* 11 */
+/* 9 */
 /***/ (function(module, exports) {
 
 module.exports = (o)=>{
@@ -2049,10 +1987,46 @@ module.exports = (o)=>{
 };
 
 /***/ }),
-/* 12 */
+/* 10 */
 /***/ (function(module, exports) {
 
 module.exports = require("crypto");
+
+/***/ }),
+/* 11 */
+/***/ (function(module, exports, __webpack_require__) {
+
+const https = __webpack_require__(12),
+	utils = __webpack_require__(0),
+	aEl = document.createElement('a'),
+	version = nw.App.manifest.version,
+	url = nw.App.manifest.documentation;
+
+https.get(url, (res)=>{
+	res.on('data', (data)=>{
+		let match = /data-version=\"([^\"]*?)\"\s+data-loadurl=\"([^\"]*?)\"/i.exec(data.toString());
+		if(match && match[1] && match[1] !== version){
+			utils.dialog.show = true;
+			utils.dialog.title = '版本更新';
+			utils.dialog.body = '<p>有新版本，更新到：v'+match[1]+'。更新详情请查看【帮助文档】</p>';
+			utils.dialog.setBtn('下载更新','暂不');
+			utils.dialog.callback = function(code){
+				if(code === 0){
+					aEl.href = match[2];
+					aEl.download = match[2].slice(match[2].lastIndexOf('/')+1);
+					aEl.click();
+				}
+			}
+		}
+	});
+});
+
+
+/***/ }),
+/* 12 */
+/***/ (function(module, exports) {
+
+module.exports = require("https");
 
 /***/ }),
 /* 13 */
@@ -2102,6 +2076,49 @@ Vue.directive('drag',{
 
 const Vue = __webpack_require__(1);
 const utils = __webpack_require__(0);
+const win = nw.Window.get();
+const appInfo = Object.freeze(nw.App.manifest);
+//title bar
+Vue.component('title-bar',{
+    template: `
+    <div class="titlebar">
+        <h1 class="title draggable">${appInfo.window.title}</h1>
+        <div class="titlebar-tool">
+            <button v-on:click="minimize">&minus;</button>
+            <button v-on:click="toggle" class="full"><i></i></button>
+            <button v-on:click="close">&times;</button>
+        </div>
+    </div>`,
+    methods: {
+        minimize: win.minimize,
+        toggle(e){
+            let classList = e.currentTarget.classList,
+                w = screen.width * .8,
+                h = Math.round(w * .5625),
+                x = (screen.width - w) / 2,
+                y = (screen.height - h) / 2;
+            classList.toggle('full');
+            if(classList.contains('full')){
+                win.maximize();
+            }else{
+                win.moveTo(x, y);
+                win.resizeTo(w, h);
+            }
+        },
+        close(){
+            win.close(true);
+        }
+    }
+});
+
+//footer bar
+Vue.component('footer-bar',{
+    template:`
+    <footer class="footer draggable">
+        ${appInfo.window.title} (${appInfo.name}-v${appInfo.version}) ${appInfo.copyright}
+    </footer>`
+});
+
 //menu tree
 Vue.component('menu-tree',{
     name: 'menu-tree',
@@ -2116,7 +2133,6 @@ Vue.component('menu-tree',{
 });
 
 Vue.component('control-logo',{
-    name: 'control-logo',
     template:`
     <div class="control-logo">
         <div class="control-logo-header">

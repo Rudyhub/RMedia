@@ -10,14 +10,7 @@
 <body>
 <div id="app" v-cloak>
     <header>
-        <div class="titlebar">
-            <h1 class="title draggable">{{app.window.title}}</h1>
-            <div class="titlebar-tool">
-                <button v-on:click="titlebarFn('min')">&minus;</button>
-                <button v-on:click="titlebarFn('toggle')" :class="{full: winToggle}"><i></i></button>
-                <button v-on:click="titlebarFn('close')">&times;</button>
-            </div>
-        </div>
+        <title-bar></title-bar>
         <section>
             <!-- 一级菜单 -->
             <div class="toolbar">
@@ -379,9 +372,7 @@
             </template>
         </section>
     </main>
-    <footer class="footer draggable">
-        {{app.window.title}} ({{app.name}}-v{{app.version}}) {{app.copyright}}
-    </footer>
+    <footer-bar></footer-bar>
 </div>
 
 <!-- dialog -->

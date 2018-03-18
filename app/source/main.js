@@ -1,5 +1,4 @@
 const win = nw.Window.get(),
-    version = require('./version'),
     config = require('./config'),
     Media = require('./Media'),
     utils = require('./utils'),
@@ -7,12 +6,15 @@ const win = nw.Window.get(),
     Vue = require('./vue.min'),
     shortcut = require('./shortcut'),
     crypto = require('crypto'),
+    appInfo = Object.freeze(nw.App.manifest),
 
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
     logoInput = document.createElement('input'),
     canvas = document.createElement('canvas');
+
 //init
+require('./version');
 require('./directives');
 require('./components');
 
@@ -238,21 +240,6 @@ const vue = new Vue({
         });
     },
 	methods: {
-        getThumb(item){
-            if(!item) return;
-            Media.thumb({
-                input: item.path,
-                time: item.currentTime,
-                success(src){
-                    item.thumb = src;
-                },
-                fail(){
-                    utils.dialog.show = true;
-                    utils.dialog.title = '错误！';
-                    utils.dialog.body = '<p>微调发生错误！</p>';
-                }
-            });
-        },
         reItem(item){
             let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv;
                 tobita = item.bita <= config.output.bita ? item.bita : config.output.bita,
@@ -274,34 +261,6 @@ const vue = new Vue({
         },
         zoomItemFn(e){
             vue.viewWidth = win.width * parseFloat(e.currentTarget.value);
-        },
-        //event function
-        titlebarFn(name){
-            switch(name){
-                case 'min':
-                {
-                    win.minimize();
-                }
-                break;
-                case 'toggle':
-                {
-                    let w = screen.width * .8,
-                        h = Math.round(w * .5625),
-                        x = (screen.width - w) / 2,
-                        y = (screen.height - h) / 2;
-                    if(vue.winToggle = !vue.winToggle){
-                        win.maximize();
-                    }else{
-                        win.moveTo(x, y);
-                        win.resizeTo(w, h);
-                    }
-                }
-                break;
-                case 'close':
-                {
-                    win.close(true);
-                }
-            }
         },
         toolbarFn(e){
             let target = e.currentTarget,
@@ -364,7 +323,7 @@ const vue = new Vue({
                     };
                     break;
                 case 'helpBook':
-                    nw.Shell.openExternal(vue.app.documentation);
+                    nw.Shell.openExternal(appInfo.documentation);
                     break;
             }
         },
@@ -610,7 +569,6 @@ const vue = new Vue({
             }
         },
         logoFn(name, val, index){
-            console.log(index);
             if(name === 'add'){
                 logoInput.dataset.activeIndex = index;
                 logoInput.value = '';
@@ -880,7 +838,7 @@ const vue = new Vue({
                     if(item.canplay){
                         vue.$refs['id'+index][0].currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -897,7 +855,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -914,7 +872,7 @@ const vue = new Vue({
                         video.pause();
                         video.currentTime = item.currentTime;
                     }else if(item.type === 'video'){
-                        vue.getThumb(item);
+                        Media.useThumb(item);
                     }
                 }
                 break;
@@ -951,7 +909,7 @@ const vue = new Vue({
                             if(item.canplay){
                                 vue.$refs['id'+index][0].currentTime = item.currentTime;
                             }else if(item.type === 'video'){
-                                vue.getThumb(item);
+                                Media.useThumb(item);
                             }
                         }
                     }else{
@@ -1040,6 +998,4 @@ const vue = new Vue({
     }
 });
 
-document.title = vue.app.window.title;
-//check update
-version(vue.app.documentation, vue.app.version, utils.dialog);
+document.title = appInfo.window.title;
