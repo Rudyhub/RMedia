@@ -12,7 +12,9 @@ const win = nw.Window.get(),
     outputEl = document.createElement('input'),
     logoInput = document.createElement('input'),
     canvas = document.createElement('canvas');
-
+//init
+require('./directives');
+require('./components');
 
 win.maximize();
 win.show();
@@ -216,7 +218,7 @@ const vue = new Vue({
                     logoPath = logoInput.files[0].path,
                     img = new Image();
                 img.onload = ()=>{
-                    if(activeIndex === 'all'){
+                    if(!activeIndex){
                         vue.batchParams.logo = logoPath;
                         for(let key in vue.items){
                             if(vue.items[key].lock){
@@ -500,19 +502,19 @@ const vue = new Vue({
                 utils.canvasToFile(vue.output+'\\sprite.png', canvas.toDataURL('image/png'), utils.dialog);
             }else if(code === 'align'){
                 alignFn( parseInt(arguments[1].target.value) );
-            }else if(code == 'matrix'){
+            }else if(code === 'matrix'){
                 vue.sprite.align = parseInt(arguments[1].target.value);
                 alignFn( parseInt(vue.$refs.spriteAlign.value) );
             }
             function alignFn(val){
-                if(vue.sprite.align == 1){
+                if(vue.sprite.align === 1){
                     vue.sprite.listCss = '';
                     switch(val){
                         case 2: vue.sprite.itemCss = 'vertical-align: middle;'; break;
                         case 3: vue.sprite.itemCss = 'vertical-align: bottom;'; break;
                         default: vue.sprite.itemCss = 'vertical-align: top;';
                     }
-                }else if(vue.sprite.align == 2){
+                }else if(vue.sprite.align === 2){
                     vue.sprite.itemCss = '';
                     switch(val){
                         case 2:
@@ -608,9 +610,9 @@ const vue = new Vue({
             }
         },
         logoFn(name, val, index){
-            console.log(index)
+            console.log(index);
             if(name === 'add'){
-                logoInput.dataset.activeIndex = 'all';
+                logoInput.dataset.activeIndex = index;
                 logoInput.value = '';
                 logoInput.click();
             }else{
@@ -648,6 +650,13 @@ const vue = new Vue({
                         break;
                     case 'del':
                         item.logo  = '';
+                        break;
+                    case 'start':
+                        item.logoStart = item.currentTime;
+                        break;
+                    case 'end':
+                        item.logoEnd = item.currentTime;
+                        break;
                 }
             }
 
@@ -912,17 +921,21 @@ const vue = new Vue({
                 case 'setstart':
                 {
                     item.startTime = item.currentTime;
-                    if(item.startTime > item.endTime){
-                        item.endTime = item.startTime;
-                    }
+                    if(item.startTime > item.endTime) item.endTime = item.startTime;
+
+                    if(item.logoStart < item.startTime) item.logoStart = item.startTime;
+
+                    if(item.logoEnd < item.logoStart) item.logoEnd = item.logoStart;
                 }
                 break;
                 case 'setend':
                 {
-                    if(item.currentTime < item.startTime){
-                        item.startTime = item.currentTime;
-                    }
                     item.endTime = item.currentTime;
+                    if(item.endTime < item.startTime) item.startTime = item.endTime;
+
+                    if(item.logoEnd > item.endTime) item.logoEnd = item.endTime;
+
+                    if(item.logoStart > item.logoEnd) item.logoStart = item.logoEnd;
                 }
                 break;
                 case 'setcover':

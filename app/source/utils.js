@@ -6,12 +6,8 @@ formats = {
     video: [['mp4','ogg','webm','mpeg','mkv'],['ts','flv','rm','mov','wmv','avi','rmvb']],
     audio: [['mp3','wav','mpeg'],['wma','mid']]
 };
-require('./directives')(Vue);
-require('./components')(Vue);
 
 module.exports = {
-    fs,
-    Vue,
     rename(oldname, newname, callback){
         fs.access(newname, (err)=>{
             if(!err){

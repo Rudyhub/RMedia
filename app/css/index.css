@@ -584,7 +584,10 @@ summary{
 }
 .item-toname,
 .item-range-time{
-    width: 98%;
+    width: 100%;
+}
+.item-range-time{
+    padding: 0;
 }
 .item-range-logo{
     width: calc(100% - 5.5em);

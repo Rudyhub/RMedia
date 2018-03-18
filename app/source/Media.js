@@ -1,13 +1,14 @@
 const childprocess = require('child_process'),
 config = require('./config'),
-utils = require('./utils');
+utils = require('./utils'),
+fs = require('fs');
 
 //用于暂存单帧base64数据的临时文件，即预览图数据来源。
 let THUMB_TEMP_FILE = 'rmedia.temp';
-utils.fs.writeFileSync(THUMB_TEMP_FILE,'');
+fs.writeFileSync(THUMB_TEMP_FILE,'');
 
 nw.process.on('exit',()=>{
-    utils.fs.unlinkSync(THUMB_TEMP_FILE);
+    fs.unlinkSync(THUMB_TEMP_FILE);
 });
 
 module.exports = {
@@ -116,7 +117,7 @@ module.exports = {
 
         ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
-                thumb = window.URL.createObjectURL(new Blob([utils.fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
+                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{
                 if(status && o.fail){
                     status = false;

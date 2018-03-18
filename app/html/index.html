@@ -113,15 +113,6 @@
                 </div>
                 <div class="drop-panel-group">
                     <control-logo v-on:logo="logoFn"></control-logo>
-<!--                     设置水印(<i class="icon icon-pushpin" title="只对锁定项目生效"></i>)：
-                    <i class="icon-btn icon icon-plus" v-on:click="batchParamsFn($event, 'logo', 'add')"></i>
-                    <i class="icon-btn icon icon-minus" v-on:click="batchParamsFn($event, 'logo', 'del')"></i>
-                    <p class="tip">尺寸比例：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'size')" min="0" max="100" step="1" type="range"></p>
-                    <p class="tip">水平位置：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'left')" min="0" max="100" step="1" type="range"></p>
-                    <p class="tip">垂直位置：<input class="drop-panel-logo-range" v-on:input="logoFn($event,'top')" min="0" max="100" step="1" type="range"></p> -->
-<!--                     <div class="tip drop-panel-logobox">
-                        <img class="drop-panel-logo" :src="batchParams.logo" alt="LOGO预览区">
-                    </div> -->
                 </div>
                 <div class="drop-panel-group">
                     <p>
@@ -252,7 +243,7 @@
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
                             <!-- logo -->
 
-                            <img class="item-logo" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}" v-show="item.logo" :src="item.logo" v-drag>
+                            <img class="item-logo" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}" v-show="item.logo && item.currentTime>=item.logoStart && item.currentTime<=item.logoEnd" :src="item.logo" v-drag>
                         </div>
                     </div>
                     <div class="item-tools">
@@ -268,7 +259,15 @@
                             <input class="item-range-time" type="range"
                                    v-on:input="itemFn($event,index,'currentTime')"
                                    v-on:change="itemFn($event,index,'timeSlide')"
-                                   :style="'background-image: linear-gradient(90deg, #ffb100, #4b7bff '+item.startTime/item.duration*100+'%,transparent '+item.startTime/item.duration*100+'%, transparent '+item.endTime/item.duration*100+'%, #4b7bff '+item.endTime/item.duration*100+'%, #ffb100)'"
+                                   :style="'background-image: linear-gradient(90deg, #888, #888 '+item.startTime/item.duration*100+'%,'+
+                                   'transparent '+item.startTime/item.duration*100+'%,'+
+                                   (item.logo ?
+                                   'transparent '+item.logoStart/item.duration*100+'%,'+
+                                   '#a00 '+item.logoStart/item.duration*100+'%,'+
+                                   '#a00 '+item.logoEnd/item.duration*100+'%,'+
+                                   'transparent '+item.logoEnd/item.duration*100+'%,' : '')+
+                                   'transparent '+item.endTime/item.duration*100+'%,'+
+                                   '#888 '+item.endTime/item.duration*100+'%, #888)'"
                                    :value="item.currentTime" min="0" :max="item.duration" step="0.001" title="时间控制">
                         </li>
                         <li class="item-controls-row text-center">
@@ -281,32 +280,7 @@
                     </ul>
                 </dd>
                 <dd class="item-row">
-                    <control-logo v-on:logo="logoFn" :param="index"></control-logo>
-                    <!--<ul class="item-controls scale-0" v-on:click="itemFn($event,index,'logo')" :class="(item.type!=='audio' && item.totype!=='audio'&& item.towidth>0 && item.toheight>0 && !item.series)?'zoom-in':''">-->
-                        <!--<li class="item-controls-row">-->
-                            <!--LOGO添加删除：-->
-                            <!--<i class="icon-btn icon icon-plus" data-name="add"></i>-->
-                            <!--<i class="icon-btn icon icon-minus" data-name="del"></i>-->
-                        <!--</li>-->
-                        <!--<li class="item-controls-row">-->
-                            <!--LOGO显示时间：-->
-                            <!--<button class="btn-s" data-name="start" :disabled="item.currentTime < item.startTime || item.currentTime > item.endTime">{{item.logoStart | timemat}}</button> - -->
-                            <!--<button class="btn-s" data-name="end" :disabled="item.currentTime < item.startTime || item.currentTime > item.endTime">{{item.logoEnd | timemat}}</button>-->
-                        <!--</li>-->
-                        <!--<li class="item-controls-row">-->
-                            <!--LOGO快速定位：-->
-                            <!--<button class="btn-s" data-name="lt">左上</button>-->
-                            <!--<button class="btn-s" data-name="lb">左下</button>-->
-                            <!--<button class="btn-s" data-name="ct">中心</button>-->
-                            <!--<button class="btn-s" data-name="rt">右上</button>-->
-                            <!--<button class="btn-s" data-name="rb">右下</button>-->
-                        <!--</li>-->
-                        <!--<li class="item-controls-row">LOGO精确控制：<br>-->
-                            <!--尺寸比例：<input class="item-range-logo" v-on:input="logoFn($event,'size',index)" min="0" max="100" step="1" type="range" title="尺寸控制"><br>-->
-                            <!--水平位置：<input class="item-range-logo" v-on:input="logoFn($event,'left',index)" min="0" max="100" step="1" type="range" title="水平方向位置控制"><br>-->
-                            <!--垂直位置：<input class="item-range-logo" v-on:input="logoFn($event,'top',index)" min="0" max="100" step="1" type="range" title="垂直方向位置控制"><br>-->
-                        <!--</li>-->
-                    <!--</ul>-->
+                    <control-logo v-on:logo="logoFn" :param="index" :item="item"></control-logo>
                 </dd>
                 <dd class="item-row">
                     <div class="item-old">

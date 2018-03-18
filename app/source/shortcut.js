@@ -2,10 +2,10 @@ module.exports = (o)=>{
 	let docListener = document.addEventListener;
 	docListener('keyup',function(e){
 		if(e.ctrlKey){
-			if(e.key == 'o'){
+			if(e.key === 'o'){
 				o.inputEl.value = '';
 				o.inputEl.click();
-			}else if(e.key == 's'){
+			}else if(e.key === 's'){
 				o.inputEl.value = '';
 				o.outputEl.click();
 			}
