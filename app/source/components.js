@@ -64,9 +64,9 @@ Vue.component('control-logo',{
             <i v-on:click="logoFn($event,'add',param)" class="icon-btn icon icon-plus"></i>
             <i v-on:click="logoFn($event,'del',param)" class="icon-btn icon icon-minus"></i>
             <span v-if="param">
-                <button v-on:click="logoFn($event,'start',param)" class="btn-s" :disabled="item.currentTime<item.startTime || item.currentTime>=item.logoEnd" title="开始显示">{{item.logoStart | timemat}}</button>
+                <button v-on:click="logoFn($event,'start',param)" class="btn-s" :disabled="!item.logo || item.currentTime<item.startTime || item.currentTime>=item.logoEnd" title="开始显示">{{item.logoStart | timemat}}</button>
                 -
-                <button v-on:click="logoFn($event, 'end', param)" class="btn-s" :disabled="item.currentTime>item.endTime || item.currentTime<=item.logoStart" title="结束显示">{{item.logoEnd | timemat  }}</button>
+                <button v-on:click="logoFn($event, 'end', param)" class="btn-s" :disabled="!item.logo || item.currentTime>item.endTime || item.currentTime<=item.logoStart" title="结束显示">{{item.logoEnd | timemat  }}</button>
             </span>
         </div>
         <div class="control-logo-body">
