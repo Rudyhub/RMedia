@@ -14,7 +14,9 @@ Vue.component('title-bar',{
         </div>
     </div>`,
     methods: {
-        minimize: win.minimize,
+        minimize(){
+            win.minimize();
+        },
         toggle(e){
             let classList = e.currentTarget.classList,
                 w = screen.width * .8,

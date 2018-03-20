@@ -127,13 +127,16 @@ const vue = new Vue({
                     });
                 break;
                 case 'concat':
+                    let tmpType;
                     command = [];
                     for(key in vue.items){
                         item = vue.items[key];
                         if(item.lock){
-                            if(item.type !== 'video'){
+                            if(!tmpType) tmpType = item.type;
+                            if(item.type !== tmpType || item.type === 'image'){
                                 utils.dialog.show = true;
-                                utils.dialog.body = '拼接失败！文件“'+item.path+'”不是视频，无法拼接。';
+                                utils.dialog.body = '所选文件“'+item.path+'”不可拼接！音、视频不能混合拼接，且不支持图片。';
+                                return false;
                             }else{
                                 command.push('-i', item.path);
                             }
