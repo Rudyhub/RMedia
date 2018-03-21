@@ -216,6 +216,6 @@ const capture = {
 			log.end();
 		}
 	}
-}
+};
 
 module.exports = capture;

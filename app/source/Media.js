@@ -3,14 +3,6 @@ config = require('./config'),
 utils = require('./utils'),
 fs = require('fs');
 
-//用于暂存单帧base64数据的临时文件，即预览图数据来源。
-let THUMB_TEMP_FILE = 'rmedia.temp';
-fs.writeFileSync(THUMB_TEMP_FILE,'');
-
-nw.process.on('exit',()=>{
-    fs.unlinkSync(THUMB_TEMP_FILE);
-});
-
 module.exports = {
     ffmpeg: null,
     metadata(url,success,fail){
@@ -115,9 +107,9 @@ module.exports = {
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
 
-        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
+        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.thumbPath+'"',(err,stdout,stderr)=>{
             if(!err){
-                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
+                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(config.thumbPath)], {type:'image/'+o.format}));
             }else{
                 if(status && o.fail){
                     status = false;
@@ -207,7 +199,7 @@ module.exports = {
             this.ffmpeg.signalCode = signalCode;
         }
     },
-    cammand(item, outFolder){
+    command(item, outFolder){
         let bita, bitv, w, h, total, outPath, result, exists;
 
         bita = item.bita < config.output.bita ? item.bita : config.output.bita;
@@ -386,12 +378,12 @@ module.exports = {
             line,
             ffmpeg;
 
-        if(!o.cammand) return;
-        if(!o.cammand.length) return;
+        if(!o.command) return;
+        if(!o.command.length) return;
 
-        o.cammand.unshift('-hide_banner','-y');
+        o.command.unshift('-hide_banner','-y');
 
-        ffmpeg = childprocess.spawn(config.ffmpegPath, o.cammand);
+        ffmpeg = childprocess.spawn(config.ffmpegPath, o.command);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
             if(o.progress){
@@ -408,5 +400,88 @@ module.exports = {
             if(o.complete) o.complete(2, '启动失败 '+err);
         });
         self.ffmpeg = ffmpeg;
+    },
+    concat(type,items, output){
+        let _this = this,
+            ext = type === 'video' ? '.mp4' : '.mp3',
+            w = items[0].width,
+            h = items[0].height,
+            total = 0,
+            allTotal = 0,
+            i = 0,
+            command = [],
+            list = null;
+
+        if(w%2 !== 0) w--;
+        if(h%2 !== 0) h--;
+
+        try{
+            fs.unlinkSync('temp/list.txt');
+            fs.rmdirSync('temp');
+        }catch(err){}
+        fs.mkdirSync('temp');
+
+        list = fs.createWriteStream('temp/list.txt', {
+            flags: 'a',
+            encoding: 'utf-8',
+            mode: '0666'
+        });
+
+        utils.dialog.show = true;
+        if(items[i]){
+            utils.dialog.title = '处理进度';
+            recycle(items[i]);
+        }else{
+            utils.dialog.body = '文件输入错误!';
+        }
+
+        function recycle(item){
+            command.splice(0,command.length);
+            command.push('-y', '-hide_banner');
+            total = item.endTime - item.startTime;
+            allTotal += total;
+            if(total > 0){
+                if(item.startTime > 0) command.push('-ss', item.startTime);
+                if(item.endTime < item.duration) command.push('-t', total);
+            }
+            command.push('-i', item.path, '-s', w+'x'+'h', '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1', 'temp/'+i+ext);
+            list.write(`file 'temp/${i+ext}'`);
+
+            console.log(command);
+            _this.convert({
+                command,
+                progress(time){
+                    utils.dialog.body = '正在处理“'+item.path+'”...'+Math.round(time/total * 100) + '%';
+                },
+                complete(code, msg){
+                    if(code === 0){
+                        i++;
+                        if(items[i]){
+                            recycle(items[i]);
+                        }else{
+                            list.end();
+                            command.splice(0, command.length);
+                            command.push('-f', 'concat', '-i', 'temp/list.txt', '-vcodec', 'copy', output+ext);
+                            _this.convert({
+                                command,
+                                progress(time){
+                                    utils.dialog.body = '正在拼接...' +Math.round(time/allTotal * 100) + '%';
+                                },
+                                complete(){
+                                    utils.dialog.body = '拼接完成 100%。文件位置：“'+output+ext+'”。';
+                                    try{
+                                        fs.unlinkSync('temp/list.txt');
+                                        fs.rmdirSync('temp');
+                                    }catch(err){}
+                                }
+                            });
+                        }
+                    }else{
+                        utils.dialog.show = true;
+                        utils.dialog.body = '拼接失败:'+msg;
+                    }
+                }
+            });
+        }
     }
 };

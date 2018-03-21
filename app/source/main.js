@@ -127,8 +127,10 @@ const vue = new Vue({
                     });
                 break;
                 case 'concat':
-                    let tmpType;
-                    command = [];
+                {
+                    let tmpType,
+                        items = [];
+                    //检查是否被允许
                     for(key in vue.items){
                         item = vue.items[key];
                         if(item.lock){
@@ -138,11 +140,17 @@ const vue = new Vue({
                                 utils.dialog.body = '所选文件“'+item.path+'”不可拼接！音、视频不能混合拼接，且不支持图片。';
                                 return false;
                             }else{
-                                command.push('-i', item.path);
+                                items.push(item);
                             }
                         }
                     }
-                    console.log(command);
+                    if(items.length > 1){
+                        Media.concat(tmpType, items, vue.output+'\\'+vue.batchParams.nameAll);
+                    }else{
+                        utils.dialog.show = true;
+                        utils.dialog.body = '无法拼接，要实现拼接至少两个文件。';
+                    }
+                }
                     break;
                 case 'mix':
 
@@ -166,7 +174,7 @@ const vue = new Vue({
             }
         },
         convertFn(e){
-            let total, cammand, keys, len, i, target, options;
+            let total, command, keys, len, i, target, options;
 
             target = e.currentTarget;
             target.dataset.stopAll = 0;
@@ -199,10 +207,10 @@ const vue = new Vue({
             }
 
             function recycle(item){
-                cammand = Media.cammand(item, vue.output);
+                command = Media.command(item, vue.output);
                 total = item.endTime - item.startTime;
                 options = {
-                    cammand: cammand.cmd,
+                    command: command.cmd,
                     progress(t){
                         if(total){
                             item.progress = Math.round((t/total)*100);
@@ -253,12 +261,12 @@ const vue = new Vue({
                 item.progress = 0;
                 vue.isStarted = true;
 
-                if(cammand.error){
+                if(command.error){
                     utils.dialog.show = true;
-                    utils.dialog.body = cammand.error.message;
-                    if(cammand.error.code === 1){
+                    utils.dialog.body = command.error.message;
+                    if(command.error.code === 1){
                         utils.dialog.title = '错误！';
-                    }else if(cammand.error.code === 2){
+                    }else if(command.error.code === 2){
                         utils.dialog.title = '文件已存在！';
                         utils.dialog.setBtn('覆盖','否');
                         utils.dialog.callback = (c)=>{
