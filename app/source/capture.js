@@ -4,6 +4,8 @@ config = require('./config'),
 utils = require('./utils'),
 fs = require('fs');
 
+let CAP_LOG_TEMP_FILE = utils.path(config.temp+'\\cap_log_temp_file.temp');
+
 const capture = {
 	ffmpeg: null,
 	audioDevices(fn){
@@ -112,7 +114,7 @@ const capture = {
 		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
 		//删除日志文件
 		try{
-			fs.unlinkSync(config.logPath);
+			fs.unlinkSync(CAP_LOG_TEMP_FILE);
 		}catch(err){}
 		error = null;
 		isComplete = false;
@@ -176,7 +178,7 @@ const capture = {
 			});
 		}
 		function begin(){
-			log = fs.createWriteStream(config.logPath, {
+			log = fs.createWriteStream(CAP_LOG_TEMP_FILE, {
 				flags: 'a',  
 				encoding: 'utf-8',  
 				mode: '0666'
@@ -193,14 +195,14 @@ const capture = {
 			});
 			ffmpeg.once('close', (a, b)=>{
 				if(a !== 0){
-					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(CAP_LOG_TEMP_FILE,'utf-8')+'</p>');
 					error.code = 1;
 				}
 				complete();
 			});
 			ffmpeg.once('error', ()=>{
 				if(!error){
-					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(CAP_LOG_TEMP_FILE,'utf-8')+'</p>');
 					error.code = 2;
 				}
 				complete();

@@ -276,40 +276,27 @@ if(checkPath.error){
 		utils.dialog.body = '<p>ffmpeg文件丢失，请确保安装目录下的文件夹ffmpeg/有ffmpeg.exe和ffprobe.exe文件。</p>';
 	}
 }
-/*
-======== 准备一些临时文件 =================
- */
 
-let TEMP_FOLDER = 'temp',
-	//用于暂存单帧base64数据的临时文件，即预览图数据来源。
-	THUMB_TEMP_FILE = TEMP_FOLDER+'\\thumb_temp_file.temp',
-    //用地录屏时的暂时标准错误流信息
-    CAP_LOG_TEMP_FILE = TEMP_FOLDER+'\\cap_log_temp_file.temp';
+//======== 准备临时文件夹 =================
 
-fs.mkdir(TEMP_FOLDER,(err)=>{
-    if(err){
-        utils.dialog.show = true;
-        utils.dialog.body = '准备临时文件夹时发生了错误。信息如：'+err.message;
-    }else{
-        fs.writeFileSync(THUMB_TEMP_FILE,'');
-        fs.writeFileSync(CAP_LOG_TEMP_FILE,'');
-    }
-});
+let TEMP_FOLDER = 'temp';
+if(!utils.has(TEMP_FOLDER)){
+    fs.mkdir(TEMP_FOLDER,(err)=>{
+        if(err){
+            utils.dialog.show = true;
+            utils.dialog.body = '准备临时文件夹时发生了错误。信息如：'+err.message;
+        }
+    });
+}
 
 nw.process.on('exit',()=>{
-	try{
-		fs.unlinkSync(THUMB_TEMP_FILE);
-		fs.unlinkSync(CAP_LOG_TEMP_FILE);
-		fs.rmdirSync(TEMP_FOLDER);
-    }catch(err){}
+	cp.execSync('rd /s /q '+TEMP_FOLDER);
 });
 
 module.exports = {
 	appRoot: appRoot,
 	ffmpegPath: ffmpegPath,
-	ffprobePath: utils.path(appRoot+'\\ffmpeg\\ffprobe.exe'),
-    thumbPath: utils.path(appRoot + '\\' + THUMB_TEMP_FILE),
-	logPath: utils.path(appRoot + '\\' + CAP_LOG_TEMP_FILE),
+	temp: TEMP_FOLDER,
 	output: {
 		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,
@@ -1349,6 +1336,9 @@ config = __webpack_require__(3),
 utils = __webpack_require__(0),
 fs = __webpack_require__(1);
 
+let THUMB_TEMP_FILE = utils.path(config.temp+'\\thumb_temp_file.temp'),
+    CONCAT_TEMP_LIST_FILE = utils.path(config.temp+'\\concat_temp_list_file.txt');
+
 module.exports = {
     ffmpeg: null,
     metadata(url,success,fail){
@@ -1453,9 +1443,11 @@ module.exports = {
         if(h%2 !== 0) h--;
         if(w%2 !== 0) w--;
 
-        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+config.thumbPath+'"',(err,stdout,stderr)=>{
+        if(!utils.has(THUMB_TEMP_FILE)) fs.writeFileSync(THUMB_TEMP_FILE, '');
+
+        ffmpeg = childprocess.exec(config.ffmpegPath+(o.time ? ' -ss '+o.time: '')+' -i "'+o.input+'" -vframes 1 -s '+w+'x'+h+' -y  -f '+format+' "'+THUMB_TEMP_FILE+'"',(err,stdout,stderr)=>{
             if(!err){
-                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(config.thumbPath)], {type:'image/'+o.format}));
+                thumb = window.URL.createObjectURL(new Blob([fs.readFileSync(THUMB_TEMP_FILE)], {type:'image/'+o.format}));
             }else{
                 if(status && o.fail){
                     status = false;
@@ -1762,12 +1754,10 @@ module.exports = {
         if(h%2 !== 0) h--;
 
         try{
-            fs.unlinkSync('temp/list.txt');
-            fs.rmdirSync('temp');
+            fs.unlinkSync(CONCAT_TEMP_LIST_FILE);
         }catch(err){}
-        fs.mkdirSync('temp');
 
-        list = fs.createWriteStream('temp/list.txt', {
+        list = fs.createWriteStream(CONCAT_TEMP_LIST_FILE, {
             flags: 'a',
             encoding: 'utf-8',
             mode: '0666'
@@ -1783,14 +1773,14 @@ module.exports = {
 
         function recycle(item){
             command.splice(0,command.length);
-            command.push('-y', '-hide_banner');
+
             total = item.endTime - item.startTime;
             allTotal += total;
             if(total > 0){
                 if(item.startTime > 0) command.push('-ss', item.startTime);
                 if(item.endTime < item.duration) command.push('-t', total);
             }
-            command.push('-i', item.path, '-s', w+'x'+'h', '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1', 'temp/'+i+ext);
+            command.push('-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1', 'temp/'+i+ext);
             list.write(`file 'temp/${i+ext}'`);
 
             console.log(command);
@@ -1807,7 +1797,7 @@ module.exports = {
                         }else{
                             list.end();
                             command.splice(0, command.length);
-                            command.push('-f', 'concat', '-i', 'temp/list.txt', '-vcodec', 'copy', output+ext);
+                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE, '-vcodec', 'copy', output+ext);
                             _this.convert({
                                 command,
                                 progress(time){
@@ -1815,10 +1805,6 @@ module.exports = {
                                 },
                                 complete(){
                                     utils.dialog.body = '拼接完成 100%。文件位置：“'+output+ext+'”。';
-                                    try{
-                                        fs.unlinkSync('temp/list.txt');
-                                        fs.rmdirSync('temp');
-                                    }catch(err){}
                                 }
                             });
                         }
@@ -1841,6 +1827,8 @@ config = __webpack_require__(3),
 {spawn} = __webpack_require__(4),
 utils = __webpack_require__(0),
 fs = __webpack_require__(1);
+
+let CAP_LOG_TEMP_FILE = utils.path(config.temp+'\\cap_log_temp_file.temp');
 
 const capture = {
 	ffmpeg: null,
@@ -1950,7 +1938,7 @@ const capture = {
 		let ffmpeg, cammand, line, log, error, isComplete, sw, sh, w, h, scale, rw, rh;
 		//删除日志文件
 		try{
-			fs.unlinkSync(config.logPath);
+			fs.unlinkSync(CAP_LOG_TEMP_FILE);
 		}catch(err){}
 		error = null;
 		isComplete = false;
@@ -2014,7 +2002,7 @@ const capture = {
 			});
 		}
 		function begin(){
-			log = fs.createWriteStream(config.logPath, {
+			log = fs.createWriteStream(CAP_LOG_TEMP_FILE, {
 				flags: 'a',  
 				encoding: 'utf-8',  
 				mode: '0666'
@@ -2031,14 +2019,14 @@ const capture = {
 			});
 			ffmpeg.once('close', (a, b)=>{
 				if(a !== 0){
-					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>录制失败：</p><p>'+fs.readFileSync(CAP_LOG_TEMP_FILE,'utf-8')+'</p>');
 					error.code = 1;
 				}
 				complete();
 			});
 			ffmpeg.once('error', ()=>{
 				if(!error){
-					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(config.logPath,'utf-8')+'</p>');
+					error = new Error('<p>启动失败：</p><p>'+fs.readFileSync(CAP_LOG_TEMP_FILE,'utf-8')+'</p>');
 					error.code = 2;
 				}
 				complete();
