@@ -76,7 +76,7 @@ const vue = new Vue({
 	},
 	methods: {
         reItem(item){
-            let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv;
+            let tobitv = item.bitv <= config.output.bitv ? item.bitv : config.output.bitv,
                 tobita = item.bita <= config.output.bita ? item.bita : config.output.bita,
                 quality = (tobitv+tobita)/(item.bitv+item.bita)*100;
 
@@ -100,7 +100,6 @@ const vue = new Vue({
         toolbarFn(e){
             let target = e.currentTarget,
                 name = target.name,
-                command,
                 item,
                 key;
 

@@ -415,7 +415,9 @@ module.exports = {
             allTotal = 0,
             i = 0,
             command = [],
-            list = null;
+            list = null,
+            bitv = 0,
+            bita = 0;
 
         if(w%2 !== 0) w--;
         if(h%2 !== 0) h--;
@@ -433,12 +435,15 @@ module.exports = {
         utils.dialog.show = true;
         if(items[i]){
             utils.dialog.title = '处理进度';
+            utils.dialog.body = '准备就绪!';
             recycle(items[i]);
         }else{
             utils.dialog.body = '文件输入错误!';
         }
 
         function recycle(item){
+            bita = item.bita < config.output.bita ? item.bita : config.output.bita;
+            bitv = Math.round(item.quality*(item.bitv+item.bita)/100 - bita);
             command.splice(0,command.length);
 
             total = item.endTime - item.startTime;
@@ -447,10 +452,13 @@ module.exports = {
                 if(item.startTime > 0) command.push('-ss', item.startTime);
                 if(item.endTime < item.duration) command.push('-t', total);
             }
-            command.push('-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1', 'temp/'+i+ext);
-            list.write(`file 'temp/${i+ext}'`);
 
-            console.log(command);
+            command.push('-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1');
+            if(bitv) command.push('-vb', bitv+'k');
+            command.push(utils.path(config.temp+'\\'+i+'.ts'));
+
+            list.write(`file ${config.temp}'/${i}.ts'\n`);
+
             _this.convert({
                 command,
                 progress(time){
@@ -464,11 +472,11 @@ module.exports = {
                         }else{
                             list.end();
                             command.splice(0, command.length);
-                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE, '-vcodec', 'copy', output+ext);
+                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE, '-q', 1, output+ext);
                             _this.convert({
                                 command,
                                 progress(time){
-                                    utils.dialog.body = '正在拼接...' +Math.round(time/allTotal * 100) + '%';
+                                    utils.dialog.body = '正在拼接...' + Math.round(time/allTotal * 100) + '%';
                                 },
                                 complete(){
                                     utils.dialog.body = '拼接完成 100%。文件位置：“'+output+ext+'”。';
