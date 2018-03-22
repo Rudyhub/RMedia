@@ -19,13 +19,17 @@ if(checkPath.error){
 //======== 准备临时文件夹 =================
 
 let TEMP_FOLDER = 'temp';
-if(!utils.has(TEMP_FOLDER)){
-    fs.mkdir(TEMP_FOLDER,(err)=>{
-        if(err){
+if(utils.has(TEMP_FOLDER)){
+    cp.exec('rd /s /q '+TEMP_FOLDER, (err)=>{
+    	if(err){
             utils.dialog.show = true;
-            utils.dialog.body = '准备临时文件夹时发生了错误。信息如：'+err.message;
-        }
-    });
+            utils.dialog.body = '清除临时文件夹时发生了错误。信息如：'+err.message.toString('utf-8');
+		}else{
+            fs.mkdirSync(TEMP_FOLDER);
+		}
+	});
+}else{
+    fs.mkdirSync(TEMP_FOLDER);
 }
 
 nw.process.on('exit',()=>{
@@ -36,6 +40,7 @@ module.exports = {
 	appRoot: appRoot,
 	ffmpegPath: ffmpegPath,
 	temp: TEMP_FOLDER,
+    audioThumb: utils.path(appRoot + '\\css\\audio.jpg'),
 	output: {
 		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,

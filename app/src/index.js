@@ -280,13 +280,17 @@ if(checkPath.error){
 //======== 准备临时文件夹 =================
 
 let TEMP_FOLDER = 'temp';
-if(!utils.has(TEMP_FOLDER)){
-    fs.mkdir(TEMP_FOLDER,(err)=>{
-        if(err){
+if(utils.has(TEMP_FOLDER)){
+    cp.exec('rd /s /q '+TEMP_FOLDER, (err)=>{
+    	if(err){
             utils.dialog.show = true;
-            utils.dialog.body = '准备临时文件夹时发生了错误。信息如：'+err.message;
-        }
-    });
+            utils.dialog.body = '清除临时文件夹时发生了错误。信息如：'+err.message.toString('utf-8');
+		}else{
+            fs.mkdirSync(TEMP_FOLDER);
+		}
+	});
+}else{
+    fs.mkdirSync(TEMP_FOLDER);
 }
 
 nw.process.on('exit',()=>{
@@ -297,6 +301,7 @@ module.exports = {
 	appRoot: appRoot,
 	ffmpegPath: ffmpegPath,
 	temp: TEMP_FOLDER,
+    audioThumb: utils.path(appRoot + '\\css\\audio.jpg'),
 	output: {
 		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,
@@ -452,7 +457,8 @@ const vue = new Vue({
                 case 'concat':
                 {
                     let tmpType,
-                        items = [];
+                        items = [],
+                        output = vue.output+'\\'+vue.batchParams.nameAll;
                     //检查是否被允许
                     for(key in vue.items){
                         item = vue.items[key];
@@ -467,8 +473,22 @@ const vue = new Vue({
                             }
                         }
                     }
+                    if(tmpType === 'video'){
+                        output += '.mp4';
+                    }else{
+                        output += '.mp3';
+                    }
                     if(items.length > 1){
-                        Media.concat(tmpType, items, vue.output+'\\'+vue.batchParams.nameAll);
+                        if(utils.has(output)){
+                            utils.dialog.show = true;
+                            utils.dialog.body = '文件“'+output+'”已存在，是否覆盖？';
+                            utils.dialog.setBtn('覆盖','否');
+                            utils.dialog.callback = (code)=>{
+                                if(code === 0) Media.concat(tmpType, items, output);
+                            }
+                        }else{
+                            Media.concat(tmpType, items, output);
+                        }
                     }else{
                         utils.dialog.show = true;
                         utils.dialog.body = '无法拼接，要实现拼接至少两个文件。';
@@ -476,7 +496,44 @@ const vue = new Vue({
                 }
                     break;
                 case 'mix':
-
+                {
+                    let tmpType,
+                        items = [],
+                        output = vue.output+'\\'+vue.batchParams.nameAll;
+                    for(key in vue.items){
+                        item = vue.items[key];
+                        if(item.lock){
+                            if(!tmpType && item.type === 'video') tmpType = item.type;
+                            if(item.type === 'image') {
+                                utils.dialog.show = true;
+                                utils.dialog.body = '所选文件“' + item.path + '”不可混合，不支持图片。';
+                                return false;
+                            }
+                            items.push(item);
+                        }
+                    }
+                    if(!tmpType) tmpType = 'audio';
+                    if(tmpType === 'video'){
+                        output += '.mp4';
+                    }else{
+                        output += '.mp3';
+                    }
+                    if(items.length > 1){
+                        if(utils.has(output)){
+                            utils.dialog.show = true;
+                            utils.dialog.body = '文件“'+output+'”已存在，是否覆盖？';
+                            utils.dialog.setBtn('覆盖','否');
+                            utils.dialog.callback = (code)=>{
+                                if(code === 0) Media.mix(tmpType, items, output);
+                            }
+                        }else{
+                            Media.mix(tmpType, items, output);
+                        }
+                    }else{
+                        utils.dialog.show = true;
+                        utils.dialog.body = '无法拼接，要实现拼接至少两个文件。';
+                    }
+                }
                     break;
                 case 'firstAid':
                     utils.dialog.show = true;
@@ -484,7 +541,6 @@ const vue = new Vue({
                     utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
                     utils.dialog.setBtn('启用','关闭');
                     utils.dialog.callback = function(code){
-
                         if(code === 0){
                             Media.killAll();
                         }
@@ -1527,7 +1583,7 @@ module.exports = {
     killAll(fn){
         if(this.ffmpeg) this.ffmpeg.signalCode = '强制退出所有';
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
-            if(fn) fn(stderr.toString());
+            if(fn) fn(stderr.toString('utf-8'));
         });
     },
     end(signalCode){
@@ -1723,6 +1779,7 @@ module.exports = {
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.command);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
+            //console.log(line); //debug
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );
@@ -1740,9 +1797,9 @@ module.exports = {
     },
     concat(type,items, output){
         let _this = this,
-            ext = type === 'video' ? '.mp4' : '.mp3',
-            w = items[0].width,
-            h = items[0].height,
+            listExt = type === 'video' ? '.ts' : '.mp3',
+            w = Math.round(items[0].towidth),
+            h = Math.round(items[0].toheight),
             total = 0,
             allTotal = 0,
             i = 0,
@@ -1767,7 +1824,7 @@ module.exports = {
         utils.dialog.show = true;
         if(items[i]){
             utils.dialog.title = '处理进度';
-            utils.dialog.body = '准备就绪!';
+            utils.dialog.body = '准备就绪...';
             recycle(items[i]);
         }else{
             utils.dialog.body = '文件输入错误!';
@@ -1785,11 +1842,13 @@ module.exports = {
                 if(item.endTime < item.duration) command.push('-t', total);
             }
 
-            command.push('-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1');
-            if(bitv) command.push('-vb', bitv+'k');
-            command.push(utils.path(config.temp+'\\'+i+'.ts'));
+            command.push('-i', item.path)
+            if(w && h) command.push('-s', w+'x'+h);
+            if(type === 'video') command.push('-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1');
+            if(type === 'video' && bitv) command.push('-vb', bitv+'k');
+            command.push(utils.path(config.temp+'\\'+i+listExt));
 
-            list.write(`file ${config.temp}'/${i}.ts'\n`);
+            list.write(`file '${config.temp}/${i+listExt}'\n`);
 
             _this.convert({
                 command,
@@ -1804,14 +1863,18 @@ module.exports = {
                         }else{
                             list.end();
                             command.splice(0, command.length);
-                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE, '-q', 1, output+ext);
+                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE);
+                            if(type === 'video') command.push('-q', 1);
+                            command.push(output);
+
                             _this.convert({
                                 command,
                                 progress(time){
                                     utils.dialog.body = '正在拼接...' + Math.round(time/allTotal * 100) + '%';
                                 },
-                                complete(){
-                                    utils.dialog.body = '拼接完成 100%。文件位置：“'+output+ext+'”。';
+                                complete(c, m){
+                                    if(c === 0) utils.dialog.body = '拼接完成 100%。文件位置：“'+output+'”。';
+                                    else utils.dialog.body = '拼接失败！失败信息：' + m;
                                 }
                             });
                         }
@@ -1822,6 +1885,51 @@ module.exports = {
                 }
             });
         }
+    },
+    mix(type, items, output) {
+        let len = items.length,
+            i = 0,
+            command = [],
+            total = 0,
+            countTotal = 0,
+            w = 0,
+            h = 0,
+            item;
+        for (; i < len; i++) {
+            item = items[i];
+            total = item.endTime - item.startTime;
+            if (total > 0) {
+                if (item.startTime > 0) command.push('-ss', item.startTime);
+                if (item.endTime < item.duration) command.push('-t', total);
+            }
+            command.push('-i', item.path);
+            if(item.type === 'video'){
+                if(!w && !h){
+                    w = Math.round(item.towidth);
+                    h = Math.round(item.toheight);
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                }
+                if(!countTotal) countTotal = total;
+            }
+        }
+        command.push('-filter_complex', 'amix=inputs=' + len);
+        if(w>0 && h>0) command.push('-s', w+'x'+h);
+        command.push('-shortest', output);
+
+        utils.dialog.show = true;
+        utils.dialog.title = '处理进度';
+        utils.dialog.body = '准备就绪...';
+        this.convert({
+            command,
+            progress(time){
+                utils.dialog.body = '正在混合...' + Math.round(time/countTotal * 100) + '%';
+            },
+            complete(code, msg){
+                if(code === 0) utils.dialog.body = '拼接完成 100%。文件位置：“'+output+'”。';
+                else utils.dialog.body = '拼接失败！失败信息：' + msg;
+            }
+        });
     }
 };
 
@@ -2136,7 +2244,10 @@ Vue.directive('drag',{
             start_x = 0, start_y = 0, cur_x = 0, cur_y = 0, matrix;
 
         if(len)
-            for(; i<len; i++) drag[i].addEventListener('mousedown', downFn);
+            for(; i<len; i++){
+                drag[i].addEventListener('mousedown', downFn);
+                drag[i].removeAttribute('data-drag');
+            }
         else
             el.addEventListener('mousedown', downFn);
 

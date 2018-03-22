@@ -195,7 +195,7 @@ module.exports = {
     killAll(fn){
         if(this.ffmpeg) this.ffmpeg.signalCode = '强制退出所有';
         childprocess.exec('TASKKILL /F /IM ffmpeg.exe', (err,stdout, stderr)=>{
-            if(fn) fn(stderr.toString());
+            if(fn) fn(stderr.toString('utf-8'));
         });
     },
     end(signalCode){
@@ -391,6 +391,7 @@ module.exports = {
         ffmpeg = childprocess.spawn(config.ffmpegPath, o.command);
         ffmpeg.stderr.on('data', (stderr)=>{
             line = stderr.toString().trim();
+            //console.log(line); //debug
             if(o.progress){
                 line = /time=\s*([\d\:\.]+)?/.exec(line);
                 if(line) o.progress( utils.timemat(line[1]) / 1000 );
@@ -408,9 +409,9 @@ module.exports = {
     },
     concat(type,items, output){
         let _this = this,
-            ext = type === 'video' ? '.mp4' : '.mp3',
-            w = items[0].width,
-            h = items[0].height,
+            listExt = type === 'video' ? '.ts' : '.mp3',
+            w = Math.round(items[0].towidth),
+            h = Math.round(items[0].toheight),
             total = 0,
             allTotal = 0,
             i = 0,
@@ -435,7 +436,7 @@ module.exports = {
         utils.dialog.show = true;
         if(items[i]){
             utils.dialog.title = '处理进度';
-            utils.dialog.body = '准备就绪!';
+            utils.dialog.body = '准备就绪...';
             recycle(items[i]);
         }else{
             utils.dialog.body = '文件输入错误!';
@@ -453,11 +454,13 @@ module.exports = {
                 if(item.endTime < item.duration) command.push('-t', total);
             }
 
-            command.push('-i', item.path, '-s', w+'x'+h, '-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1');
-            if(bitv) command.push('-vb', bitv+'k');
-            command.push(utils.path(config.temp+'\\'+i+'.ts'));
+            command.push('-i', item.path)
+            if(w && h) command.push('-s', w+'x'+h);
+            if(type === 'video') command.push('-pix_fmt', 'yuv420p', '-filter_complex', 'setsar=1/1');
+            if(type === 'video' && bitv) command.push('-vb', bitv+'k');
+            command.push(utils.path(config.temp+'\\'+i+listExt));
 
-            list.write(`file ${config.temp}'/${i}.ts'\n`);
+            list.write(`file '${config.temp}/${i+listExt}'\n`);
 
             _this.convert({
                 command,
@@ -472,14 +475,18 @@ module.exports = {
                         }else{
                             list.end();
                             command.splice(0, command.length);
-                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE, '-q', 1, output+ext);
+                            command.push('-f', 'concat', '-i', CONCAT_TEMP_LIST_FILE);
+                            if(type === 'video') command.push('-q', 1);
+                            command.push(output);
+
                             _this.convert({
                                 command,
                                 progress(time){
                                     utils.dialog.body = '正在拼接...' + Math.round(time/allTotal * 100) + '%';
                                 },
-                                complete(){
-                                    utils.dialog.body = '拼接完成 100%。文件位置：“'+output+ext+'”。';
+                                complete(c, m){
+                                    if(c === 0) utils.dialog.body = '拼接完成 100%。文件位置：“'+output+'”。';
+                                    else utils.dialog.body = '拼接失败！失败信息：' + m;
                                 }
                             });
                         }
@@ -490,5 +497,50 @@ module.exports = {
                 }
             });
         }
+    },
+    mix(type, items, output) {
+        let len = items.length,
+            i = 0,
+            command = [],
+            total = 0,
+            countTotal = 0,
+            w = 0,
+            h = 0,
+            item;
+        for (; i < len; i++) {
+            item = items[i];
+            total = item.endTime - item.startTime;
+            if (total > 0) {
+                if (item.startTime > 0) command.push('-ss', item.startTime);
+                if (item.endTime < item.duration) command.push('-t', total);
+            }
+            command.push('-i', item.path);
+            if(item.type === 'video'){
+                if(!w && !h){
+                    w = Math.round(item.towidth);
+                    h = Math.round(item.toheight);
+                    if(w%2 !== 0) w--;
+                    if(h%2 !== 0) h--;
+                }
+                if(!countTotal) countTotal = total;
+            }
+        }
+        command.push('-filter_complex', 'amix=inputs=' + len);
+        if(w>0 && h>0) command.push('-s', w+'x'+h);
+        command.push('-shortest', output);
+
+        utils.dialog.show = true;
+        utils.dialog.title = '处理进度';
+        utils.dialog.body = '准备就绪...';
+        this.convert({
+            command,
+            progress(time){
+                utils.dialog.body = '正在混合...' + Math.round(time/countTotal * 100) + '%';
+            },
+            complete(code, msg){
+                if(code === 0) utils.dialog.body = '拼接完成 100%。文件位置：“'+output+'”。';
+                else utils.dialog.body = '拼接失败！失败信息：' + msg;
+            }
+        });
     }
 };

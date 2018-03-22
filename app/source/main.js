@@ -128,7 +128,8 @@ const vue = new Vue({
                 case 'concat':
                 {
                     let tmpType,
-                        items = [];
+                        items = [],
+                        output = vue.output+'\\'+vue.batchParams.nameAll;
                     //检查是否被允许
                     for(key in vue.items){
                         item = vue.items[key];
@@ -143,8 +144,22 @@ const vue = new Vue({
                             }
                         }
                     }
+                    if(tmpType === 'video'){
+                        output += '.mp4';
+                    }else{
+                        output += '.mp3';
+                    }
                     if(items.length > 1){
-                        Media.concat(tmpType, items, vue.output+'\\'+vue.batchParams.nameAll);
+                        if(utils.has(output)){
+                            utils.dialog.show = true;
+                            utils.dialog.body = '文件“'+output+'”已存在，是否覆盖？';
+                            utils.dialog.setBtn('覆盖','否');
+                            utils.dialog.callback = (code)=>{
+                                if(code === 0) Media.concat(tmpType, items, output);
+                            }
+                        }else{
+                            Media.concat(tmpType, items, output);
+                        }
                     }else{
                         utils.dialog.show = true;
                         utils.dialog.body = '无法拼接，要实现拼接至少两个文件。';
@@ -152,7 +167,44 @@ const vue = new Vue({
                 }
                     break;
                 case 'mix':
-
+                {
+                    let tmpType,
+                        items = [],
+                        output = vue.output+'\\'+vue.batchParams.nameAll;
+                    for(key in vue.items){
+                        item = vue.items[key];
+                        if(item.lock){
+                            if(!tmpType && item.type === 'video') tmpType = item.type;
+                            if(item.type === 'image') {
+                                utils.dialog.show = true;
+                                utils.dialog.body = '所选文件“' + item.path + '”不可混合，不支持图片。';
+                                return false;
+                            }
+                            items.push(item);
+                        }
+                    }
+                    if(!tmpType) tmpType = 'audio';
+                    if(tmpType === 'video'){
+                        output += '.mp4';
+                    }else{
+                        output += '.mp3';
+                    }
+                    if(items.length > 1){
+                        if(utils.has(output)){
+                            utils.dialog.show = true;
+                            utils.dialog.body = '文件“'+output+'”已存在，是否覆盖？';
+                            utils.dialog.setBtn('覆盖','否');
+                            utils.dialog.callback = (code)=>{
+                                if(code === 0) Media.mix(tmpType, items, output);
+                            }
+                        }else{
+                            Media.mix(tmpType, items, output);
+                        }
+                    }else{
+                        utils.dialog.show = true;
+                        utils.dialog.body = '无法拼接，要实现拼接至少两个文件。';
+                    }
+                }
                     break;
                 case 'firstAid':
                     utils.dialog.show = true;
@@ -160,7 +212,6 @@ const vue = new Vue({
                     utils.dialog.body = '<p>为了避免失误操作，必须谨慎选择是否真的启用急救，不到万不得已，请不要轻易启用！当然，它也可以强制中止正在处理的程序。</p>';
                     utils.dialog.setBtn('启用','关闭');
                     utils.dialog.callback = function(code){
-
                         if(code === 0){
                             Media.killAll();
                         }

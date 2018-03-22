@@ -9,7 +9,10 @@ Vue.directive('drag',{
             start_x = 0, start_y = 0, cur_x = 0, cur_y = 0, matrix;
 
         if(len)
-            for(; i<len; i++) drag[i].addEventListener('mousedown', downFn);
+            for(; i<len; i++){
+                drag[i].addEventListener('mousedown', downFn);
+                drag[i].removeAttribute('data-drag');
+            }
         else
             el.addEventListener('mousedown', downFn);
 

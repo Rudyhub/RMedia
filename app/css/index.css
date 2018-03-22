@@ -189,11 +189,10 @@ summary{
     -webkit-app-region: drag;
     position: relative;
 }
-[data-drag]{
+[data-drag],
+.drag-bar{
     cursor: move;
     user-select: none;
-}
-.drag-bar{
     background: var(--gray3);
     height: 1.5em;
     border-top-left-radius: 4px;
@@ -719,6 +718,7 @@ summary{
     background: var(--black2);
     border: 1px solid var(--gray3);
     transform: scale(0);
+    min-width: 10em;
 }
 .dialog-show .dialog-inner{
     animation: zoomIn .5s cubic-bezier(.4,1.13,.76,1.21);
