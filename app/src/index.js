@@ -1332,7 +1332,7 @@ inputEl.multiple = true;
 outputEl.nwdirectory = true;
 
 inputEl.addEventListener('change', (e)=>{
-    vue.toolbar.drop = 'chosefile';
+    vue.toolbar.drop = '';
     listItems(inputEl.files);
 });
 inputEl.addEventListener('cancel', ()=>{
@@ -1340,7 +1340,7 @@ inputEl.addEventListener('cancel', ()=>{
 });
 
 outputEl.addEventListener('change', ()=>{
-    vue.toolbar.drop = 'chosedir';
+    vue.toolbar.drop = '';
     vue.output = outputEl.files[0].path || '';
 });
 outputEl.addEventListener('cancel', ()=>{
