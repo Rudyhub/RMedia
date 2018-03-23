@@ -1735,6 +1735,7 @@ module.exports = {
         if(item.totype === 'image'){
             //2...
             if(utils.has(outPath+'.'+item.toformat)) exists.push('.'+item.toformat);
+            if(item.toformat !== 'gif') result.cmd.push('-vframes',1);
             result.cmd.push(outPath +'.'+ item.toformat);
         }
 
@@ -2101,7 +2102,7 @@ const capture = {
 				if(!err){
 					win.show();
 					utils.dialog.show = true;
-					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问，是否覆盖？</p>`;
+					utils.dialog.body = `<p>输出的文件：${output}已存在或不可访问</p><p>请选择检查后重试、覆盖已存在、或不处理。</p>`;
 					utils.dialog.setBtn('覆盖','重试','取消');
 					utils.dialog.callback = function(code){
 						

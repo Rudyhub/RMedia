@@ -347,6 +347,7 @@ module.exports = {
         if(item.totype === 'image'){
             //2...
             if(utils.has(outPath+'.'+item.toformat)) exists.push('.'+item.toformat);
+            if(item.toformat !== 'gif') result.cmd.push('-vframes',1);
             result.cmd.push(outPath +'.'+ item.toformat);
         }
 
