@@ -41,6 +41,15 @@ npm install
 3. 下载nwjs:
 > [下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开发的东西。
 
+> 也可以完全选择另一种方式：全局安装nwjs.
+```
+    //安装nwjs
+    npm install -g nwjs
+    
+    //安装对应sdk版本
+    nw install 0.26.6-sdk
+```
+
 4. ffmpeg下载：
 > [下载ffmpeg.exe文件（zip压缩包）](https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.4.2-win64-static.zip),版本号：`3.4.2-win64-static`，[其他版本](https://ffmpeg.zeranoe.com/builds/win64/static)一般也可以，但如果官网更新一些参数的写法，就可能产生错误。
 > [下载ffmpeg.dll文件（zip压缩包）](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases/download/0.26.6/0.26.6-win-x64.zip)，版本号：0.26.6，此文件的版本号一定要与nwjs的版本号对应（这很重要），否则，video，audio标签将不支持播放如mp4,mp3等文件。[更多版本](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases)。
