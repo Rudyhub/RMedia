@@ -600,7 +600,6 @@ const vue = new Vue({
                         params.y = y;
                         params.width = w;
                         params.height = h;
-                        start();
                     });
                 }
                 break;
@@ -639,7 +638,7 @@ const vue = new Vue({
                         utils.dialog.title = '完成！';
                         utils.dialog.body = '<p>输出位置：'+output+'</p>';
                     }
-                }
+                };
                 capture.start(output, vue.capParams);
             }
             if(code === 0 || code === -1){

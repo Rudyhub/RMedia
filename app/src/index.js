@@ -929,7 +929,6 @@ const vue = new Vue({
                         params.y = y;
                         params.width = w;
                         params.height = h;
-                        start();
                     });
                 }
                 break;
@@ -968,7 +967,7 @@ const vue = new Vue({
                         utils.dialog.title = '完成！';
                         utils.dialog.body = '<p>输出位置：'+output+'</p>';
                     }
-                }
+                };
                 capture.start(output, vue.capParams);
             }
             if(code === 0 || code === -1){
@@ -2010,11 +2009,9 @@ const capture = {
 					childDoc.removeEventListener('keyup',onEnter);
 					childWin.close();
 					capture.areaWin = null;
-					win.show();
 				}
-			}
+			};
 			childDoc.addEventListener('keyup', onEnter);
-			win.hide();
 		});
 	},
 	progress: null,

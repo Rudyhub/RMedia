@@ -70,11 +70,9 @@ const capture = {
 					childDoc.removeEventListener('keyup',onEnter);
 					childWin.close();
 					capture.areaWin = null;
-					win.show();
 				}
-			}
+			};
 			childDoc.addEventListener('keyup', onEnter);
-			win.hide();
 		});
 	},
 	progress: null,
