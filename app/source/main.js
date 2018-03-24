@@ -121,8 +121,8 @@ const vue = new Vue({
                         new_instance: false,
                         focus: true,
                         frame: false,
-                        width: win.width*.8,
-                        height: win.height*.8
+                        width: Math.round(win.width*.8),
+                        height: Math.round(win.height*.8)
                     });
                 break;
                 case 'concat':
