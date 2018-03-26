@@ -40,7 +40,7 @@ module.exports = {
 	appRoot: appRoot,
 	ffmpegPath: ffmpegPath,
 	temp: TEMP_FOLDER,
-    audioThumb: utils.path(appRoot + '\\css\\audio.jpg'),
+    audioThumb: utils.path(appRoot + '\\icons\\audio.jpg'),
 	output: {
 		folder: utils.path(process.env.USERPROFILE+'\\desktop'),
 		width: 1280,
