@@ -287,7 +287,7 @@ summary{
 [v-cloak]{display: none;}
 .titlebar{
     position: relative;
-    background: var(--gray4) url('../icons/icon.png') no-repeat .5em center;
+    background: var(--gray4) url('../logo.png') no-repeat .5em center;
     background-size: auto 100%;
 }
 .title{
