@@ -44,7 +44,7 @@ const capture = {
 	areaWin: null,
 	setArea(initWidth, initHeight, fn){
 		if(typeof fn !== 'function' || capture.areaWin !== null) return false;
-		nw.Window.open('html/capture.html',{
+		nw.Window.open('./capture.html',{
 			id: 'capture',
 		    position: 'center',
 		    transparent: true,

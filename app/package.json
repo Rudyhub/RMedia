@@ -1,5 +1,5 @@
 {
-  "main": "html/index.html",
+  "main": "index.html",
   "name": "RMedia",
   "version": "1.0.0",
   "description": "The program can batch process media such as video, audio, image.",
@@ -14,7 +14,7 @@
     "width": 320,
     "height": 180,
     "title": "媒体处理器",
-    "icon": "css/icon.png",
+    "icon": "../icons/icon.png",
     "toolbar": false,
     "resizable": true,
     "show_in_taskbar": true,
