@@ -14,7 +14,6 @@ const win = nw.Window.get(),
     canvas = document.createElement('canvas');
 
 //init
-require('./version');
 require('./directives');
 require('./components');
 document.title = appInfo.window.title;
@@ -219,7 +218,7 @@ const vue = new Vue({
                     };
                     break;
                 case 'helpBook':
-                    nw.Shell.openExternal(appInfo.documentation);
+                    nw.Shell.openExternal(config.usercfg.documentation);
                     break;
             }
         },

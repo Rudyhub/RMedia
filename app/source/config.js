@@ -1,6 +1,6 @@
 const cp = require('child_process'),
-	utils = require('./utils'),
-    fs = require('fs');
+    fs = require('fs'),
+    utils = require('./utils');
 
 let appRoot = utils.path(true).dirname(process.execPath),
 	ffmpegPath = utils.path(appRoot+'\\ffmpeg\\ffmpeg.exe'),
@@ -36,9 +36,18 @@ nw.process.on('exit',()=>{
 	cp.execSync('rd /s /q '+TEMP_FOLDER);
 });
 
+let readFile = fs.readFileSync(utils.path(appRoot+'\\config.json'), 'utf-8'),
+	usercfg;
+if(readFile){
+	usercfg = JSON.parse(readFile);
+}else{
+	usercfg = {};
+}
+
 module.exports = {
-	appRoot: appRoot,
-	ffmpegPath: ffmpegPath,
+	appRoot,
+	ffmpegPath,
+    usercfg,
 	temp: TEMP_FOLDER,
     audioThumb: utils.path(appRoot + '\\icons\\audio.jpg'),
 	output: {
