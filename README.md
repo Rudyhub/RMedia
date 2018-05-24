@@ -93,7 +93,7 @@ npm run dev
 npm run nw
 ```
 
->全局安装则通过以下方法启动启动:
+>全局安装nwjs则通过以下方法启动启动:
 
 ```
 npm run nd
