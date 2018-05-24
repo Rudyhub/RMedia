@@ -5,7 +5,6 @@ const win = nw.Window.get(),
     capture = require('./capture'),
     Vue = require('./vue.min'),
     shortcut = require('./shortcut'),
-    crypto = require('crypto'),
     appInfo = Object.freeze(nw.App.manifest),
 
     inputEl = document.createElement('input'),
@@ -19,6 +18,8 @@ require('./components');
 document.title = appInfo.window.title;
 win.maximize();
 win.show();
+
+let uniqid = 0;
 
 const vue = new Vue({
 	el: '#app',
@@ -246,6 +247,8 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
+                console.log(keys, vue.items);
+            /*
 
             if(len){
                 recycle(vue.items[ keys[i] ]);
@@ -327,6 +330,7 @@ const vue = new Vue({
                     Media.convert(options);
                 }
             }
+            */
         },
         spriteFn(code){
             if(typeof code !== 'string'){
@@ -503,7 +507,7 @@ const vue = new Vue({
         nameAllFn(code){
             if(code === -1) return;
 
-            let output, n;
+            let output, n, i, k, item;
             n = 0;
             i = 0;
             k = Object.keys(vue.items)[0];
@@ -521,9 +525,9 @@ const vue = new Vue({
                     i++;
                     output = vue.output +'\\'+ utils.namemat(vue.batchParams.nameAll, i) +'.'+ item.format;
                     if(code === 1){
-                        Media.rename(item.path, output, oneComplete);
+                        utils.rename(item.path, output, oneComplete);
                     }else if(code === 2){
-                        Media.copyFile(item.path, output, oneComplete);
+                        utils.copyFile(item.path, output, oneComplete);
                     }
                 }
             }
@@ -880,9 +884,7 @@ const vue = new Vue({
 
 function listItems(files){
     let i = 0,
-        item,
-        hex,
-        key;
+        item;
     if(files.length){
         recycle(files[0]);
         function recycle(file){
@@ -939,10 +941,7 @@ function listItems(files){
                 vchannel: ''
             };
 
-            hex = crypto.createHash('md5');
-            hex.update(file.path);
-            key = hex.digest('base64');
-            vue.$set(vue.items, key, item);
+            vue.$set(vue.items, uniqid, item);
 
             Media.info({
                 input: file.path,
@@ -970,6 +969,7 @@ function listItems(files){
                     vue.reItem(item);
 
                     i++;
+                    uniqid++;
                     if(files[i]) recycle(files[i]);
                 },
                 fail: (err)=>{
@@ -983,8 +983,8 @@ function listItems(files){
                     utils.dialog.callback = function(code){
 
                         if(code === 1){
-                            window.URL.revokeObjectURL(vue.items[key].thumb);
-                            vue.$delete(vue.items, key);
+                            window.URL.revokeObjectURL(vue.items[uniqid].thumb);
+                            vue.$delete(vue.items, uniqid);
                         }
                         i++;
                         if(files[i]) recycle(files[i]);
