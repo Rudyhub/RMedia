@@ -38,17 +38,20 @@ git clone https://github.com/rudyhub/rmedia.git
 npm install
 ```
 
-3. 下载nwjs:
-> [下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开发的东西。
+3. 安装nwjs
 
-> 也可以完全选择另一种方式：全局安装nwjs.
-```
-    //安装nwjs
-    npm install -g nwjs
-    
-    //安装对应sdk版本
-    nw install 0.26.6-sdk
-```
+> 有两种方式:
+
+    > 1.[下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开发的东西。
+
+    > 2.也可以完全选择另一种方式：全局安装nwjs.
+    ```
+        //安装nwjs
+        npm install -g nwjs
+        
+        //安装对应sdk版本
+        nw install 0.26.6-sdk
+    ```
 
 4. ffmpeg下载：
 > [下载ffmpeg.exe文件（zip压缩包）](https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.4.2-win64-static.zip),版本号：`3.4.2-win64-static`，[其他版本](https://ffmpeg.zeranoe.com/builds/win64/static)一般也可以，但如果官网更新一些参数的写法，就可能产生错误。
@@ -58,7 +61,7 @@ npm install
 > 将以上下载的第一个zip包解压后，把bin文件夹下的ffmpeg.exe文件复制到项目的ffmpeg文件夹下。
 > 将第二个zip包解压得到ffmpeg.dll文件，复制替换nwjs文件夹根目录的ffmpeg.dll文件。
 
-6. 配置nwjs:
+6. 配置nwjs(全局安装nwjs则不需要):
 > 将nwjs-sdk-v0.26.6-win-x64.zip解压到目录RMedia/下，最终的文件树枝关系如：
 ```
 > RMedia/
@@ -88,6 +91,14 @@ npm run dev
 
 ```
 npm run nw
+```
+
+>全局安装则通过以下方法启动启动:
+
+```
+npm run nd
+//或者
+nw app/.
 ```
 
 8. 打包:
