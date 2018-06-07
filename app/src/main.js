@@ -247,8 +247,6 @@ const vue = new Vue({
             keys = Object.keys(vue.items);
             len = keys.length;
             i = 0;
-                console.log(keys, vue.items);
-            /*
 
             if(len){
                 recycle(vue.items[ keys[i] ]);
@@ -330,7 +328,6 @@ const vue = new Vue({
                     Media.convert(options);
                 }
             }
-            */
         },
         spriteFn(code){
             if(typeof code !== 'string'){
@@ -1000,7 +997,7 @@ inputEl.type = outputEl.type = logoInput.type = 'file';
 inputEl.multiple = true;
 outputEl.nwdirectory = true;
 
-inputEl.addEventListener('change', (e)=>{
+inputEl.addEventListener('change', ()=>{
     vue.toolbar.drop = '';
     listItems(inputEl.files);
 });
@@ -1042,4 +1039,3 @@ logoInput.addEventListener('change', ()=>{
 });
 
 shortcut({inputEl, outputEl, listItems});
-
