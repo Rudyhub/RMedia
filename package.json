@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "webpack --mode development",
     "build": "webpack --mode production",
-    "nw": "cd app && start ../nwjs-v0.26.6-win-x64-sdk/nw ."
+    "nw": "cd app && start ../nwjs/nw ."
   },
   "repository": {
     "type": "git",
