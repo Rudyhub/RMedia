@@ -1,11 +1,12 @@
 const win = nw.Window.get(),
-    config = require('./config'),
+    config = require('./config.js'),
     Media = require('./Media'),
     utils = require('./utils'),
     capture = require('./capture'),
     Vue = require('./vue.min'),
     shortcut = require('./shortcut'),
     appInfo = Object.freeze(nw.App.manifest),
+    ScaleControl = require('./ScaleControl'),
 
     inputEl = document.createElement('input'),
     outputEl = document.createElement('input'),
@@ -19,7 +20,8 @@ document.title = appInfo.window.title;
 win.maximize();
 win.show();
 
-let uniqid = 0;
+let uniqid = 0,
+    scaleControl = new ScaleControl();
 
 const vue = new Vue({
 	el: '#app',
@@ -287,7 +289,7 @@ const vue = new Vue({
                                 utils.dialog.body = `<p>${msg}！接下来选择如何处理已完成？</p>`;
                                 utils.dialog.setBtn('移除','保留');
                                 utils.dialog.callback = function(code){
-                                    
+
                                     for(let key in vue.items){
                                         if(code === 0 && vue.items[key].progress){
                                             window.URL.revokeObjectURL(vue.items[key].thumb);
@@ -462,7 +464,7 @@ const vue = new Vue({
                     for(let key in vue.items) calc(vue.items[key]);
                 }
             }
-            
+
             /*位置推算：
                 目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
                 已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
@@ -499,7 +501,9 @@ const vue = new Vue({
                         break;
                 }
             }
-
+        },
+        logoControlFn(e){
+            scaleControl.bind(e.currentTarget);
         },
         nameAllFn(code){
             if(code === -1) return;
@@ -509,7 +513,7 @@ const vue = new Vue({
             i = 0;
             k = Object.keys(vue.items)[0];
             item = vue.items[k];
-            
+
             if(item){
                 recycle(item)
             }else{
@@ -540,7 +544,7 @@ const vue = new Vue({
                     </details>`;
                     utils.dialog.setBtn('继续','退出');
                     utils.dialog.callback = function(c){
-                        
+
                         if(c === 0){
                             if(item){
                                 recycle(item);
@@ -691,7 +695,7 @@ const vue = new Vue({
                 }
                 break;
                 case 'lock': item.lock = !item.lock; break;
-                case 'lockAll': 
+                case 'lockAll':
                 {
                     vue.toolbar.toggle.lock = !vue.toolbar.toggle.lock;
                     for(let key in vue.items){
@@ -785,7 +789,7 @@ const vue = new Vue({
                         utils.dialog.title = '注意';
                         utils.dialog.body = '<p>取预览图的位置必须是在截取时间'+utils.timemat(item.startTime*1000)+'到'+utils.timemat(item.endTime*1000)+'</p>';
                         utils.dialog.callback = ()=>{
-                            
+
                             item.coverTime = item.currentTime > item.startTime ? item.endTime : item.startTime;
                             item.currentTime = item.coverTime;
                             if(item.canplay){
@@ -1040,3 +1044,4 @@ logoInput.addEventListener('change', ()=>{
 });
 
 shortcut({inputEl, outputEl, listItems});
+
