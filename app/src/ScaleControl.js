@@ -23,7 +23,7 @@ class ScaleControl {
             box.appendChild(points[k]);
         }
         this.matrix = [0,0,0,0,0,0];
-        this.limit = [];
+        this.limit = [0,0];
         this.points = points;
         this[0] = box;
         this.el = null;
@@ -41,10 +41,16 @@ class ScaleControl {
             }
             this.el = el;
             el.parentNode.appendChild(this[0]);
+
             this[0].style.top = el.offsetTop + 'px';
             this[0].style.left = el.offsetLeft + 'px';
             this[0].style.width = el.offsetWidth + 'px';
             this[0].style.height = el.offsetHeight + 'px';
+
+            this.limit[0] = el.parentNode.offsetWidth;
+            this.limit[1] = el.parentNode.offsetHeight;
+
+            el.draggable = false;
         }
     }
     unbind(){
@@ -56,7 +62,7 @@ class ScaleControl {
         return this[0].contains(target);
     }
     static bindEvent(_this){
-        let w, h, pX, pY, startX, startY, endX, endY, isX, isY, isMove, isLeft, isTop,
+        let w, h, pX, pY, startX, startY, endX, endY, isX, isY, isMove, isLeft, isTop, limitW, limitH, right, bottom,
             box = _this[0],
             points = _this.points;
 
@@ -85,6 +91,21 @@ class ScaleControl {
                     _this.matrix[3] = box.offsetWidth * (_this.matrix[5] / _this.matrix[4]);
                 }
             }
+
+            if(_this.matrix[0] < 0) {
+                _this.matrix[0] = 0;
+                _this.matrix[2] = limitW;
+            }
+            if(_this.matrix[1] < 0) {
+                _this.matrix[1] = 0;
+                _this.matrix[3] = limitH;
+            }
+
+            right = _this.limit[0] - _this.matrix[0];
+            bottom = _this.limit[1] - _this.matrix[1];
+
+            if(_this.matrix[2] > right) _this.matrix[2] = right;
+            if(_this.matrix[3] > bottom) _this.matrix[3] = bottom;
 
             _this.el.style.left = box.style.left = _this.matrix[0] + 'px';
             _this.el.style.top = box.style.top = _this.matrix[1] + 'px';
@@ -115,6 +136,8 @@ class ScaleControl {
             isMove = false;
             isLeft = false;
             isTop = false;
+            limitW = _this.el.offsetLeft + _this.el.offsetWidth;
+            limitH = _this.el.offsetTop + _this.el.offsetHeight;
 
             if(target === points.topCenter || target === points.bottomCenter){
                 isX = false;
