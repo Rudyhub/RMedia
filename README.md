@@ -38,11 +38,53 @@ git clone https://github.com/rudyhub/rmedia.git
 npm install
 ```
 
-3. 安装nwjs
+3. 安装nwjs（有两种方式）
 
-> 有两种方式:
+> 第一种（推荐）：
 
-> 1.[下载nwjs-sdk-v0.26.6-win-x64.zip即开发版](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip),与开发版不同的是，正式版去除了调试工具等一些方便开发的东西。
+> 1.下载nwjs：
+  
+  > [下载nwjs-sdk-v0.26.6-win-x64.zip](https://dl.nwjs.io/v0.26.6/nwjs-sdk-v0.26.6-win-x64.zip)，注意版本：`sdk-v0.26.6-win-x64`。此版本为开发时用，打包时，需要[下载nwjs-v0.26.6-win-x64.zip即正式版](https://dl.nwjs.io/v0.26.6/nwjs-v0.26.6-win-x64.zip)。（与开发版不同之处：正式版无devtools)。
+
+  > 完成后，解压到项目根目录，改名为: nwjs
+
+> 2.ffmpeg下载：
+
+  > [下载ffmpeg.exe](https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.4.2-win64-static.zip),版本：`3.4.2-win64-static`，[其他版本](https://ffmpeg.zeranoe.com/builds/win64/static)一般也可以，但如果官网更新一些参数的写法，就可能产生错误。
+  
+  > 完成后，解压提取ffmpeg.exe文件，在“app/”目录下新建一个ffmpeg文件夹，把提取的ffmpeg.exe放进入。
+  
+  > 然后[下载ffmpeg.dll](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases/download/0.26.6/0.26.6-win-x64.zip)，版本：0.26.6，此文件的版本号一定要与nwjs的版本号对应（这很重要），否则，video，audio标签将不支持播放如mp4,mp3等文件。[更多版本](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases)。
+  
+  > 完成后，解压提取ffmpeg.dll，替换nwjs目录下的ffmpeg.dll文件。
+
+> 3.整体目录结构大致如下：
+
+```
+> RMedia/
+| - app/
+| | - cache/
+| | - css/
+| | - ffmpeg/
+| | | - ffmpeg.exe
+| | | - ...
+| - nwjs/
+| | - ...
+| | - ffmpeg.dll
+| | - nw.exe
+| | - ...
+| - .gitignore
+| - package.json
+| - README.md
+| - webpack.config.js
+ ```
+ 
+> 4.启动：
+```
+npm run dev
+```
+>稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
+然后右击软件，在右键菜单中选`重新加载应用`，即刷新（也可以F12调出调试工具，在工具中再按F5刷新）。
 
 > 2.也可以完全选择另一种方式：全局安装nwjs.
 
@@ -52,39 +94,7 @@ npm install
     //安装对应sdk版本
     nw install 0.26.6-sdk
 
-4. ffmpeg下载：
-> [下载ffmpeg.exe文件（zip压缩包）](https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.4.2-win64-static.zip),版本号：`3.4.2-win64-static`，[其他版本](https://ffmpeg.zeranoe.com/builds/win64/static)一般也可以，但如果官网更新一些参数的写法，就可能产生错误。
-> [下载ffmpeg.dll文件（zip压缩包）](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases/download/0.26.6/0.26.6-win-x64.zip)，版本号：0.26.6，此文件的版本号一定要与nwjs的版本号对应（这很重要），否则，video，audio标签将不支持播放如mp4,mp3等文件。[更多版本](https://github.com/iteufel/nwjs-ffmpeg-prebuilt/releases)。
 
-5. 配置ffmpeg:
-> 将以上下载的第一个zip包解压后，把bin文件夹下的ffmpeg.exe文件复制到项目的ffmpeg文件夹下。
-> 将第二个zip包解压得到ffmpeg.dll文件，复制替换nwjs文件夹根目录的ffmpeg.dll文件。
-
-6. 配置nwjs(全局安装nwjs则不需要):
-> 将nwjs-sdk-v0.26.6-win-x64.zip解压到目录RMedia/下，最终的文件树枝关系如：
-```
-> RMedia/
-| - app/
-| | - cache/
-| | - css/
-| | - ffmpeg/
-| | | - ffmpeg.exe
-| | | - ...
-| - nwjs-v0.26.6-win-x64-sdk/
-| | - ...
-| | - nw.exe
-| | - ...
-| - .gitignore
-| - package.json
-| - README.md
-| - webpack.config.js
- ```
-7. 启动：
-```
-npm run dev
-```
->稍等一会即可看到软件已经打开，接下来就可以修改源码，修改后，执行命令：`webpack`
-然后右击软件，在右键菜单中选`重新加载应用`，即刷新（其他刷新方式：F12调出调试工具，在工具中再按F5即刷新）。
 
 >当然，也可以把正式版nwjs-v0.26.6-win-x64.zip解压到RMedia/下，与sdk版并列。然后使用以下命令运行。注意：两个版本无法一起运行。
 

@@ -648,6 +648,7 @@ const vue = new Vue({
         videoFn(e, index, type){
             let item = vue.items[index],
                 video = vue.$refs['id'+index][0];
+
             if(!item) return;
             switch(type){
                 case 'timeupdate':
