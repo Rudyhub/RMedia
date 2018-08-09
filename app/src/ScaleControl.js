@@ -62,7 +62,7 @@ class ScaleControl {
         return this[0].contains(target);
     }
     static bindEvent(_this){
-        let w, h, pX, pY, startX, startY, endX, endY, isX, isY, isMove, isLeft, isTop, limitW, limitH, right, bottom,
+        let w, h, pX, pY, startX, startY, endX, endY, isX, isY, isMove, isLeft, isTop, limitW, limitH, right, bottom, moveLimitX, moveLimitY,
             box = _this[0],
             points = _this.points;
 
@@ -70,6 +70,12 @@ class ScaleControl {
             if(isMove){
                 _this.matrix[0] = pX + e.clientX - startX;
                 _this.matrix[1] = pY + e.clientY - startY;
+                if(_this.matrix[0] > moveLimitX){
+                    _this.matrix[0] = moveLimitX;
+                }
+                if(_this.matrix[1] > moveLimitY){
+                    _this.matrix[1] = moveLimitY;
+                }
             }else{
                 if(isX){
                     if(isLeft){
@@ -95,17 +101,19 @@ class ScaleControl {
             if(_this.matrix[0] < 0) {
                 _this.matrix[0] = 0;
                 _this.matrix[2] = limitW;
+            }else if(_this.matrix[0] > limitW){
+                _this.matrix[0] = limitW;
+            }else if(_this.matrix[2] > right){
+                _this.matrix[2] = right;
             }
             if(_this.matrix[1] < 0) {
                 _this.matrix[1] = 0;
                 _this.matrix[3] = limitH;
+            }else if(_this.matrix[1] > limitH){
+                _this.matrix[1] = limitH;
+            }else if(_this.matrix[3] > bottom){
+                _this.matrix[3] = bottom
             }
-
-            right = _this.limit[0] - _this.matrix[0];
-            bottom = _this.limit[1] - _this.matrix[1];
-
-            if(_this.matrix[2] > right) _this.matrix[2] = right;
-            if(_this.matrix[3] > bottom) _this.matrix[3] = bottom;
 
             _this.el.style.left = box.style.left = _this.matrix[0] + 'px';
             _this.el.style.top = box.style.top = _this.matrix[1] + 'px';
@@ -136,8 +144,12 @@ class ScaleControl {
             isMove = false;
             isLeft = false;
             isTop = false;
-            limitW = _this.el.offsetLeft + _this.el.offsetWidth;
-            limitH = _this.el.offsetTop + _this.el.offsetHeight;
+            limitW = box.offsetLeft + box.offsetWidth;
+            limitH = box.offsetTop + box.offsetHeight;
+            right = _this.limit[0] - box.offsetLeft;
+            bottom = _this.limit[1] - box.offsetTop;
+            moveLimitX = _this.limit[0] - box.offsetWidth;
+            moveLimitY = _this.limit[1] - box.offsetHeight;
 
             if(target === points.topCenter || target === points.bottomCenter){
                 isX = false;
