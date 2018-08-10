@@ -29,7 +29,7 @@ const vue = new Vue({
         app: Object.freeze(nw.App.manifest),
 		output: config.output.folder,
         items: {},
-        viewWidth: screen.availWidth * .19,
+        viewWidth: screen.availWidth * .32,
         viewScale: .5625,
         isStarted: false,
 		winToggle: true,
@@ -459,39 +459,18 @@ const vue = new Vue({
                 logoInput.click();
             }else{
                 if(index){
-                    calc(vue.items[index]);
+                    calc(vue.items[index], index);
                 }else{
-                    for(let key in vue.items) calc(vue.items[key]);
+                    for(let key in vue.items) calc(vue.items[key], key);
                 }
             }
-
-            /*位置推算：
-                目的：要求出logo高度与item(图/视频)的高度比(设为：Hs);
-                已知：logo宽度与item宽度比item.logoSize(设为：A); logo宽高比item.logoScale(设为：B); item宽高比item.scale(设为：C);
-                设： item宽、高分别为 W1、 H1，logo宽高分别为 W2、H2;
-                求：Hs，即(H2/H1)。
-                解：
-                    因: A = W2/W1; B = H2/W2; C = H1/W1;
-                    故: H1 = W1*C; H2 = W2*B;
-                    推导: Hs = H2/H1
-                        = (W2*B) / (W1*C)
-                        = (W2/W1) * (B/C)
-                        = A * (B/C);
-                套入：Hs = item.logoSize * (item.logoScale / item.scale);
-            */
-            function calc(item){
+            function calc(item, n){
                 switch(name){
-                    case 'size':
-                        item.logoSize = val;
-                        break;
-                    case 'left':
-                        item.logoX = (100-item.logoSize) * (val/100);
-                        break;
-                    case 'top':
-                        item.logoY = (100 - item.logoSize * (item.logoScale / item.scale)) * (val /100);
-                        break;
                     case 'del':
                         item.logo  = '';
+                        if(vue.$refs['logo'+n][0] && vue.$refs['logo'+n][0].hasAttribute('bind-scale-control')){
+                            scaleControl.unbind();
+                        }
                         break;
                     case 'start':
                         item.logoStart = item.currentTime;
@@ -502,7 +481,13 @@ const vue = new Vue({
                 }
             }
         },
-        logoControlFn(e){
+        logoControlFn(e, index){
+            let item = vue.items[index];
+            ScaleControl.onChangeEnd = (sc)=>{
+                item.logoX = Math.round((sc.matrix[0] / sc.limit[0])*100);
+                item.logoY = Math.round((sc.matrix[1] / sc.limit[1])*100);
+                item.logoSize = Math.round((sc.matrix[2] / sc.limit[0])*100);
+            };
             scaleControl.bind(e.currentTarget);
         },
         nameAllFn(code){

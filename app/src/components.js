@@ -41,7 +41,7 @@ Vue.component('title-bar',{
 Vue.component('footer-bar',{
     template:`
     <footer class="footer draggable">
-        ${appInfo.window.title} (${appInfo.name}-v${appInfo.version}) ${appInfo.copyright}
+        ${appInfo.window.title} ${appInfo.name}-v${appInfo.version} ${appInfo.copyright}
     </footer>`
 });
 
@@ -70,18 +70,6 @@ Vue.component('control-logo',{
                 -
                 <button v-on:click="logoFn($event, 'end', param)" class="btn-s" :disabled="!item.logo || item.currentTime>item.endTime || item.currentTime<=item.logoStart" title="结束显示">{{item.logoEnd | timemat  }}</button>
             </span>
-        </div>
-        <div class="control-logo-body">
-            <div class="control-logo-names">
-                <div class="control-logo-name">尺寸比例：</div>
-                <div class="control-logo-name">水平位置：</div>
-                <div class="control-logo-name">垂直位置：</div>
-            </div>
-            <div class="control-logo-ranges">
-                <input v-on:input="logoFn($event,'size',param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="尺寸比例"/>
-                <input v-on:input="logoFn($event,'left',param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="水平位置"/>
-                <input v-on:input="logoFn($event,'top', param)" class="control-logo-range" type="range" min="0" max="100" step="1" title="垂直位置"/>
-            </div>
         </div>
     </div>`,
     props: ['param','item'],

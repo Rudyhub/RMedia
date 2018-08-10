@@ -236,9 +236,7 @@
                             <!-- loading icon -->
                             <div class="loading" v-else><i class="loading-icon icon icon-spinner9"></i></div>
                             <!-- logo -->
-
-
-                            <img class="item-logo" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}" v-show="item.logo && item.currentTime>=item.logoStart && item.currentTime<=item.logoEnd" :src="item.logo" v-on:click="logoControlFn">
+                            <img class="item-logo" :ref="'logo'+index" :style="{top:item.logoY+'%',left:item.logoX+'%', width: item.logoSize+'%'}" v-show="item.logo && item.currentTime>=item.logoStart && item.currentTime<=item.logoEnd" :src="item.logo" v-on:click="logoControlFn($event,index)">
                         </div>
                     </div>
                     <div class="item-tools">

@@ -288,15 +288,16 @@ summary{
 .titlebar{
     position: relative;
     background: var(--gray4) url('../logo.png') no-repeat .5em center;
-    background-size: auto 100%;
+    background-size: auto 80%;
 }
 .title{
     width: calc(100% - 9em);
     font-size: 18px;
     font-weight: normal;
-    padding: .5em 1em .5em 3em;
+    padding: .5em 1em .5em 7.5em;
     margin: 0;
     box-sizing: border-box;
+    opacity: .6;
 }
 .titlebar-tool{
     position: absolute;
@@ -463,7 +464,7 @@ summary{
 }
 .item{
     display: inline-block;
-    width: 19vw;
+    width: 32vw;
     border: 1px solid #35373a;
     box-sizing: border-box;
     vertical-align: top;
