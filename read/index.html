@@ -122,7 +122,14 @@
     .rmedia-art {
       overflow: hidden;
     }
+    time{
+      font-size: 14px;
+      color: #888;
+    }
     </style>
+  <script>
+    var version = '1.1.1';
+  </script>
 </head>
 <body>
 <div data-version="1.0.0" data-loadurl="http://assets.wenweipo.com/software/RMedia1.0.0x64.zip" class="rmedia">
@@ -130,8 +137,12 @@
     RMedia操作介绍
   </h1></div>
   <div class="rmedia-layout border-box">
-    <div class="rmedia-nav border-box"><h2 class="rmedia-h2">目录</h2>
+    <div class="rmedia-nav border-box">
+      <h2 class="rmedia-h2">目录</h2>
       <ul class="tree" id="rmedia-nav-list">
+        <li class="tree-item">
+          <a class="tree-name" href="#a18">更新至1.1.1</a>
+        </li>
         <li class="tree-item">
           <a class="tree-name" href="#a17">更新至1.1.0</a>
         </li>
@@ -191,8 +202,24 @@
     </div>
     <div id="rmedia-scroll-body" class="rmedia-main border-box">
       <section class="rmedia-section">
-        <article class="rmedia-art"><h3 id="a17" class="rmedia-h3">1 - 更新至1.1.0</h3>
-          <article class="rmedia-art"><img class="float-r margin-l" src="./img/11.png" alt="">
+        <article class="rmedia-art">
+          <h3 id="a18" class="rmedia-h3">3 - 更新至1.1.1 <time>(更新日期: 2018-8-17)</time></h3>
+          <div><a href="http://assets.wenweipo.com/software/RMedia1.1.1x64.zip" download="RMedia1.1.1x64.zip">下载RMedia1.1.1x64.zip</a></div>
+          <article class="rmedia-art">
+            <ul>
+              <li>修复LOGO输出保持比例的BUG</li>
+              <li>LOGO控制上，更改只有中心点才可移动为整个图片区域可移动</li>
+              <li>更改帮助文档链接</li>
+            </ul>
+            <div class="clear"></div>
+            <hr>
+          </article>
+        </article>
+        <article class="rmedia-art">
+          <h3 id="a17" class="rmedia-h3">2 - 更新至1.1.0 <time>(更新日期: 2018-8-12)</time></h3>
+          <div><a href="javascript:alert('请下载更新版RMedia'+version)">下载RMedia1.1.0x64.zip</a></div>
+          <article class="rmedia-art">
+            <img class="float-r margin-l" src="./img/11.png" alt="">
             <div>如右图：</div>
             <ul>
               <li>更新了LOGO控制，换用更灵活的晶格手柄控制</li>
@@ -204,9 +231,11 @@
             <hr>
           </article>
         </article>
-        <article class="rmedia-art"><h3 id="a16" class="rmedia-h3">2 - 初始版本1.0.0</h3>
+        <article class="rmedia-art">
+          <h3 id="a16" class="rmedia-h3">2 - 初始版本1.0.0 <time>(更新日期: 2018-5-18)</time></h3>
           <article class="rmedia-art">
-            <div>更新日期: 2018-5-18</div>
+            <div><a href="javascript:alert('请下载上方最新版，旧版bug多')">下载RMedia1.0.0x64.zip</a></div>
+            <div><a href="javascript:alert('请下载上方最新版，旧版bug多')">下载RMedia1.0.0x86.zip</a></div>
           </article>
         </article>
         <article class="rmedia-art"><h3 id="a15" class="rmedia-h3">3 - 界面简介与基本操作</h3>
