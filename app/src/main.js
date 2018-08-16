@@ -487,6 +487,7 @@ const vue = new Vue({
                 item.logoX = Math.round((sc.matrix[0] / sc.limit[0])*100);
                 item.logoY = Math.round((sc.matrix[1] / sc.limit[1])*100);
                 item.logoSize = Math.round((sc.matrix[2] / sc.limit[0])*100);
+                item.logoScale = sc.matrix[3] / sc.matrix[2]
             };
             scaleControl.bind(e.currentTarget);
         },

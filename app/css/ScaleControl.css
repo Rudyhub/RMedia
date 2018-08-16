@@ -5,6 +5,7 @@
     -moz-box-sizing: border-box;
     box-sizing: border-box;
     z-index: 99999999;
+    cursor: move;
 }
 .scale-control-point{
     position: absolute;
@@ -39,14 +40,6 @@
     bottom: 0;
     margin: auto 0;
     cursor: w-resize;
-}
-.scale-control-mid-center{
-    top: 0;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    margin: auto;
-    cursor: move;
 }
 .scale-control-mid-right{
     right: -4px;

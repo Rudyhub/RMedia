@@ -6,7 +6,6 @@ class ScaleControl {
                 topCenter: box.cloneNode(),
                 topRight: box.cloneNode(),
                 midLeft: box.cloneNode(),
-                midCenter: box.cloneNode(),
                 midRight: box.cloneNode(),
                 bottomLeft: box.cloneNode(),
                 bottomCenter: box.cloneNode(),
@@ -53,6 +52,13 @@ class ScaleControl {
             this.limit[1] = el.parentNode.offsetHeight;
 
             el.draggable = false;
+            let _this = this;
+            document.addEventListener('click', function docEventHandle(e){
+                if(!e.target.classList.contains('item-logo') && !_this[0].contains(e.target)){
+                    _this.unbind();
+                    document.removeEventListener('click', docEventHandle, false)
+                }
+            }, false)
         }
     }
     unbind(){
@@ -175,7 +181,7 @@ class ScaleControl {
                 target === points.topRight,
 
                 target === points.midLeft,
-                target === points.midCenter,
+                target === this,
                 target === points.midRight,
 
                 target === points.bottomLeft,
