@@ -225,7 +225,7 @@ const vue = new Vue({
                     break;
             }
         },
-        convertFn(e){
+        convertFn(e, isOnlyIndex){
             let total, command, keys, len, i, target, options;
 
             target = e.currentTarget;
@@ -250,6 +250,10 @@ const vue = new Vue({
             len = keys.length;
             i = 0;
 
+            if(isOnlyIndex !== undefined){
+                recycle(vue.items[isOnlyIndex]);
+                return;
+            }
             if(len){
                 recycle(vue.items[ keys[i] ]);
             }else{
@@ -279,7 +283,7 @@ const vue = new Vue({
                         if(code === 0){
                             item.progress = 100;
                             i++;
-                            if(keys[i] && target.dataset.stopAll != 1){
+                            if(isOnlyIndex === undefined && keys[i] && target.dataset.stopAll != 1){
                                 recycle(vue.items[ keys[i] ]);
                             }else{
                                 msg = msg || '全部完成';

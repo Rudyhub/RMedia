@@ -27,7 +27,7 @@
                 <button class="toolbar-item" name="more" v-on:click="toolbarFn" :class="{'active-1': toolbar.drop == 'more'}">
                     <i class="icon icon-list"></i> 更多功能
                 </button>
-                <button class="toolbar-item" v-on:click="convertFn" :class="{'active-1': isStarted}">
+                <button class="toolbar-item start-btn" v-on:click="convertFn" :class="{'active-1': isStarted}">
                     <i class="icon icon-stack"></i> {{isStarted ? '停止':'开始'}}
                 </button>
                 <input class="toolbar-item" type="range" min=".19" max=".98" step="0.01" v-on:input="zoomItemFn">
@@ -356,8 +356,9 @@
                     <div class="item-new scale-0" :class="((item.aclayout>1 || (item.achannel && item.vchannel)) && item.totype!=='image')?'zoom-in':''">
                         <input class="item-checkbox" type="checkbox" v-model="item.split" title="分离提取音频声道和视频"> {{item.split ? '是':'否'}}
                     </div>
+                    <button class="start-btn start-one" v-on:click="convertFn($event, index)">{{isStarted ? '停止':'开始'}}</button>
                 </dd>
-                <dd class="item-mask" v-if="item.progress">
+                <dd class="item-mask" v-show="item.progress">
                     <div class="item-progress-loaded" :style="{width: item.progress+'%'}"></div>
                     <div class="item-progress-txt">{{item.progress}} %</div>
                 </dd>

@@ -1,7 +1,6 @@
 const cp = require('child_process'),
     fs = require('fs'),
     utils = require('./utils');
-
 let appRoot = utils.path(true).dirname(process.execPath),
 	ffmpegPath = utils.path(appRoot+'\\ffmpeg\\ffmpeg.exe'),
 	checkPath = cp.spawnSync(ffmpegPath,['-version']);
@@ -12,7 +11,9 @@ if(checkPath.error){
 	if(checkPath.error){
 		utils.dialog.show = true;
 		utils.dialog.title = '丢失';
-		utils.dialog.body = '<p>ffmpeg文件丢失，请确保安装目录下的文件夹ffmpeg/有ffmpeg.exe和ffprobe.exe文件。</p>';
+		utils.dialog.body = `<p>未找到核心程序，
+		<a href="https://ffmpeg.zeranoe.com/builds/win64/static/ffmpeg-3.4.2-win64-static.zip" download="ffmpeg.zip" style="color: #b00">前往下载</a>，
+		提取解压包中的ffmpeg.exe，放置位置如：${ffmpegPath}</p>`;
 	}
 }
 
@@ -36,12 +37,14 @@ nw.process.on('exit',()=>{
 	cp.execSync('rd /s /q '+TEMP_FOLDER);
 });
 
-let readFile = fs.readFileSync(utils.path(appRoot+'\\config.json'), 'utf-8'),
+let usercfgPath = utils.path(appRoot+'\\config.json'),
 	usercfg;
-if(readFile){
-	usercfg = JSON.parse(readFile);
+if(fs.existsSync(usercfgPath)){
+    usercfg = JSON.parse(fs.readFileSync(usercfgPath, 'utf-8'));
 }else{
-	usercfg = {};
+    usercfg = {
+        documentation: "https://rudyhub.github.io/RMedia"
+    };
 }
 
 module.exports = {

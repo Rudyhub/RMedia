@@ -864,6 +864,19 @@ summary{
     }
 }
 
+button.start-btn{
+    border-color: #d0bf37;
+    color: #d09f42;
+    font-weight: bold;
+    box-shadow: #f7dc51 0 0 3px;
+}
+button.start-one{
+    position: absolute;
+    bottom: 0.3em;
+    right: 0.5em;
+    z-index: 4;
+}
+
 .control-logo{
     position: relative;
     box-sizing: border-box;
