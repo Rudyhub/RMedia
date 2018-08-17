@@ -126,6 +126,12 @@
       font-size: 14px;
       color: #888;
     }
+    img{
+      max-height: 150px;
+    }
+    img:hover{
+      max-height: 100%;
+    }
     </style>
   <script>
     var version = '1.1.1';
@@ -470,6 +476,25 @@
           this.classList.add('active');
       }
   }
+  // var imgs = document.getElementsByTagName('img'),
+  //     zoomBox = document.createElement('div'),
+  //     zoomImg = document.createElement('img');
+  // len = imgs.length;
+  // i = 0;
+  // zoomBox.setAttribute('style', 'position:fixed;overflow:auto;');
+  // zoomImg.setAttribute('style', 'width:auto;height:auto;');
+  // zoomBox.appendChild(zoomImg);
+  // for(; i<len; i++){
+  //     imgs[i].onmouseenter = function(e){
+  //         zoomImg.src = this.src;
+  //         zoomBox.style.left = e.clientX + 'px';
+  //         zoomBox.style.top = e.clientY + 'px'
+  //         document.body.appendChild(zoomBox);
+  //     };
+  //     imgs[i].onmouseleave = function(){
+  //       document.body.removeChild(zoomBox);
+  //     };
+  // }
 </script>
 </body>
 </html>
