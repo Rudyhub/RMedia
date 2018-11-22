@@ -16,7 +16,7 @@
 Window7 x64/x86和Window10 x64/x86可以使用，其他平台没有测试过。
 
 ## 使用方法
-参考文档说明[文档/read](https://rudyhub.github.io/RMedia/)。
+参考文档说明[文档/read](https://rudyhub.github.io/RMedia/)，文档里有[下载](https://rudyhub.github.io/RMedia/)地址。
 
 ## 开发环境
 1. node + npm
